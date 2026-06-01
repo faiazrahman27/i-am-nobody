@@ -28,7 +28,7 @@ body{background:var(--paper);color:var(--ink);font-family:var(--fb);overflow-x:h
 button,a{-webkit-tap-highlight-color:transparent;}
 button{font:inherit;}
 .iris{background:linear-gradient(90deg,var(--i1),var(--i2),var(--i3),var(--i4),var(--i1));}
-.no-crop{line-height:1.08;overflow:visible;padding:.04em 0 .08em;}
+.no-crop{line-height:1.12;overflow:visible;padding:.08em 0 .14em;display:block;}
 
 /* NAV */
 nav{
@@ -62,7 +62,7 @@ nav{
 .shop-hero::before{content:'SHOP';position:absolute;right:-20px;top:50%;transform:translateY(-50%);font-family:var(--fd);font-size:clamp(110px,18vw,220px);line-height:1;color:rgba(255,255,255,.035);pointer-events:none;}
 .shop-hero-inner{position:relative;z-index:1;max-width:1100px;}
 .shop-hero-label{font-family:var(--fu);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.34);margin-bottom:16px;display:block;}
-.shop-hero-title{font-family:var(--fd);font-size:clamp(48px,8vw,86px);line-height:1.02;color:#fff;margin-bottom:20px;letter-spacing:.4px;max-width:760px;overflow:visible;padding-bottom:.06em;}
+.shop-hero-title{font-family:var(--fd);font-size:clamp(48px,8vw,86px);line-height:1.08;color:#fff;margin-bottom:20px;letter-spacing:.4px;max-width:760px;overflow:visible;padding-bottom:.12em;}
 .shop-hero-sub{font-family:var(--fb);font-size:16px;font-style:italic;color:rgba(255,255,255,.46);max-width:560px;line-height:1.7;margin-bottom:34px;}
 .shop-filters{display:flex;gap:8px;flex-wrap:wrap;max-width:920px;}
 .filter-btn{font-family:var(--fu);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.58);background:transparent;cursor:pointer;transition:all .2s;}
@@ -78,7 +78,7 @@ nav{
 .section-dark .section-header{border-color:rgba(255,255,255,.08);}
 .section-tag{font-family:var(--fu);font-size:8px;letter-spacing:4px;text-transform:uppercase;color:var(--ghost);margin-bottom:8px;display:block;line-height:1.5;}
 .section-dark .section-tag{color:rgba(255,255,255,.34);}
-.section-title{font-family:var(--fd);font-size:clamp(34px,5vw,54px);color:var(--ink);line-height:1.04;letter-spacing:.2px;overflow:visible;padding-bottom:.04em;}
+.section-title{font-family:var(--fd);font-size:clamp(34px,5vw,54px);color:var(--ink);line-height:1.08;letter-spacing:.2px;overflow:visible;padding-bottom:.1em;}
 .section-dark .section-title{color:#fff;}
 .section-desc{font-family:var(--fb);font-size:14px;font-style:italic;color:var(--ghost);max-width:380px;text-align:right;line-height:1.7;}
 .section-dark .section-desc{color:rgba(255,255,255,.38);}
@@ -110,14 +110,11 @@ nav{
 .product-card:hover .product-quick{opacity:1;transform:translateY(0);}
 
 /* VISUALS */
-.book-cover{width:138px;aspect-ratio:3/4;background:linear-gradient(155deg,#101010 0%,#050505 48%,#191919 100%);box-shadow:12px 16px 38px rgba(0,0,0,.32);position:relative;overflow:hidden;flex-shrink:0;}
-.book-cover::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--i1),var(--i2),var(--i3),var(--i4));opacity:.18;mix-blend-mode:screen;}
+.book-cover{width:138px;aspect-ratio:3/4;background:#0a0a0a;box-shadow:12px 16px 38px rgba(0,0,0,.32);position:relative;overflow:hidden;flex-shrink:0;}
+.book-cover img{width:100%;height:100%;display:block;object-fit:cover;}
 .book-cover::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,var(--i1),var(--i2),var(--i3),var(--i4),var(--i1));}
-.cover-kicker{position:absolute;top:14px;left:14px;font-family:var(--fu);font-size:7px;letter-spacing:4px;color:rgba(255,255,255,.5);}
-.cover-title{position:absolute;bottom:26px;left:14px;font-family:var(--fd);font-size:34px;line-height:.9;color:#fff;letter-spacing:.5px;}
-.cover-author{position:absolute;bottom:10px;left:14px;font-family:var(--fu);font-size:5px;letter-spacing:1.4px;color:rgba(255,255,255,.34);}
+.cover-kicker,.cover-title,.cover-author{display:none;}
 .visual-book{background:#f0ece4;}
-.visual-book.en .book-cover{filter:grayscale(.25);}
 .visual-special{background:#0a0a0a;gap:26px;justify-content:flex-start;align-items:center;}
 .special-list{display:flex;flex-direction:column;gap:9px;margin:14px 0 18px;}
 .special-line{display:flex;align-items:center;gap:9px;font-family:var(--fb);font-size:12px;color:rgba(255,255,255,.66);line-height:1.4;}
@@ -160,7 +157,7 @@ nav{
 .poster-card:hover .poster-cta{opacity:1;transform:translateY(0);}
 .poster-1{background:#0a0a0a;color:#fff;}.poster-2{background:#f4f1ec;color:#0a0a0a;}.poster-3{background:linear-gradient(160deg,#0a0a0a 0%,#1a0a2e 100%);color:#d4a017;}.poster-4{background:#fff;color:#0a0a0a;}.poster-5{background:#050510;color:#fff;}
 .poster-kicker{font-family:var(--fu);font-size:7px;letter-spacing:4px;opacity:.38;margin-bottom:18px;text-transform:uppercase;line-height:1.6;}
-.poster-main{font-family:var(--fd);font-size:clamp(24px,3vw,38px);line-height:1.05;overflow:visible;padding-bottom:.05em;}
+.poster-main{font-family:var(--fd);font-size:clamp(24px,3vw,38px);line-height:1.08;overflow:visible;padding-bottom:.1em;}
 .poster-script{font-family:var(--fb);font-size:14px;font-style:italic;line-height:1.6;}
 .poster-note{margin-top:2px;background:#f8f5f0;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
 .poster-note p{font-family:var(--fb);font-size:13px;font-style:italic;color:var(--ghost);line-height:1.55;}
@@ -172,7 +169,7 @@ nav{
 .bundle-section{background:var(--dark);padding:86px 64px;position:relative;overflow:hidden;scroll-margin-top:88px;}
 .bundle-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,1fr);gap:80px;align-items:center;}
 .bundle-label{font-family:var(--fu);font-size:8px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.34);margin-bottom:20px;display:block;line-height:1.5;}
-.bundle-title{font-family:var(--fd);font-size:clamp(48px,7vw,76px);color:#fff;line-height:1.02;margin-bottom:22px;overflow:visible;padding-bottom:.06em;}
+.bundle-title{font-family:var(--fd);font-size:clamp(48px,7vw,76px);color:#fff;line-height:1.08;margin-bottom:22px;overflow:visible;padding-bottom:.12em;}
 .bundle-desc{font-family:var(--fb);font-size:15px;font-style:italic;color:rgba(255,255,255,.44);line-height:1.75;margin-bottom:32px;max-width:570px;}
 .bundle-includes{margin-bottom:36px;}
 .bundle-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);}
@@ -248,7 +245,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
 </head>
 <body>
 <nav aria-label="Shop navigation">
-  <a href="#top" class="nav-logo" data-scroll>I AM <span>NOBODY</span></a>
+  <a href="/" class="nav-logo" data-scroll>I AM <span>NOBODY</span></a>
   <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navLinks">Menu</button>
   <div class="nav-links" id="navLinks">
     <a href="#books" data-scroll data-nav="books">Libri</a>
@@ -295,9 +292,9 @@ footer{background:var(--dark);padding:62px 64px 42px;}
       </div>
       <div class="bundle-visual" aria-hidden="true">
         <div class="bundle-stack">
-          <div class="bundle-book book-shadow2"><div class="book-cover"><span class="cover-kicker">I AM</span><span class="cover-title">NO<br>BODY</span><span class="cover-author">ANDREA MAGELLI</span></div></div>
-          <div class="bundle-book book-shadow1"><div class="book-cover"><span class="cover-kicker">I AM</span><span class="cover-title">NO<br>BODY</span><span class="cover-author">ANDREA MAGELLI</span></div></div>
-          <div class="bundle-book book-main"><div class="book-cover"><span class="cover-kicker">I AM</span><span class="cover-title">NO<br>BODY</span><span class="cover-author">ANDREA MAGELLI</span></div></div>
+          <div class="bundle-book book-shadow2"><div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div></div>
+          <div class="bundle-book book-shadow1"><div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div></div>
+          <div class="bundle-book book-main"><div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div></div>
           <div class="bundle-side-card light" data-i18n="sideCardOne">Chi sei quando nessuno ti guarda?</div>
           <div class="bundle-side-card dark" data-i18n="sideCardTwo">L'IRRIPETIBILE ROMPE IL MODELLO.</div>
         </div>
@@ -399,7 +396,7 @@ const sections = [
       {num:'I',handle:'iam-nobody-volume-1-for-leaders',stripe:'var(--i1)',title:{it:'PER CHI GUIDA',en:'FOR THOSE WHO LEAD'},sub:{it:"Il ruolo, il potere, l'identità autentica",en:'Role, power, and authentic identity'},chapters:{it:'Prologo · Cap. 3 · Cap. 4<br>Cap. 8 · Chiusura',en:'Prologue · Ch. 3 · Ch. 4<br>Ch. 8 · Closing'},price:'€ 5'},
       {num:'II',handle:'iam-nobody-volume-2-for-growth',stripe:'var(--i2)',title:{it:'PER CHI CRESCE',en:'FOR THOSE WHO GROW'},sub:{it:"Identità, libertà e algoritmi nell'era digitale",en:'Identity, freedom, and algorithms in the digital age'},chapters:{it:'Prologo · Cap. 1 · Cap. 5<br>Cap. 7 · Chiusura',en:'Prologue · Ch. 1 · Ch. 5<br>Ch. 7 · Closing'},price:'€ 5'},
       {num:'III',handle:'iam-nobody-volume-3-for-love',stripe:'var(--i3)',title:{it:'PER CHI AMA',en:'FOR THOSE WHO LOVE'},sub:{it:'Corpo, presenza, relazione e legacy',en:'Body, presence, relationship, and legacy'},chapters:{it:'Prologo · Cap. 2 · Cap. 6<br>Cap. 9 · Cap. 10 · Chiusura',en:'Prologue · Ch. 2 · Ch. 6<br>Ch. 9 · Ch. 10 · Closing'},price:'€ 5'},
-      {num:'IV',handle:'iam-nobody-volume-4-for-builders',stripe:'var(--i4)',title:{it:'PER CHI COSTRUISCE',en:'FOR THOSE WHO BUILD'},sub:{it:'AI, irripetibile, legacy e futuro',en:'AI, the unrepeatable, legacy, and future'},chapters:{it:'Prologo · Cap. 3 · Cap. 7<br>Cap. 8 · Cap. 10 · Chiusura',en:'Prologue · Ch. 3 · Ch. 7<br>Ch. 8 · Ch. 10 · Closing'},price:'€ 5'}
+      {num:'IV',handle:'iam-nobody-volume-4-for-builders',stripe:'var(--i4)',title:{it:'PER CHI COSTRUISCE',en:'FOR THOSE WHO BUILD'},sub:{it:'AI, irripetibile, legacy e futuro',en:'AI, the unrepeatable, legacy and future'},chapters:{it:'Prologo · Cap. 3 · Cap. 7<br>Cap. 8 · Cap. 10 · Chiusura',en:'Prologue · Ch. 3 · Ch. 7<br>Ch. 8 · Ch. 10 · Closing'},price:'€ 5'}
     ],
     inlineBundle:{handle:'iam-nobody-four-volume-ebook-bundle',label:{it:'Bundle completo',en:'Complete bundle'},title:{it:'Tutti e 4 i volumi tematici',en:'All 4 thematic volumes'},price:'€ 14',oldPrice:'€ 20',button:{it:'Acquista bundle',en:'Buy bundle'}}
   },
@@ -458,7 +455,8 @@ const infoItems = [
   {icon:'🔄', title:{it:'RESI FACILI',en:'EASY RETURNS'}, desc:{it:'30 giorni per restituire i prodotti fisici · Nessuna domanda',en:'30 days to return physical products · No questions asked'}}
 ];
 
-let currentLang = 'it';
+const initialLang = document.documentElement.lang === 'en' || window.location.pathname.startsWith('/en') ? 'en' : 'it';
+let currentLang = initialLang;
 let cartCount = 0;
 
 function t(value){ return typeof value === 'object' ? value[currentLang] : value; }
@@ -476,21 +474,21 @@ function renderVisual(product){
   const badge = product.badge ? `<span class="product-badge ${product.badge.class}">${escapeHtml(t(product.badge))}</span>` : '';
   if(product.visual === 'book-it' || product.visual === 'book-en'){
     return `<div class="product-img visual-book ${product.visual === 'book-en' ? 'en' : ''}">
-      <div class="book-cover"><span class="cover-kicker">I AM</span><span class="cover-title">NO<br>BODY</span><span class="cover-author">ANDREA MAGELLI</span></div>${badge}${quick}</div>`;
+      <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>${badge}${quick}</div>`;
   }
   if(product.visual === 'special'){
     const lines = currentLang === 'it'
       ? ['Libro numerato e firmato','Mazzo Le 25 Chiavi','Set 5 postcard manifesto','Cofanetto nero opaco']
       : ['Numbered and signed book','The 25 Keys deck','Set of 5 manifesto postcards','Matte black box'];
     return `<div class="product-img visual-special">
-      <div class="book-cover"><span class="cover-kicker">I AM</span><span class="cover-title">NO<br>BODY</span><span class="cover-author">ANDREA MAGELLI</span></div>
+      <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>
       <div><div class="visual-ebook-label">${currentLang === 'it' ? 'EDIZIONE SPECIALE · 500 COPIE' : 'SPECIAL EDITION · 500 COPIES'}</div>
       <div class="special-list">${lines.map(line => `<div class="special-line"><span class="special-dot"></span>${escapeHtml(line)}</div>`).join('')}</div>
       <div class="special-price">€ 95</div><div class="special-value">${currentLang === 'it' ? 'Valore singoli: €142' : 'Individual value: €142'}</div></div>${badge}${quick}</div>`;
   }
   if(product.visual === 'ebook-complete' || product.visual === 'ebook-en'){
     return `<div class="product-img visual-ebook">
-      <div class="book-cover"><span class="cover-kicker">I AM</span><span class="cover-title">NO<br>BODY</span><span class="cover-author">ANDREA MAGELLI</span></div>
+      <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>
       <div class="visual-ebook-text"><div class="visual-ebook-label">${escapeHtml(t(product.category))}</div><div class="visual-ebook-title">I AM NOBODY</div><p class="visual-ebook-sub">${escapeHtml(t(product.sub)).replace('&lt;br&gt;','<br>')}</p></div>${quick}</div>`;
   }
   if(product.visual === 'keys' || product.visual === 'keys-gold'){
@@ -606,6 +604,13 @@ function applyStaticTranslations(){
   document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === currentLang));
 }
 
+function updateShopLangUrl(){
+  const nextPath = currentLang === 'en' ? '/en/shop' : '/it/shop';
+  if(window.location.pathname !== nextPath){
+    window.history.replaceState(null, '', nextPath);
+  }
+}
+
 function bindActions(){
   document.querySelectorAll('[data-scroll-target]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -681,6 +686,7 @@ document.querySelector('.nav-toggle').addEventListener('click', () => {
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     currentLang = btn.dataset.lang;
+    updateShopLangUrl();
     renderPage();
   });
 });
