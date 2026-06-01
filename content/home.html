@@ -224,20 +224,20 @@
 
     .book-cover-display{
       position:relative;
-      width:min(540px,82vw);
-      aspect-ratio:17/24;
-      max-height:72vh;
+      width:min(430px,82vw);
+      margin: 0 auto;
       border:1px solid rgba(255,255,255,.08);
-      background:#050505;
+      background: transparent;
       box-shadow:0 45px 120px rgba(0,0,0,.65);
-      overflow:hidden;
+      overflow:visible;
     }
     .book-cover-display img{
       width:100%;
-      height:100%;
+      height:auto;
       display:block;
-      object-fit:cover;
+      object-fit:unset;
       object-position:center;
+      background: transparent;
     }
     .book-cover-display:after{
       content:"";
@@ -300,9 +300,10 @@
     .manifesto h2{
       font-family:var(--display);
       font-size:clamp(70px,12vw,160px);
-      line-height:.88;
+      line-height:1.02;
       letter-spacing:2px;
       max-width:1100px;
+      padding: .05em .12em;
     }
     .manifesto h2 span{display:block;color:var(--gold2);}
     .manifesto p{
@@ -384,8 +385,9 @@
       width:100%;
       height:100%;
       display:block;
-      object-fit:cover;
+      object-fit:contain;
       object-position:center;
+      background: #050505;
     }
     .book-cover-mini .cover-line{height:6px;}
     .book-content p{

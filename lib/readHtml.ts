@@ -109,83 +109,6 @@ const HOME_EN_TRANSLATIONS: Array<[string, string]> = [
   ['href="#top">I AM <span>NOBODY</span>', 'href="/en">I AM <span>NOBODY</span>'],
 ];
 
-const SHOP_EN_TRANSLATIONS: Array<[string, string]> = [
-  ['<html lang="it">', '<html lang="en">'],
-  [">Il libro<", ">The book<"],
-  [">Le soglie<", ">Thresholds<"],
-  [">Eventi<", ">Events<"],
-  [">Aziende<", ">Companies<"],
-  [">Carrello", ">Cart"],
-  ["OGGETTI<br>CHE RESTANO.", "OBJECTS<br>THAT REMAIN."],
-  [
-    "Non merchandising. Strumenti. Ogni oggetto è un modo diverso di portare la domanda con te.",
-    "Not merchandise. Tools. Every object is a different way to carry the question with you."
-  ],
-  [">Tutto<", ">All<"],
-  [">Libri<", ">Books<"],
-  [">Le 25 Chiavi<", ">The 25 Keys<"],
-  [">Manifesti<", ">Posters<"],
-  [">Postcard<", ">Postcards<"],
-  [">Bundle<", ">Bundles<"],
-  ["Il libro", "The book"],
-  ["IL LIBRO", "THE BOOK"],
-  [
-    "Disponibile in italiano e inglese, in edizione standard e in edizione speciale numerata.",
-    "Available in Italian and English, in standard edition and numbered special edition."
-  ],
-  ["Libro IT", "Italian book"],
-  ["Libro EN", "English book"],
-  ["EDIZIONE SPECIALE", "SPECIAL EDITION"],
-  ["Edizione speciale", "Special edition"],
-  ["edizione speciale", "special edition"],
-  ["Numerata", "Numbered"],
-  ["numerata", "numbered"],
-  ["Aggiungi", "Add"],
-  ["AGGIUNGI", "ADD"],
-  ["Compra", "Buy"],
-  ["COMPRA", "BUY"],
-  ["Anteprima", "Preview"],
-  ["ANTEPRIMA", "PREVIEW"],
-  ["Nuovo", "New"],
-  ["NUOVO", "NEW"],
-  ["Limitato", "Limited"],
-  ["LIMITATO", "LIMITED"],
-  ["Digitale", "Digital"],
-  ["DIGITALE", "DIGITAL"],
-  ["Mazzo", "Deck"],
-  ["mazzo", "deck"],
-  ["Domande", "Questions"],
-  ["domande", "questions"],
-  ["Manifesto", "Poster"],
-  ["manifesto", "poster"],
-  ["Singola", "Single"],
-  ["singola", "single"],
-  ["Per chi guida", "For those who lead"],
-  ["Per chi cresce", "For those who grow"],
-  ["Per chi ama", "For those who love"],
-  ["Per chi costruisce", "For those who build"],
-  ["TUTTO IAM NOBODY", "ALL IAM NOBODY"],
-  ["Tutto IAM NOBODY", "All IAM NOBODY"],
-  ["Risparmi", "You save"],
-  ["risparmi", "you save"],
-  ["Include", "Includes"],
-  ["include", "includes"],
-  ["Oggetti", "Objects"],
-  ["oggetti", "objects"],
-  ["CHE RESTANO", "THAT REMAIN"],
-  ["che restano", "that remain"],
-  ["Spedizione", "Shipping"],
-  ["spedizione", "shipping"],
-  ["Consegna", "Delivery"],
-  ["consegna", "delivery"],
-  ["Torna al sito", "Back to site"],
-  ["Termini", "Terms"],
-  ["Rimborsi", "Refunds"],
-  ["Contatti", "Contact"],
-  ['href="#" class="nav-logo"', 'href="/en" class="nav-logo"'],
-  ['href="#" class="active">Shop</a>', 'href="/en/shop" class="active">Shop</a>'],
-];
-
 function replaceAllText(html: string, translations: Array<[string, string]>) {
   let output = html;
 
@@ -200,15 +123,17 @@ export async function readHtmlFile(fileName: HtmlFileName, locale: Locale) {
   const filePath = path.join(process.cwd(), "content", fileName);
   const html = await readFile(filePath, "utf8");
 
+  if (fileName === "shop.html") {
+    return locale === "en"
+      ? html.replace('<html lang="it">', '<html lang="en">')
+      : html;
+  }
+
   if (locale === "it") {
     return html;
   }
 
-  if (fileName === "home.html") {
-    return replaceAllText(html, HOME_EN_TRANSLATIONS);
-  }
-
-  return replaceAllText(html, SHOP_EN_TRANSLATIONS);
+  return replaceAllText(html, HOME_EN_TRANSLATIONS);
 }
 
 export function htmlResponse(html: string) {
