@@ -13,6 +13,22 @@ type ShopifyImage = {
   altText: string | null;
 };
 
+type ShopifySelectedOption = {
+  name: string;
+  value: string;
+};
+
+type ShopifyVariantNode = {
+  id: string;
+  title: string;
+  availableForSale: boolean;
+  sku: string | null;
+  selectedOptions: ShopifySelectedOption[];
+  image: ShopifyImage | null;
+  price: ShopifyMoney;
+  compareAtPrice: ShopifyMoney | null;
+};
+
 type ShopifyProductNode = {
   id: string;
   handle: string;
@@ -28,10 +44,7 @@ type ShopifyProductNode = {
     minVariantPrice: ShopifyMoney;
   };
   variants: {
-    nodes: Array<{
-      id: string;
-      availableForSale: boolean;
-    }>;
+    nodes: ShopifyVariantNode[];
   };
 };
 
@@ -42,6 +55,8 @@ type ShopifyGraphQLResponse = {
 
 const HANDLE_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 const MAX_HANDLES = 60;
+const MAX_VARIANTS_PER_PRODUCT = 100;
+const SHOPIFY_IMAGE_MAX_WIDTH = 2400;
 
 function jsonResponse(body: unknown, status = 200) {
   return NextResponse.json(body, {
@@ -90,7 +105,7 @@ function buildProductsQuery(handles: string[]) {
         availableForSale
         onlineStoreUrl
         featuredImage {
-          url(transform: { maxWidth: 900 })
+          url(transform: { maxWidth: ${SHOPIFY_IMAGE_MAX_WIDTH} })
           altText
         }
         priceRange {
@@ -105,10 +120,28 @@ function buildProductsQuery(handles: string[]) {
             currencyCode
           }
         }
-        variants(first: 1) {
+        variants(first: ${MAX_VARIANTS_PER_PRODUCT}) {
           nodes {
             id
+            title
             availableForSale
+            sku
+            selectedOptions {
+              name
+              value
+            }
+            image {
+              url(transform: { maxWidth: ${SHOPIFY_IMAGE_MAX_WIDTH} })
+              altText
+            }
+            price {
+              amount
+              currencyCode
+            }
+            compareAtPrice {
+              amount
+              currencyCode
+            }
           }
         }
       }`
@@ -118,6 +151,20 @@ function buildProductsQuery(handles: string[]) {
   return `query IamNobodyProducts {
     ${productQueries}
   }`;
+}
+
+function hasRealCompareAt(compareAtPrice: ShopifyMoney | null | undefined, price: ShopifyMoney | null | undefined) {
+  if (!compareAtPrice || !price) return false;
+
+  const compareAmount = Number(compareAtPrice.amount);
+  const priceAmount = Number(price.amount);
+
+  return (
+    Number.isFinite(compareAmount) &&
+    Number.isFinite(priceAmount) &&
+    compareAmount > 0 &&
+    compareAmount > priceAmount
+  );
 }
 
 function normalizeProducts(data: Record<string, ShopifyProductNode | null> | undefined) {
@@ -131,10 +178,24 @@ function normalizeProducts(data: Record<string, ShopifyProductNode | null> | und
     const firstVariant = product.variants.nodes[0] || null;
     const compareAtPrice = product.compareAtPriceRange.minVariantPrice;
     const price = product.priceRange.minVariantPrice;
-    const hasRealCompareAt =
-      compareAtPrice &&
-      Number(compareAtPrice.amount) > 0 &&
-      Number(compareAtPrice.amount) > Number(price.amount);
+
+    const variants = product.variants.nodes.map((variant) => ({
+      id: variant.id,
+      title: variant.title,
+      availableForSale: variant.availableForSale,
+      sku: variant.sku,
+      selectedOptions: variant.selectedOptions || [],
+      image: variant.image
+        ? {
+            url: variant.image.url,
+            altText: variant.image.altText,
+          }
+        : null,
+      price: variant.price,
+      compareAtPrice: hasRealCompareAt(variant.compareAtPrice, variant.price)
+        ? variant.compareAtPrice
+        : null,
+    }));
 
     products[product.handle] = {
       id: product.id,
@@ -150,9 +211,10 @@ function normalizeProducts(data: Record<string, ShopifyProductNode | null> | und
           }
         : null,
       price,
-      compareAtPrice: hasRealCompareAt ? compareAtPrice : null,
+      compareAtPrice: hasRealCompareAt(compareAtPrice, price) ? compareAtPrice : null,
       firstVariantId: firstVariant?.id || null,
       firstVariantAvailable: firstVariant?.availableForSale || false,
+      variants,
     };
   });
 

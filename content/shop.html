@@ -60,139 +60,48 @@ nav{
 
 /* HERO */
 .shop-hero{
-    background:var(--dark);
-    padding:92px 64px 64px;
-    position:relative;
-    overflow:hidden;
+  background:var(--dark);
+  padding:92px 64px 64px;
+  position:relative;
+  overflow:hidden;
 }
-
 .shop-hero::before{
-    content:'SHOP';
-    position:absolute;
-    right:clamp(22px,5vw,72px);
-    top:50%;
-    transform:translateY(-50%);
-    z-index:0;
-
-    font-family:var(--fd);
-    font-size:clamp(96px,18vw,220px);
-    line-height:.9;
-    letter-spacing:.02em;
-    color:rgba(255,255,255,.035);
-
-    pointer-events:none;
-    white-space:nowrap;
-    width:max-content;
-
-    clip-path:inset(0 100% 0 0);
-    animation:shopHeroTypewriter 1.25s steps(4,end) .25s forwards;
+  content:'SHOP';
+  position:absolute;
+  right:clamp(22px,5vw,72px);
+  top:50%;
+  transform:translateY(-50%);
+  z-index:0;
+  font-family:var(--fd);
+  font-size:clamp(96px,18vw,220px);
+  line-height:.9;
+  letter-spacing:.02em;
+  color:rgba(255,255,255,.035);
+  pointer-events:none;
+  white-space:nowrap;
+  width:max-content;
+  clip-path:inset(0 100% 0 0);
+  animation:shopHeroTypewriter 1.25s steps(4,end) .25s forwards;
 }
-
 @keyframes shopHeroTypewriter{
-    from{
-        clip-path:inset(0 100% 0 0);
-    }
-    to{
-        clip-path:inset(0 0 0 0);
-    }
+  from{clip-path:inset(0 100% 0 0);}
+  to{clip-path:inset(0 0 0 0);}
 }
-
-.shop-hero-inner{
-    position:relative;
-    z-index:1;
-    max-width:1100px;
-}
-
-.shop-hero-label{
-    font-family:var(--fu);
-    font-size:9px;
-    letter-spacing:4px;
-    text-transform:uppercase;
-    color:rgba(255,255,255,.34);
-    margin-bottom:16px;
-    display:block;
-}
-
-.shop-hero-title{
-    font-family:var(--fd);
-    font-size:clamp(48px,8vw,86px);
-    line-height:1.08;
-    color:#fff;
-    margin-bottom:20px;
-    letter-spacing:.4px;
-    max-width:760px;
-    overflow:visible;
-    padding-bottom:.12em;
-}
-
-.shop-hero-sub{
-    font-family:var(--fb);
-    font-size:16px;
-    font-style:italic;
-    color:rgba(255,255,255,.46);
-    max-width:560px;
-    line-height:1.7;
-    margin-bottom:34px;
-}
-
-.shop-filters{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    max-width:920px;
-}
-
-.filter-btn{
-    font-family:var(--fu);
-    font-size:9px;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    padding:9px 16px;
-    border:1px solid rgba(255,255,255,.16);
-    color:rgba(255,255,255,.58);
-    background:transparent;
-    cursor:pointer;
-    transition:all .2s;
-}
-
-.filter-btn:hover,
-.filter-btn.active{
-    border-color:#fff;
-    color:#fff;
-    background:rgba(255,255,255,.06);
-}
-
-.shop-iris{
-    height:2px;
-    width:100%;
-    margin-top:44px;
-    position:relative;
-    z-index:1;
-}
+.shop-hero-inner{position:relative;z-index:1;max-width:1100px;}
+.shop-hero-label{font-family:var(--fu);font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.34);margin-bottom:16px;display:block;}
+.shop-hero-title{font-family:var(--fd);font-size:clamp(48px,8vw,86px);line-height:1.08;color:#fff;margin-bottom:20px;letter-spacing:.4px;max-width:760px;overflow:visible;padding-bottom:.12em;}
+.shop-hero-sub{font-family:var(--fb);font-size:16px;font-style:italic;color:rgba(255,255,255,.46);max-width:560px;line-height:1.7;margin-bottom:34px;}
+.shop-filters{display:flex;gap:8px;flex-wrap:wrap;max-width:920px;}
+.filter-btn{font-family:var(--fu);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.58);background:transparent;cursor:pointer;transition:all .2s;}
+.filter-btn:hover,.filter-btn.active{border-color:#fff;color:#fff;background:rgba(255,255,255,.06);}
+.shop-iris{height:2px;width:100%;margin-top:44px;position:relative;z-index:1;}
 
 @media(max-width:760px){
-    .shop-hero{
-        padding:88px 22px 48px;
-    }
-
-    .shop-hero::before{
-        right:22px;
-        font-size:clamp(72px,23vw,128px);
-    }
-
-    .shop-hero-title{
-        font-size:clamp(38px,13vw,64px);
-        line-height:1.05;
-        max-width:100%;
-    }
-
-    .shop-hero-sub{
-        font-size:15px;
-        line-height:1.6;
-    }
+  .shop-hero{padding:88px 22px 48px;}
+  .shop-hero::before{right:22px;font-size:clamp(72px,23vw,128px);}
+  .shop-hero-title{font-size:clamp(38px,13vw,64px);line-height:1.05;max-width:100%;}
+  .shop-hero-sub{font-size:15px;line-height:1.6;}
 }
-
-
 
 /* SECTIONS */
 .section-wrap{padding:82px 64px;scroll-margin-top:88px;}
@@ -214,15 +123,38 @@ nav{
 .grid-2{grid-template-columns:repeat(2,1fr);}
 
 /* PRODUCT CARD */
-.product-card{background:#fff;cursor:default;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;min-width:0;}
+.product-card{
+  background:#fff;
+  cursor:default;
+  transition:transform .2s,box-shadow .2s;
+  position:relative;
+  overflow:hidden;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
 .product-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.12);z-index:2;}
 .product-card.featured{grid-column:span 2;}
 .product-img{position:relative;overflow:hidden;background:#f0ece4;min-height:220px;display:flex;align-items:center;justify-content:center;padding:28px;}
-.product-info{padding:22px 22px 24px;min-width:0;}
+.product-info{
+  padding:22px 22px 24px;
+  min-width:0;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
 .product-category{font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--ghost);margin-bottom:8px;display:block;line-height:1.6;}
 .product-name{font-family:var(--fd);font-size:22px;letter-spacing:.5px;color:var(--ink);margin-bottom:6px;line-height:1.1;overflow:visible;}
 .product-sub{font-family:var(--fb);font-size:13px;font-style:italic;color:var(--ghost);margin-bottom:16px;line-height:1.55;}
-.product-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.product-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-top:auto;
+}
 .product-price{font-family:var(--fd);font-size:28px;color:var(--ink);white-space:nowrap;line-height:1;}
 .product-price-old{font-family:var(--fu);font-size:11px;color:var(--ghost);text-decoration:line-through;margin-left:8px;}
 .product-add,.ebook-add,.bundle-cta{font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;background:var(--ink);color:#fff;padding:10px 14px;border:none;cursor:pointer;transition:all .2s;line-height:1.25;white-space:nowrap;}
@@ -230,10 +162,301 @@ nav{
 .ebook-add{border:1px solid rgba(255,255,255,.22);background:transparent;color:rgba(255,255,255,.62);}
 .ebook-add:hover{border-color:#fff;color:#fff;}
 .product-badge{position:absolute;top:12px;left:12px;font-family:var(--fu);font-size:7px;letter-spacing:2px;text-transform:uppercase;padding:5px 10px;z-index:3;}
-.badge-new{background:var(--i2);color:#fff;}.badge-limited{background:var(--ink);color:#fff;}.badge-bundle{background:var(--i3);color:#fff;}.badge-digital{background:var(--i1);color:#fff;}.badge-premium{background:#d4a017;color:#fff;}
-.product-quick{position:absolute;bottom:12px;right:12px;font-family:var(--fu);font-size:8px;letter-spacing:1px;text-transform:uppercase;background:rgba(10,10,10,.86);color:#fff;padding:8px 14px;opacity:0;transform:translateY(4px);transition:all .2s;z-index:5;}
-.product-card:hover .product-quick{opacity:1;transform:translateY(0);}
+.badge-new{background:var(--i2);color:#fff;}
+.badge-limited{background:var(--ink);color:#fff;}
+.badge-bundle{background:var(--i3);color:#fff;}
+.badge-digital{background:var(--i1);color:#fff;}
+.badge-premium{background:#d4a017;color:#fff;}
+.product-quick{display:none !important;}
 .shopify-product-image{display:block;width:min(220px,100%);max-height:260px;object-fit:contain;object-position:center;filter:drop-shadow(12px 16px 38px rgba(0,0,0,.24));}
+.visual-shopify-dark{background:#0a0a0a;}
+.visual-shopify-gold{background:#1a0a00;}
+.visual-shopify-white{background:#fff;}
+
+/* FEATURED SPECIAL EDITION */
+.product-card.featured .product-img{
+  min-height:340px;
+  padding:42px 46px;
+}
+.product-card.featured .visual-special{
+  gap:44px;
+  justify-content:flex-start;
+  align-items:center;
+}
+.product-card.featured .visual-special .book-cover{
+  width:190px;
+  box-shadow:18px 24px 56px rgba(0,0,0,.46);
+}
+.product-card.featured .visual-ebook-label{
+  font-size:8px;
+  letter-spacing:4px;
+  margin-bottom:16px;
+}
+.product-card.featured .special-list{
+  gap:12px;
+  margin:18px 0 26px;
+}
+.product-card.featured .special-line{
+  font-size:15px;
+  line-height:1.45;
+}
+.product-card.featured .special-dot{
+  width:6px;
+  height:6px;
+}
+.product-card.featured .special-price{
+  font-size:58px;
+}
+.product-card.featured .special-value{
+  font-size:9px;
+  letter-spacing:1.3px;
+  margin-top:8px;
+}
+.product-card.featured .product-info{
+  padding:28px 28px 30px;
+}
+.product-card.featured .product-name{
+  font-size:30px;
+}
+.product-card.featured .product-sub{
+  font-size:15px;
+}
+.product-card.featured .product-price{
+  font-size:40px;
+}
+
+/* FEATURED MANIFESTO POSTCARD SET + SINGLE POSTCARD CAROUSEL */
+#postcards{
+  --postcard-visual-height:420px;
+}
+
+#postcards .product-grid{
+  align-items:stretch;
+}
+
+#postcards .product-card{
+  height:100%;
+}
+
+.product-card.postcard-set-card,
+.product-card.postcard-single-card{
+  background:#1a1a1a;
+}
+
+.product-card.postcard-set-card .product-img,
+.product-card.postcard-single-card .product-img{
+  flex:0 0 var(--postcard-visual-height);
+  padding:0;
+  min-height:var(--postcard-visual-height) !important;
+  height:var(--postcard-visual-height) !important;
+  background:#0a0a0a;
+  overflow:hidden;
+}
+
+.product-card.postcard-set-card.featured .product-img{
+  flex:0 0 var(--postcard-visual-height);
+  min-height:var(--postcard-visual-height) !important;
+  height:var(--postcard-visual-height) !important;
+  padding:0;
+}
+
+.visual-postcard-set{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  background:#0a0a0a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.postcard-set-image-wrap{
+  width:100%;
+  height:100% !important;
+  min-height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:0;
+  background:#0a0a0a;
+}
+
+.postcard-set-shopify-image{
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  max-width:none;
+  max-height:none;
+  object-fit:contain;
+  object-position:center;
+  transform:none;
+  filter:none;
+  background:#0a0a0a;
+}
+
+/* SINGLE POSTCARD CAROUSEL */
+.visual-single-postcard-carousel{
+  width:100%;
+  min-height:var(--postcard-visual-height) !important;
+  height:var(--postcard-visual-height) !important;
+  background:#0a0a0a;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:center;
+  padding:0;
+}
+
+.single-postcard-stage{
+  position:relative;
+  width:100%;
+  flex:1;
+  min-height:0 !important;
+  height:100% !important;
+  background:#0a0a0a;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.single-postcard-slide{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  pointer-events:none;
+  transform:translateX(12px);
+  transition:opacity .22s ease, transform .22s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:34px 18px 46px;
+  background:#0a0a0a;
+}
+
+.single-postcard-slide.active{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateX(0);
+}
+
+.single-postcard-image{
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:contain;
+  object-position:center;
+  filter:none;
+  background:#0a0a0a;
+}
+
+.single-postcard-fallback-card{
+  width:min(340px,88%);
+  aspect-ratio:3/2;
+  background:#f4f1ec;
+  color:#0a0a0a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:26px;
+  font-family:var(--fb);
+  font-size:18px;
+  font-style:italic;
+  line-height:1.35;
+  box-shadow:0 24px 60px rgba(0,0,0,.42);
+  position:relative;
+}
+
+.single-postcard-fallback-card.dark{
+  background:#050505;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.single-postcard-fallback-card.gold{
+  background:#1a0a2e;
+  color:#d4a017;
+  font-family:var(--fd);
+  font-size:24px;
+  font-style:normal;
+  letter-spacing:.5px;
+}
+
+.single-postcard-fallback-card::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:2px;
+  background:linear-gradient(90deg,var(--i1),var(--i2),var(--i3),var(--i4),var(--i1));
+}
+
+.single-postcard-caption,
+.single-postcard-counter{
+  display:none !important;
+}
+
+.single-postcard-nav{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  width:34px;
+  height:34px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.44);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-family:var(--fu);
+  font-size:16px;
+  line-height:1;
+  transition:all .18s ease;
+}
+
+.single-postcard-nav:hover{
+  background:#fff;
+  color:#0a0a0a;
+  border-color:#fff;
+}
+
+.single-postcard-prev{left:12px;}
+.single-postcard-next{right:12px;}
+
+.single-postcard-dots{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:18px;
+  z-index:6;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+
+.single-postcard-dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  border:0;
+  background:rgba(255,255,255,.28);
+  cursor:pointer;
+  transition:all .18s ease;
+  padding:0;
+}
+
+.single-postcard-dot.active{
+  width:22px;
+  background:#fff;
+}
 
 /* VISUALS */
 .book-cover{width:138px;aspect-ratio:3/4;background:#0a0a0a;box-shadow:12px 16px 38px rgba(0,0,0,.32);position:relative;overflow:hidden;flex-shrink:0;}
@@ -281,7 +504,11 @@ nav{
 .poster-card:hover{transform:scale(1.02);z-index:2;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .poster-card .poster-cta{position:absolute;left:16px;right:16px;bottom:16px;font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 10px;opacity:0;transform:translateY(4px);transition:all .2s;background:rgba(0,0,0,.28);}
 .poster-card:hover .poster-cta{opacity:1;transform:translateY(0);}
-.poster-1{background:#0a0a0a;color:#fff;}.poster-2{background:#f4f1ec;color:#0a0a0a;}.poster-3{background:linear-gradient(160deg,#0a0a0a 0%,#1a0a2e 100%);color:#d4a017;}.poster-4{background:#fff;color:#0a0a0a;}.poster-5{background:#050510;color:#fff;}
+.poster-1{background:#0a0a0a;color:#fff;}
+.poster-2{background:#f4f1ec;color:#0a0a0a;}
+.poster-3{background:linear-gradient(160deg,#0a0a0a 0%,#1a0a2e 100%);color:#d4a017;}
+.poster-4{background:#fff;color:#0a0a0a;}
+.poster-5{background:#050510;color:#fff;}
 .poster-kicker{font-family:var(--fu);font-size:7px;letter-spacing:4px;opacity:.38;margin-bottom:18px;text-transform:uppercase;line-height:1.6;}
 .poster-main{font-family:var(--fd);font-size:clamp(24px,3vw,38px);line-height:1.08;overflow:visible;padding-bottom:.1em;}
 .poster-script{font-family:var(--fb);font-size:14px;font-style:italic;line-height:1.6;}
@@ -306,89 +533,16 @@ nav{
 .bundle-price{font-family:var(--fd);font-size:56px;color:#fff;line-height:1;}
 .bundle-save{font-family:var(--fu);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--i2);}
 .bundle-cta{background:#fff;color:var(--ink);padding:17px 32px;font-size:10px;}
-.bundle-visual{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:420px;
-}
-
-.bundle-stack{
-  position:relative;
-  width:min(430px,100%);
-  height:380px;
-  margin:0 auto;
-}
-
-.bundle-book{
-  position:absolute;
-  width:166px;
-  aspect-ratio:3/4;
-}
-
-.bundle-book .book-cover{
-  width:100%;
-  height:100%;
-}
-
-.book-main{
-  left:18px;
-  top:30px;
-  z-index:3;
-}
-
-.book-shadow1{
-  left:42px;
-  top:50px;
-  z-index:2;
-  opacity:.62;
-  filter:blur(1px);
-}
-
-.book-shadow2{
-  left:66px;
-  top:70px;
-  z-index:1;
-  opacity:.32;
-  filter:blur(2px);
-}
-
-.bundle-side-card{
-  position:absolute;
-  width:92px;
-  min-height:112px;
-  border-radius:3px;
-  box-shadow:4px 4px 16px rgba(0,0,0,.45);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:10px;
-  text-align:center;
-  line-height:1.35;
-}
-
-.bundle-side-card.light{
-  right:24px;
-  top:78px;
-  background:#f4f1ec;
-  color:#333;
-  font-family:var(--fb);
-  font-size:8px;
-  font-style:italic;
-  transform:rotate(5deg);
-}
-
-.bundle-side-card.dark{
-  right:36px;
-  top:212px;
-  background:#0a0a0a;
-  color:#d4a017;
-  font-family:var(--fd);
-  font-size:8px;
-  transform:rotate(-4deg);
-}
-
+.bundle-visual{position:relative;display:flex;align-items:center;justify-content:center;min-height:420px;}
+.bundle-stack{position:relative;width:min(430px,100%);height:380px;margin:0 auto;}
+.bundle-book{position:absolute;width:166px;aspect-ratio:3/4;}
+.bundle-book .book-cover{width:100%;height:100%;}
+.book-main{left:18px;top:30px;z-index:3;}
+.book-shadow1{left:42px;top:50px;z-index:2;opacity:.62;filter:blur(1px);}
+.book-shadow2{left:66px;top:70px;z-index:1;opacity:.32;filter:blur(2px);}
+.bundle-side-card{position:absolute;width:92px;min-height:112px;border-radius:3px;box-shadow:4px 4px 16px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:10px;text-align:center;line-height:1.35;}
+.bundle-side-card.light{right:24px;top:78px;background:#f4f1ec;color:#333;font-family:var(--fb);font-size:8px;font-style:italic;transform:rotate(5deg);}
+.bundle-side-card.dark{right:36px;top:212px;background:#0a0a0a;color:#d4a017;font-family:var(--fd);font-size:8px;transform:rotate(-4deg);}
 
 /* INFO + FOOTER */
 .info-strip{background:#fff;padding:42px 64px;display:grid;grid-template-columns:repeat(4,1fr);gap:40px;border-top:1px solid var(--rule);}
@@ -397,7 +551,8 @@ nav{
 .info-icon{font-size:20px;margin-bottom:10px;}
 footer{background:var(--dark);padding:62px 64px 42px;}
 .footer-top{display:flex;align-items:center;justify-content:space-between;gap:30px;margin-bottom:40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.06);}
-.footer-logo{font-family:var(--fd);font-size:22px;letter-spacing:3px;color:#fff;line-height:1.1;}.footer-logo span{color:var(--i2);}
+.footer-logo{font-family:var(--fd);font-size:22px;letter-spacing:3px;color:#fff;line-height:1.1;}
+.footer-logo span{color:var(--i2);}
 .footer-tagline{font-family:var(--fb);font-size:13px;font-style:italic;color:rgba(255,255,255,.28);margin-top:8px;line-height:1.6;}
 .footer-bottom{display:flex;justify-content:space-between;gap:20px;font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.24);line-height:1.7;}
 
@@ -407,6 +562,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .grid-4{grid-template-columns:repeat(2,1fr);}
   .poster-grid{grid-template-columns:repeat(3,1fr);}
 }
+
 @media (max-width:900px){
   html{scroll-padding-top:76px;}
   nav{gap:12px;}
@@ -419,11 +575,16 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .section-desc{text-align:left;max-width:620px;}
   .grid-3,.grid-2{grid-template-columns:1fr;}
   .product-card.featured{grid-column:span 1;}
+  .product-card.featured .product-img{min-height:320px;padding:34px 30px;}
+  .product-card.featured .visual-special .book-cover{width:170px;}
+  .product-card.featured .special-price{font-size:50px;}
+  #postcards{--postcard-visual-height:440px;}
   .bundle-grid{grid-template-columns:1fr;gap:42px;}
   .bundle-visual{min-height:340px;}
   .info-strip{grid-template-columns:repeat(2,1fr);}
   .inline-bundle{align-items:flex-start;flex-direction:column;}
 }
+
 @media (max-width:640px){
   nav{padding:12px 16px;}
   .nav-logo{font-size:15px;letter-spacing:2px;}
@@ -437,30 +598,46 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .poster-card{min-height:360px;}
   .product-img{min-height:210px;padding:24px 18px;}
   .visual-special,.visual-ebook{flex-direction:column;align-items:flex-start;}
+  .product-card.featured .product-img{min-height:360px;padding:32px 22px;}
+  .product-card.featured .visual-special{gap:24px;}
+  .product-card.featured .visual-special .book-cover{width:158px;}
+  .product-card.featured .special-line{font-size:14px;}
+  .product-card.featured .special-price{font-size:46px;}
+  #postcards{--postcard-visual-height:340px;}
+  .single-postcard-slide{padding:30px 12px 44px;}
+  .single-postcard-nav{width:30px;height:30px;}
+  .single-postcard-prev{left:8px;}
+  .single-postcard-next{right:8px;}
   .poster-note{align-items:flex-start;flex-direction:column;}
   .info-strip{grid-template-columns:1fr;}
   .footer-top,.footer-bottom{flex-direction:column;align-items:flex-start;}
-  .bundle-stack{
-  width:320px;
-  transform:scale(.86);
-  transform-origin:center;
+  .bundle-stack{width:320px;transform:scale(.86);transform-origin:center;}
+  .book-main{left:22px;}
+  .book-shadow1{left:46px;}
+  .book-shadow2{left:68px;}
+  .bundle-side-card.light{right:2px;top:80px;}
+  .bundle-side-card.dark{right:12px;top:214px;}
 }
 
-.book-main{left:22px;}
-.book-shadow1{left:46px;}
-.book-shadow2{left:68px;}
-
-.bundle-side-card.light{
-  right:2px;
-  top:80px;
+/* HARD BLACK FIX FOR POSTCARD / MANIFESTO AREA */
+#postcards,
+#postcards .product-grid,
+#postcards .product-card,
+#postcards .product-info,
+#postcards .product-img,
+#postcards .visual-postcard-set,
+#postcards .postcard-set-image-wrap,
+#postcards .visual-single-postcard-carousel,
+#postcards .single-postcard-stage,
+#postcards .single-postcard-slide{
+  background:#000 !important;
 }
 
-.bundle-side-card.dark{
-  right:12px;
-  top:214px;
+#postcards .postcard-set-shopify-image,
+#postcards .single-postcard-image{
+  background:#000 !important;
 }
 
-}
 
 </style>
 </head>
@@ -550,7 +727,7 @@ const translations = {
     heroSub: 'Non merchandising. Strumenti. Ogni oggetto è un modo diverso di portare la domanda con te.',
     added: '✓ Aggiunto',
     bundleLabel: 'Il cofanetto completo',
-    bundleTitle: 'TUTTO<br>IAM<br>NOBODY.',
+    bundleTitle: 'TUTTO<br>I AM<br>NOBODY.',
     bundleDesc: 'Il modo più completo per portare il progetto con te — o il regalo definitivo per chi ami abbastanza da fargli una domanda scomoda.',
     bundleSave: 'Risparmi €44',
     bundleCta: 'Acquista il cofanetto completo',
@@ -566,7 +743,7 @@ const translations = {
     heroSub: 'Not merchandising. Tools. Each object is a different way to carry the question with you.',
     added: '✓ Added',
     bundleLabel: 'The complete box set',
-    bundleTitle: 'ALL OF<br>IAM<br>NOBODY.',
+    bundleTitle: 'ALL OF<br>I AM<br>NOBODY.',
     bundleDesc: 'The most complete way to carry the project with you — or the definitive gift for someone you love enough to ask an uncomfortable question.',
     bundleSave: 'You save €44',
     bundleCta: 'Buy the complete box set',
@@ -599,9 +776,9 @@ const sections = [
     title:{it:'IL LIBRO',en:'THE BOOK'},
     desc:{it:'Disponibile in italiano e inglese, in edizione standard e in edizione speciale numerata.',en:'Available in Italian and English, in standard edition and numbered special edition.'},
     products:[
-      {key:'book-it',handle:'iam-nobody-book-italian',visual:'book-it',badge:null,price:'€ 22',oldPrice:'',category:{it:'Libro · Italiano',en:'Book · Italian'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Chi sei quando nessuno ti guarda?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'+ Carrello',en:'+ Cart'},quick:{it:'Aggiungi al carrello',en:'Add to cart'}},
-      {key:'book-en',handle:'iam-nobody-book-english',visual:'book-en',badge:{class:'badge-new',it:'EN',en:'EN'},price:'€ 25',oldPrice:'',category:{it:'Book · English',en:'Book · English'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'+ Cart',en:'+ Cart'},quick:{it:'Add to cart',en:'Add to cart'}},
-      {key:'special-edition',handle:'iam-nobody-special-edition',visual:'special',featured:true,badge:{class:'badge-limited',it:'Limited',en:'Limited'},price:'€ 95',oldPrice:'',category:{it:'Cofanetto · Edizione limitata',en:'Box set · Limited edition'},name:{it:'EDIZIONE SPECIALE',en:'SPECIAL EDITION'},sub:{it:"500 copie numerate · Firmato dall'autore",en:'500 numbered copies · Signed by the author'},button:{it:'Prenota ora',en:'Reserve now'},quick:{it:'Acquista',en:'Buy'}}
+      {key:'book-it',handle:'iam-nobody-book-italian',visual:'book-it',badge:null,price:'€ 22',oldPrice:'',category:{it:'Libro · Italiano',en:'Book · Italian'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Chi sei quando nessuno ti guarda?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'+ Carrello',en:'+ Cart'}},
+      {key:'book-en',handle:'iam-nobody-book-english',visual:'book-en',badge:{class:'badge-new',it:'EN',en:'EN'},price:'€ 25',oldPrice:'',category:{it:'Book · English',en:'Book · English'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'+ Cart',en:'+ Cart'}},
+      {key:'special-edition',handle:'iam-nobody-special-edition',visual:'special',featured:true,badge:{class:'badge-limited',it:'Limited',en:'Limited'},price:'€ 95',oldPrice:'',category:{it:'Cofanetto · Edizione limitata',en:'Box · Limited edition'},name:{it:'EDIZIONE SPECIALE',en:'SPECIAL EDITION'},sub:{it:"500 copie numerate · Firmato dall'autore",en:'500 numbered copies · Signed by the author'},button:{it:'Prenota ora',en:'Book now'}}
     ]
   },
   {
@@ -610,8 +787,8 @@ const sections = [
     title:{it:'EBOOK',en:'EBOOKS'},
     desc:{it:'Il libro completo in digitale. O i quattro volumi tematici, ognuno per un lettore diverso.',en:'The complete book in digital format, or four thematic volumes for different readers.'},
     products:[
-      {key:'ebook-complete',handle:'iam-nobody-complete-ebook-it-en',visual:'ebook-complete',price:'€ 9',oldPrice:'€ 22',category:{it:'Ebook completo · IT + EN',en:'Complete ebook · IT + EN'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Versione digitale integrale · PDF + EPUB',en:'Complete digital edition · PDF + EPUB'},button:{it:'+ Carrello',en:'+ Cart'},quick:{it:'Download',en:'Download'}},
-      {key:'ebook-en',handle:'iam-nobody-ebook-english',visual:'ebook-en',price:'€ 9',oldPrice:'',category:{it:'Ebook · English edition',en:'Ebook · English edition'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'English adaptation · PDF + EPUB',en:'English adaptation · PDF + EPUB'},button:{it:'+ Cart',en:'+ Cart'},quick:{it:'Download',en:'Download'}}
+      {key:'ebook-complete',handle:'iam-nobody-complete-ebook-it-en',visual:'ebook-complete',price:'€ 9',oldPrice:'€ 22',category:{it:'Ebook completo · IT + EN',en:'Complete ebook · IT + EN'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Versione digitale integrale · PDF + EPUB',en:'Complete digital edition · PDF + EPUB'},button:{it:'+ Carrello',en:'+ Cart'}},
+      {key:'ebook-en',handle:'iam-nobody-ebook-english',visual:'ebook-en',price:'€ 9',oldPrice:'',category:{it:'Ebook · English edition',en:'Ebook · English edition'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'English adaptation · PDF + EPUB',en:'English adaptation · PDF + EPUB'},button:{it:'+ Cart',en:'+ Cart'}}
     ],
     ebookVolumes:[
       {num:'I',handle:'iam-nobody-volume-1-for-leaders',stripe:'var(--i1)',title:{it:'PER CHI GUIDA',en:'FOR THOSE WHO LEAD'},sub:{it:"Il ruolo, il potere, l'identità autentica",en:'Role, power, and authentic identity'},chapters:{it:'Prologo · Cap. 3 · Cap. 4<br>Cap. 8 · Chiusura',en:'Prologue · Ch. 3 · Ch. 4<br>Ch. 8 · Closing'},price:'€ 5'},
@@ -627,9 +804,9 @@ const sections = [
     title:{it:'LE 25 CHIAVI',en:'THE 25 KEYS'},
     desc:{it:'Non risposte. Aperture. Un mazzo di domande da usare da soli, in coppia o in gruppo.',en:'Not answers. Openings. A deck of questions to use alone, as a couple, or in a group.'},
     products:[
-      {key:'keys-standard',handle:'le-25-chiavi-standard-deck',visual:'keys',badge:{class:'badge-new',it:'Nuovo',en:'New'},price:'€ 20',category:{it:'Mazzo · 25 carte',en:'Deck · 25 cards'},name:{it:'LE 25 CHIAVI',en:'THE 25 KEYS'},sub:{it:'25 domande su carta da gioco · Formato 9×6 cm · Cofanetto kraft',en:'25 questions on playing-card stock · 9×6 cm · Kraft box'},button:{it:'+ Carrello',en:'+ Cart'},quick:{it:'Aggiungi al carrello',en:'Add to cart'}},
-      {key:'keys-gold',handle:'le-25-chiavi-gold-deck',visual:'keys-gold',badge:{class:'badge-premium',it:'Premium',en:'Premium'},price:'€ 38',category:{it:'Mazzo · Edizione premium',en:'Deck · Premium edition'},name:{it:'LE 25 CHIAVI — GOLD',en:'THE 25 KEYS — GOLD'},sub:{it:'Carta riciclata nera · Stampa oro · Cofanetto rigido · Nastro iridescente',en:'Black recycled paper · Gold print · Rigid box · Iridescent ribbon'},button:{it:'+ Carrello',en:'+ Cart'},quick:{it:'Aggiungi al carrello',en:'Add to cart'}},
-      {key:'workbook-30-days',handle:'30-domande-30-giorni-workbook',visual:'workbook',badge:{class:'badge-digital',it:'Digital',en:'Digital'},price:'€ 15',category:{it:'Workbook digitale · PDF interattivo',en:'Digital workbook · Interactive PDF'},name:{it:'30 DOMANDE · 30 GIORNI',en:'30 QUESTIONS · 30 DAYS'},sub:{it:'Una domanda al giorno · Spazio per rispondere · Percorso completo',en:'One question per day · Space to answer · Complete path'},button:{it:'Scarica',en:'Download'},quick:{it:'Scarica ora',en:'Download now'}}
+      {key:'keys-standard',handle:'le-25-chiavi-standard-deck',visual:'keys',badge:{class:'badge-new',it:'Nuovo',en:'New'},price:'€ 20',category:{it:'Mazzo · 25 carte',en:'Deck · 25 cards'},name:{it:'LE 25 CHIAVI',en:'THE 25 KEYS'},sub:{it:'25 domande su carta da gioco · Formato 9×6 cm · Cofanetto kraft',en:'25 questions on playing-card stock · 9×6 cm · Kraft box'},button:{it:'+ Carrello',en:'+ Cart'}},
+      {key:'keys-gold',handle:'le-25-chiavi-gold-deck',visual:'keys-gold',badge:{class:'badge-premium',it:'Premium',en:'Premium'},price:'€ 38',category:{it:'Mazzo · Edizione premium',en:'Deck · Premium edition'},name:{it:'LE 25 CHIAVI — GOLD',en:'THE 25 KEYS — GOLD'},sub:{it:'Carta riciclata nera · Stampa oro · Cofanetto rigido · Nastro iridescente',en:'Black recycled paper · Gold print · Rigid box · Iridescent ribbon'},button:{it:'+ Carrello',en:'+ Cart'}},
+      {key:'workbook-30-days',handle:'30-domande-30-giorni-workbook',visual:'workbook',badge:{class:'badge-digital',it:'Digital',en:'Digital'},price:'€ 15',category:{it:'Workbook digitale · PDF interattivo',en:'Digital workbook · Interactive PDF'},name:{it:'30 DOMANDE · 30 GIORNI',en:'30 QUESTIONS · 30 DAYS'},sub:{it:'Una domanda al giorno · Spazio per rispondere · Percorso completo',en:'One question per day · Space to answer · Complete path'},button:{it:'Scarica',en:'Download'}}
     ]
   },
   {
@@ -653,9 +830,42 @@ const sections = [
     title:{it:'POSTCARD',en:'POSTCARDS'},
     desc:{it:'5 postcard con le frasi manifesto. Da spedire, da lasciare, da trovare.',en:'5 postcards with manifesto lines. To send, leave, or find.'},
     products:[
-      {key:'postcard-set',handle:'iam-nobody-manifesto-postcard-set',visual:'postcard-set',featured:true,dark:true,price:'€ 12',category:{it:'Set · 5 postcard · 15×10 cm',en:'Set · 5 postcards · 15×10 cm'},name:{it:'SET MANIFESTI',en:'MANIFESTO SET'},sub:{it:'5 frasi, 5 grafiche · Carta 350g · Involucro iridescente',en:'5 lines, 5 graphics · 350g paper · Iridescent wrap'},button:{it:'+ Carrello',en:'+ Cart'},quick:{it:'Aggiungi al carrello',en:'Add to cart'}},
-      {key:'postcard-single',handle:'iam-nobody-single-postcard',visual:'postcard-single',dark:true,price:'€ 3',category:{it:'Postcard singola · 15×10 cm',en:'Single postcard · 15×10 cm'},name:{it:'POSTCARD SINGOLA',en:'SINGLE POSTCARD'},sub:{it:'Scelta tra 5 grafiche · Carta 350g',en:'Choice of 5 graphics · 350g paper'},button:{it:'Scegli →',en:'Choose →'},quick:{it:'Aggiungi al carrello',en:'Add to cart'}}
+      {key:'postcard-set',handle:'iam-nobody-manifesto-postcard-set',visual:'postcard-set',featured:true,dark:true,price:'€ 12',category:{it:'Set · 5 postcard · 15×10 cm',en:'Set · 5 postcards · 15×10 cm'},name:{it:'SET MANIFESTI',en:'MANIFESTO SET'},sub:{it:'5 frasi, 5 grafiche · Carta 350g · Involucro iridescente',en:'5 lines, 5 graphics · 350g paper · Iridescent wrap'},button:{it:'+ Carrello',en:'+ Cart'}},
+      {key:'postcard-single',handle:'iam-nobody-single-postcard',visual:'postcard-single',dark:true,price:'€ 3',category:{it:'Postcard singola · 15×10 cm',en:'Single postcard · 15×10 cm'},name:{it:'POSTCARD SINGOLA',en:'SINGLE POSTCARD'},sub:{it:'Scelta tra 5 grafiche · Carta 350g',en:'Choice of 5 graphics · 350g paper'},button:{it:'Scegli →',en:'Choose →'}}
     ]
+  }
+];
+
+const singlePostcardFallbackSlides = [
+  {
+    key:'who-are-you',
+    label:{it:'Cartolina 01',en:'Postcard 01'},
+    text:{it:'Chi sei quando<br>nessuno ti guarda?',en:'Who are you when<br>no one is watching?'},
+    tone:'light'
+  },
+  {
+    key:'mask-reveals',
+    label:{it:'Cartolina 02',en:'Postcard 02'},
+    text:{it:'LA MASCHERA<br>NON NASCONDE.<br>RIVELA.',en:'THE MASK<br>DOES NOT HIDE.<br>IT REVEALS.'},
+    tone:'dark'
+  },
+  {
+    key:'unrepeatable',
+    label:{it:'Cartolina 03',en:'Postcard 03'},
+    text:{it:"L'IRRIPETIBILE<br>ROMPE<br>IL MODELLO.",en:'THE UNREPEATABLE<br>BREAKS<br>THE MODEL.'},
+    tone:'gold'
+  },
+  {
+    key:'what-remains',
+    label:{it:'Cartolina 04',en:'Postcard 04'},
+    text:{it:'Non sei ciò che mostri.<br><br><strong>Sei ciò che rimane<br>negli altri.</strong>',en:'You are not what you show.<br><br><strong>You are what remains<br>in others.</strong>'},
+    tone:'light'
+  },
+  {
+    key:'when-over',
+    label:{it:'Cartolina 05',en:'Postcard 05'},
+    text:{it:'Chi sarai<br>quando è<br>tutto finito?',en:'Who will you be<br>when it is<br>all over?'},
+    tone:'dark'
   }
 ];
 
@@ -682,22 +892,227 @@ let cartCount = 0;
 let shopifyProducts = {};
 let shopifyStoreDomain = '';
 let shopifyConfigured = false;
+let postcardCarouselState = {};
 
 function t(value){ return typeof value === 'object' ? value[currentLang] : value; }
 function escapeHtml(value){ return String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 function escapeAttr(value){ return escapeHtml(value).replace(/`/g, '&#96;'); }
 function trustedLine(value){ return String(value); }
 function getShopifyProduct(handle){ return handle ? shopifyProducts[handle] : null; }
+
+function getSelectedOptionValue(variant, optionNames){
+  if(!variant || !Array.isArray(variant.selectedOptions)) return '';
+  const names = optionNames.map(name => String(name).trim().toLowerCase());
+
+  const option = variant.selectedOptions.find(item =>
+    names.includes(String(item.name || '').trim().toLowerCase())
+  );
+
+  return option ? String(option.value || '').trim() : '';
+}
+
+function getLanguageVariant(shopifyProduct){
+  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
+
+  const acceptedValues = currentLang === 'it'
+    ? ['italian', 'italiano', 'it']
+    : ['english', 'inglese', 'en'];
+
+  return shopifyProduct.variants.find(variant => {
+    const value = getSelectedOptionValue(variant, ['Language', 'Lingua']).toLowerCase();
+    return acceptedValues.includes(value);
+  }) || null;
+}
+
+function getPreferredVariant(shopifyProduct){
+  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
+  return getLanguageVariant(shopifyProduct) || shopifyProduct.variants[0] || null;
+}
+
+function getPreferredShopifyImage(shopifyProduct){
+  const preferredVariant = getPreferredVariant(shopifyProduct);
+
+  if(preferredVariant && preferredVariant.image && preferredVariant.image.url){
+    return preferredVariant.image;
+  }
+
+  if(shopifyProduct && shopifyProduct.image && shopifyProduct.image.url){
+    return shopifyProduct.image;
+  }
+
+  return null;
+}
+
+function getDesignOptionValue(variant){
+  if(!variant || !Array.isArray(variant.selectedOptions)) return '';
+
+  const explicit = getSelectedOptionValue(variant, [
+    'Design',
+    'Disegno',
+    'Postcard',
+    'Cartolina',
+    'Manifesto',
+    'Artwork',
+    'Grafica',
+    'Style',
+    'Stile'
+  ]);
+
+  if(explicit) return explicit;
+
+  const nonLanguageOption = variant.selectedOptions.find(option => {
+    const name = String(option.name || '').trim().toLowerCase();
+    return name !== 'language' && name !== 'lingua';
+  });
+
+  if(nonLanguageOption && nonLanguageOption.value) return String(nonLanguageOption.value).trim();
+
+  if(variant.title && variant.title !== 'Default Title'){
+    return String(variant.title).split('/')[0].trim();
+  }
+
+  return '';
+}
+
+function getLanguageFilteredVariants(shopifyProduct){
+  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return [];
+
+  const acceptedValues = currentLang === 'it'
+    ? ['italian', 'italiano', 'it']
+    : ['english', 'inglese', 'en'];
+
+  const languageVariants = shopifyProduct.variants.filter(variant => {
+    const value = getSelectedOptionValue(variant, ['Language', 'Lingua']).toLowerCase();
+    return acceptedValues.includes(value);
+  });
+
+  return languageVariants.length ? languageVariants : shopifyProduct.variants;
+}
+
+function getSinglePostcardSlides(shopifyProduct){
+  const variants = getLanguageFilteredVariants(shopifyProduct);
+
+  if(!variants.length){
+    return singlePostcardFallbackSlides.map((slide, index) => ({
+      key:slide.key,
+      label:t(slide.label),
+      text:t(slide.text),
+      tone:slide.tone,
+      image:null,
+      index
+    }));
+  }
+
+  const grouped = [];
+  const seen = new Set();
+
+  variants.forEach((variant, index) => {
+    const design = getDesignOptionValue(variant) || `${currentLang === 'it' ? 'Cartolina' : 'Postcard'} ${index + 1}`;
+    const key = design.toLowerCase().replace(/\s+/g, '-');
+
+    if(seen.has(key)) return;
+    seen.add(key);
+
+    grouped.push({
+      key,
+      label:design,
+      text:'',
+      tone:'light',
+      image:variant.image && variant.image.url ? variant.image : null,
+      variantId:variant.id,
+      index
+    });
+  });
+
+  const imageSlides = grouped.filter(slide => slide.image && slide.image.url);
+
+  if(imageSlides.length){
+    return imageSlides.slice(0, 5);
+  }
+
+  return singlePostcardFallbackSlides.map((slide, index) => ({
+    key:slide.key,
+    label:t(slide.label),
+    text:t(slide.text),
+    tone:slide.tone,
+    image:null,
+    index
+  }));
+}
+
+function getCarouselIndex(carouselKey, slideCount){
+  const stored = Number(postcardCarouselState[carouselKey] || 0);
+  if(!Number.isFinite(stored) || stored < 0) return 0;
+  if(stored >= slideCount) return Math.max(slideCount - 1, 0);
+  return stored;
+}
+
+function setSinglePostcardCarouselIndex(carousel, nextIndex){
+  if(!carousel) return;
+
+  const slides = Array.from(carousel.querySelectorAll('.single-postcard-slide'));
+  const dots = Array.from(carousel.querySelectorAll('.single-postcard-dot'));
+  const total = slides.length;
+
+  if(!total) return;
+
+  const safeIndex = ((nextIndex % total) + total) % total;
+  const key = carousel.getAttribute('data-carousel-key');
+
+  if(key) postcardCarouselState[key] = safeIndex;
+
+  carousel.setAttribute('data-current', String(safeIndex));
+
+  slides.forEach((slide, index) => {
+    slide.classList.toggle('active', index === safeIndex);
+  });
+
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('active', index === safeIndex);
+    dot.setAttribute('aria-pressed', String(index === safeIndex));
+  });
+}
+
+function getShopifyImageClass(product){
+  if(product.visual === 'keys') return 'visual-shopify-dark';
+  if(product.visual === 'keys-gold') return 'visual-shopify-gold';
+  if(product.visual === 'workbook') return 'visual-shopify-white';
+  return 'visual-book';
+}
+
 function formatMoney(money){
   if(!money || !money.amount || !money.currencyCode) return '';
   const amount = Number(money.amount);
   if(!Number.isFinite(amount)) return '';
   try{
-    return new Intl.NumberFormat(currentLang === 'it' ? 'it-IT' : 'en-US', { style:'currency', currency:money.currencyCode, maximumFractionDigits:amount % 1 === 0 ? 0 : 2 }).format(amount);
+    return new Intl.NumberFormat(currentLang === 'it' ? 'it-IT' : 'en-US', {
+      style:'currency',
+      currency:money.currencyCode,
+      maximumFractionDigits:amount % 1 === 0 ? 0 : 2
+    }).format(amount);
   }catch(error){
     return `${money.currencyCode} ${amount.toFixed(amount % 1 === 0 ? 0 : 2)}`;
   }
 }
+
+function formatVisualMoney(money, fallback){
+  if(!money || !money.amount || !money.currencyCode) return fallback || '';
+  const amount = Number(money.amount);
+  if(!Number.isFinite(amount)) return fallback || '';
+  const value = amount % 1 === 0 ? String(amount.toFixed(0)) : amount.toFixed(2).replace('.', ',');
+  if(money.currencyCode === 'EUR') return `€ ${value}`;
+  return `${money.currencyCode} ${value}`;
+}
+
+function formatCompactMoney(money, fallback){
+  if(!money || !money.amount || !money.currencyCode) return fallback || '';
+  const amount = Number(money.amount);
+  if(!Number.isFinite(amount)) return fallback || '';
+  const value = amount % 1 === 0 ? String(amount.toFixed(0)) : amount.toFixed(2).replace('.', ',');
+  if(money.currencyCode === 'EUR') return `€${value}`;
+  return `${money.currencyCode} ${value}`;
+}
+
 function collectShopifyHandles(){
   const handles = new Set();
   sections.forEach(section => {
@@ -710,6 +1125,7 @@ function collectShopifyHandles(){
   handles.add('iam-nobody-complete-pack');
   return Array.from(handles);
 }
+
 async function loadShopifyProducts(){
   try{
     const handles = collectShopifyHandles();
@@ -724,6 +1140,7 @@ async function loadShopifyProducts(){
     return false;
   }
 }
+
 function getShopifyUrl(handle){
   const item = getShopifyProduct(handle);
   if(item && item.onlineStoreUrl) return item.onlineStoreUrl;
@@ -737,36 +1154,121 @@ function renderFilters(){
   `).join('');
 }
 
+function renderSinglePostcardCarousel(product, badge){
+  const shopifyProduct = getShopifyProduct(product.handle);
+  const slides = getSinglePostcardSlides(shopifyProduct);
+  const currentIndex = getCarouselIndex(product.key, slides.length);
+  const showControls = slides.length > 1;
+
+  return `<div class="product-img visual-single-postcard-carousel" data-single-postcard-carousel data-carousel-key="${escapeAttr(product.key)}" data-current="${currentIndex}">
+    <div class="single-postcard-stage">
+      ${slides.map((slide, index) => {
+        const activeClass = index === currentIndex ? ' active' : '';
+        const label = slide.label || `${currentLang === 'it' ? 'Cartolina' : 'Postcard'} ${index + 1}`;
+
+        if(slide.image && slide.image.url){
+          const alt = slide.image.altText || label || t(product.name) || 'I AM NOBODY postcard';
+          return `<div class="single-postcard-slide${activeClass}" data-slide-index="${index}">
+            <img class="single-postcard-image" src="${escapeAttr(slide.image.url)}" alt="${escapeAttr(alt)}" loading="lazy" />
+          </div>`;
+        }
+
+        return `<div class="single-postcard-slide${activeClass}" data-slide-index="${index}">
+          <div class="single-postcard-fallback-card ${escapeAttr(slide.tone || 'light')}">${trustedLine(slide.text)}</div>
+        </div>`;
+      }).join('')}
+
+      ${showControls ? `<button class="single-postcard-nav single-postcard-prev" type="button" data-carousel-dir="-1" aria-label="${currentLang === 'it' ? 'Cartolina precedente' : 'Previous postcard'}">‹</button>` : ''}
+      ${showControls ? `<button class="single-postcard-nav single-postcard-next" type="button" data-carousel-dir="1" aria-label="${currentLang === 'it' ? 'Cartolina successiva' : 'Next postcard'}">›</button>` : ''}
+
+      ${showControls ? `<div class="single-postcard-dots">
+        ${slides.map((slide, index) => `<button class="single-postcard-dot${index === currentIndex ? ' active' : ''}" type="button" data-carousel-index="${index}" aria-label="${currentLang === 'it' ? 'Mostra cartolina' : 'Show postcard'} ${index + 1}" aria-pressed="${index === currentIndex ? 'true' : 'false'}"></button>`).join('')}
+      </div>` : ''}
+    </div>
+    ${badge}
+  </div>`;
+}
+
 function renderVisual(product){
   const shopifyProduct = getShopifyProduct(product.handle);
-  const quick = product.quick ? `<span class="product-quick">${escapeHtml(t(product.quick))}</span>` : '';
+  const shopifyImage = getPreferredShopifyImage(shopifyProduct);
   const badge = product.badge ? `<span class="product-badge ${product.badge.class}">${escapeHtml(t(product.badge))}</span>` : '';
 
-  if(shopifyProduct && shopifyProduct.image && shopifyProduct.image.url){
-    const alt = shopifyProduct.image.altText || shopifyProduct.title || t(product.name) || 'I AM NOBODY product';
-    return `<div class="product-img ${product.visual === 'special' ? 'visual-special' : 'visual-book'}">
-      <img class="shopify-product-image" src="${escapeAttr(shopifyProduct.image.url)}" alt="${escapeAttr(alt)}" loading="lazy" />${badge}${quick}</div>`;
+  if(product.visual === 'special'){
+    const specialImageUrl = shopifyImage && shopifyImage.url
+      ? shopifyImage.url
+      : '/book-cover.png';
+
+    const specialImageAlt = shopifyImage && shopifyImage.altText
+      ? shopifyImage.altText
+      : 'I AM NOBODY Special Edition book cover';
+
+    const specialPrice = shopifyProduct && shopifyProduct.price
+      ? formatVisualMoney(shopifyProduct.price, product.price)
+      : product.price;
+
+    const specialValue = shopifyProduct && shopifyProduct.compareAtPrice
+      ? formatCompactMoney(shopifyProduct.compareAtPrice, '€142')
+      : '€142';
+
+    const lines = currentLang === 'it'
+      ? ['Libro numerato e firmato','Mazzo 25 Chiavi','Set 5 postcard poster','Cofanetto nero opaco']
+      : ['Numbered and signed book','The 25 Keys deck','Set of 5 poster postcards','Matte black box'];
+
+    return `<div class="product-img visual-special">
+      <div class="book-cover"><img src="${escapeAttr(specialImageUrl)}" alt="${escapeAttr(specialImageAlt)}" loading="lazy" /></div>
+      <div>
+        <div class="visual-ebook-label">${currentLang === 'it' ? 'EDIZIONE SPECIALE · 500 COPIE' : 'SPECIAL EDITION · 500 COPIES'}</div>
+        <div class="special-list">${lines.map(line => `<div class="special-line"><span class="special-dot"></span>${escapeHtml(line)}</div>`).join('')}</div>
+        <div class="special-price">${escapeHtml(specialPrice)}</div>
+        <div class="special-value">${currentLang === 'it' ? `Valore singoli: ${specialValue}` : `Single value: ${specialValue}`}</div>
+      </div>
+      ${badge}
+    </div>`;
+  }
+
+  if(product.visual === 'postcard-set'){
+    if(shopifyImage && shopifyImage.url){
+      const alt = shopifyImage.altText || shopifyProduct.title || t(product.name) || 'I AM NOBODY postcard set';
+      return `<div class="product-img visual-postcard-set">
+        <div class="postcard-set-image-wrap">
+          <img class="postcard-set-shopify-image" src="${escapeAttr(shopifyImage.url)}" alt="${escapeAttr(alt)}" loading="lazy" />
+        </div>
+        ${badge}
+      </div>`;
+    }
+
+    return `<div class="product-img postcard-visual">
+      <div class="postcard-mini" style="background:#f4f1ec;color:#333;transform:rotate(-6deg) translateY(8px);">${currentLang === 'it' ? 'Chi sei quando nessuno ti guarda?' : 'Who are you when no one is watching?'}</div>
+      <div class="postcard-mini" style="background:#0a0a0a;color:#fff;transform:rotate(-2deg);font-family:var(--fd);font-size:10px;font-style:normal;">${currentLang === 'it' ? 'LA MASCHERA NON NASCONDE. RIVELA.' : 'THE MASK DOES NOT HIDE. IT REVEALS.'}</div>
+      <div class="postcard-mini" style="background:#1a0a2e;color:#d4a017;transform:rotate(2deg) translateY(4px);font-family:var(--fd);font-size:9px;font-style:normal;">${currentLang === 'it' ? "L'IRRIPETIBILE ROMPE IL MODELLO." : 'THE UNREPEATABLE BREAKS THE MODEL.'}</div>
+      <div class="postcard-mini" style="background:#fff;color:#0a0a0a;transform:rotate(5deg) translateY(8px);">${currentLang === 'it' ? 'Non sei ciò che mostri. Sei ciò che rimane negli altri.' : 'You are not what you show. You are what remains in others.'}</div>
+      <div class="postcard-mini" style="background:#050510;color:rgba(255,255,255,.72);transform:rotate(9deg) translateY(12px);">${currentLang === 'it' ? 'Chi sarai quando è tutto finito?' : 'Who will you be when it is all over?'}</div>
+      ${badge}
+    </div>`;
+  }
+
+  if(product.visual === 'postcard-single'){
+    return renderSinglePostcardCarousel(product, badge);
+  }
+
+  if(shopifyImage && shopifyImage.url){
+    const alt = shopifyImage.altText || shopifyProduct.title || t(product.name) || 'I AM NOBODY product';
+    return `<div class="product-img ${getShopifyImageClass(product)}">
+      <img class="shopify-product-image" src="${escapeAttr(shopifyImage.url)}" alt="${escapeAttr(alt)}" loading="lazy" />${badge}</div>`;
   }
 
   if(product.visual === 'book-it' || product.visual === 'book-en'){
     return `<div class="product-img visual-book ${product.visual === 'book-en' ? 'en' : ''}">
-      <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>${badge}${quick}</div>`;
+      <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>${badge}</div>`;
   }
-  if(product.visual === 'special'){
-    const lines = currentLang === 'it'
-      ? ['Libro numerato e firmato','Mazzo Le 25 Chiavi','Set 5 postcard manifesto','Cofanetto nero opaco']
-      : ['Numbered and signed book','The 25 Keys deck','Set of 5 manifesto postcards','Matte black box'];
-    return `<div class="product-img visual-special">
-      <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>
-      <div><div class="visual-ebook-label">${currentLang === 'it' ? 'EDIZIONE SPECIALE · 500 COPIE' : 'SPECIAL EDITION · 500 COPIES'}</div>
-      <div class="special-list">${lines.map(line => `<div class="special-line"><span class="special-dot"></span>${escapeHtml(line)}</div>`).join('')}</div>
-      <div class="special-price">€ 95</div><div class="special-value">${currentLang === 'it' ? 'Valore singoli: €142' : 'Individual value: €142'}</div></div>${badge}${quick}</div>`;
-  }
+
   if(product.visual === 'ebook-complete' || product.visual === 'ebook-en'){
     return `<div class="product-img visual-ebook">
       <div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div>
-      <div class="visual-ebook-text"><div class="visual-ebook-label">${escapeHtml(t(product.category))}</div><div class="visual-ebook-title">I AM NOBODY</div><p class="visual-ebook-sub">${escapeHtml(t(product.sub)).replace('&lt;br&gt;','<br>')}</p></div>${quick}</div>`;
+      <div class="visual-ebook-text"><div class="visual-ebook-label">${escapeHtml(t(product.category))}</div><div class="visual-ebook-title">I AM NOBODY</div><p class="visual-ebook-sub">${escapeHtml(t(product.sub)).replace('&lt;br&gt;','<br>')}</p></div></div>`;
   }
+
   if(product.visual === 'keys' || product.visual === 'keys-gold'){
     const gold = product.visual === 'keys-gold';
     return `<div class="product-img ${gold ? 'gold' : ''}" style="background:${gold ? '#1a0a0a' : '#0a0a0a'};">
@@ -774,38 +1276,52 @@ function renderVisual(product){
         <div class="key-card-mini key-card-1">${currentLang === 'it' ? 'Chi sei quando nessuno ti guarda?' : 'Who are you when no one is watching?'}</div>
         <div class="key-card-mini key-card-2">${currentLang === 'it' ? 'Cosa ti rende fragile in modo che non cambieresti?' : 'What makes you fragile in a way you would not change?'}</div>
         <div class="key-card-mini key-card-3"><span>I AM</span><span>NOBODY</span><span class="iris" style="width:40px;height:1px;"></span></div>
-      </div>${badge}${quick}</div>`;
+      </div>${badge}</div>`;
   }
+
   if(product.visual === 'workbook'){
     return `<div class="product-img" style="background:#fff;">
-      <div class="workbook"><div class="workbook-title">30 GIORNI<br>I AM<br>NOBODY</div><div class="workbook-lines">Giorno 1 .............. ○<br>Giorno 2 .............. ○<br>Giorno 3 .............. ○<br>...</div></div>${badge}${quick}</div>`;
+      <div class="workbook"><div class="workbook-title">30 GIORNI<br>I AM<br>NOBODY</div><div class="workbook-lines">Giorno 1 .............. ○<br>Giorno 2 .............. ○<br>Giorno 3 .............. ○<br>...</div></div>${badge}</div>`;
   }
-  if(product.visual === 'postcard-set'){
-    return `<div class="product-img postcard-visual">
-      <div class="postcard-mini" style="background:#f4f1ec;color:#333;transform:rotate(-6deg) translateY(8px);">${currentLang === 'it' ? 'Chi sei quando nessuno ti guarda?' : 'Who are you when no one is watching?'}</div>
-      <div class="postcard-mini" style="background:#0a0a0a;color:#fff;transform:rotate(-2deg);font-family:var(--fd);font-size:10px;font-style:normal;">${currentLang === 'it' ? 'LA MASCHERA NON NASCONDE. RIVELA.' : 'THE MASK DOES NOT HIDE. IT REVEALS.'}</div>
-      <div class="postcard-mini" style="background:#1a0a2e;color:#d4a017;transform:rotate(2deg) translateY(4px);font-family:var(--fd);font-size:9px;font-style:normal;">${currentLang === 'it' ? "L'IRRIPETIBILE ROMPE IL MODELLO." : 'THE UNREPEATABLE BREAKS THE MODEL.'}</div>
-      <div class="postcard-mini" style="background:#fff;color:#0a0a0a;transform:rotate(5deg) translateY(8px);">${currentLang === 'it' ? 'Non sei ciò che mostri. Sei ciò che rimane negli altri.' : 'You are not what you show. You are what remains in others.'}</div>
-      <div class="postcard-mini" style="background:#050510;color:rgba(255,255,255,.72);transform:rotate(9deg) translateY(12px);">${currentLang === 'it' ? 'Chi sarai quando è tutto finito?' : 'Who will you be when it is all over?'}</div>${quick}</div>`;
-  }
-  if(product.visual === 'postcard-single'){
-    return `<div class="product-img" style="background:#111;"><div class="postcard-single">${currentLang === 'it' ? 'Chi sei quando<br>nessuno ti guarda?' : 'Who are you when<br>no one is watching?'}<div class="iris" style="position:absolute;bottom:0;left:0;right:0;height:2px;"></div></div>${quick}</div>`;
-  }
-  return `<div class="product-img">${quick}</div>`;
+
+  return `<div class="product-img"></div>`;
 }
 
 function renderProduct(product){
   const dark = product.dark;
-  const cardClass = `product-card${product.featured ? ' featured' : ''}`;
+  const preserveCuratedCopy = product.visual === 'special';
+  const extraClass = product.visual === 'postcard-set'
+    ? ' postcard-set-card'
+    : product.visual === 'postcard-single'
+      ? ' postcard-single-card'
+      : '';
+  const cardClass = `product-card${product.featured ? ' featured' : ''}${extraClass}`;
   const infoStyle = dark ? ' style="background:#1a1a1a;"' : '';
   const nameStyle = dark ? ' style="color:#fff;"' : '';
   const mutedStyle = dark ? ' style="color:rgba(255,255,255,.34);"' : '';
   const priceStyle = dark ? ' style="color:#fff;"' : '';
   const shopifyProduct = getShopifyProduct(product.handle);
-  const displayName = shopifyProduct && shopifyProduct.title ? shopifyProduct.title : t(product.name);
-  const displaySub = shopifyProduct && shopifyProduct.description ? escapeHtml(shopifyProduct.description) : trustedLine(t(product.sub));
-  const displayPrice = shopifyProduct && shopifyProduct.price ? formatMoney(shopifyProduct.price) || product.price : product.price;
-  const displayOldPrice = shopifyProduct && shopifyProduct.compareAtPrice ? formatMoney(shopifyProduct.compareAtPrice) : product.oldPrice;
+  const preferredVariant = getPreferredVariant(shopifyProduct);
+
+  const displayName = !preserveCuratedCopy && shopifyProduct && shopifyProduct.title
+    ? shopifyProduct.title
+    : t(product.name);
+
+  const displaySub = !preserveCuratedCopy && shopifyProduct && shopifyProduct.description
+    ? escapeHtml(shopifyProduct.description)
+    : trustedLine(t(product.sub));
+
+  const displayPrice = preferredVariant && preferredVariant.price
+    ? formatMoney(preferredVariant.price) || product.price
+    : shopifyProduct && shopifyProduct.price
+      ? formatMoney(shopifyProduct.price) || product.price
+      : product.price;
+
+  const displayOldPrice = !preserveCuratedCopy && preferredVariant && preferredVariant.compareAtPrice
+    ? formatMoney(preferredVariant.compareAtPrice)
+    : !preserveCuratedCopy && shopifyProduct && shopifyProduct.compareAtPrice
+      ? formatMoney(shopifyProduct.compareAtPrice)
+      : product.oldPrice;
 
   return `<article class="${cardClass}" data-product="${escapeHtml(product.key)}" data-shopify-handle="${escapeHtml(product.handle)}">
     ${renderVisual(product)}
@@ -914,6 +1430,29 @@ function bindActions(){
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
       document.getElementById('navLinks').classList.remove('open');
       document.querySelector('.nav-toggle').setAttribute('aria-expanded','false');
+    });
+  });
+
+  document.querySelectorAll('.single-postcard-nav').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const carousel = btn.closest('[data-single-postcard-carousel]');
+      if(!carousel) return;
+      const current = Number(carousel.getAttribute('data-current') || '0');
+      const direction = Number(btn.getAttribute('data-carousel-dir') || '0');
+      setSinglePostcardCarouselIndex(carousel, current + direction);
+    });
+  });
+
+  document.querySelectorAll('.single-postcard-dot').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const carousel = btn.closest('[data-single-postcard-carousel]');
+      if(!carousel) return;
+      const index = Number(btn.getAttribute('data-carousel-index') || '0');
+      setSinglePostcardCarouselIndex(carousel, index);
     });
   });
 
