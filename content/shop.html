@@ -25,6 +25,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;scroll-padding-top:92px;}
 body{background:var(--paper);color:var(--ink);font-family:var(--fb);overflow-x:hidden;}
+body.cart-open{overflow:hidden;}
 button,a{-webkit-tap-highlight-color:transparent;}
 button{font:inherit;}
 .iris{background:linear-gradient(90deg,var(--i1),var(--i2),var(--i3),var(--i4),var(--i1));}
@@ -159,6 +160,7 @@ nav{
 .product-price-old{font-family:var(--fu);font-size:11px;color:var(--ghost);text-decoration:line-through;margin-left:8px;}
 .product-add,.ebook-add,.bundle-cta{font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;background:var(--ink);color:#fff;padding:10px 14px;border:none;cursor:pointer;transition:all .2s;line-height:1.25;white-space:nowrap;}
 .product-add:hover,.bundle-cta:hover{background:var(--i2);}
+.product-add.is-added,.ebook-add.is-added,.bundle-cta.is-added,.poster-cta.is-added{background:var(--i2) !important;color:#fff !important;border-color:var(--i2) !important;}
 .ebook-add{border:1px solid rgba(255,255,255,.22);background:transparent;color:rgba(255,255,255,.62);}
 .ebook-add:hover{border-color:#fff;color:#fff;}
 .product-badge{position:absolute;top:12px;left:12px;font-family:var(--fu);font-size:7px;letter-spacing:2px;text-transform:uppercase;padding:5px 10px;z-index:3;}
@@ -249,7 +251,7 @@ nav{
   padding:0;
   min-height:var(--postcard-visual-height) !important;
   height:var(--postcard-visual-height) !important;
-  background:#0a0a0a;
+  background:#000;
   overflow:hidden;
 }
 
@@ -264,7 +266,7 @@ nav{
   width:100%;
   height:100%;
   min-height:100%;
-  background:#0a0a0a;
+  background:#000;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -279,7 +281,7 @@ nav{
   justify-content:center;
   overflow:hidden;
   padding:0;
-  background:#0a0a0a;
+  background:#000;
 }
 
 .postcard-set-shopify-image{
@@ -292,7 +294,7 @@ nav{
   object-position:center;
   transform:none;
   filter:none;
-  background:#0a0a0a;
+  background:#000;
 }
 
 /* SINGLE POSTCARD CAROUSEL */
@@ -300,7 +302,7 @@ nav{
   width:100%;
   min-height:var(--postcard-visual-height) !important;
   height:var(--postcard-visual-height) !important;
-  background:#0a0a0a;
+  background:#000;
   display:flex;
   flex-direction:column;
   align-items:stretch;
@@ -314,7 +316,7 @@ nav{
   flex:1;
   min-height:0 !important;
   height:100% !important;
-  background:#0a0a0a;
+  background:#000;
   overflow:hidden;
   display:flex;
   align-items:center;
@@ -332,7 +334,7 @@ nav{
   align-items:center;
   justify-content:center;
   padding:34px 18px 46px;
-  background:#0a0a0a;
+  background:#000;
 }
 
 .single-postcard-slide.active{
@@ -350,7 +352,7 @@ nav{
   object-fit:contain;
   object-position:center;
   filter:none;
-  background:#0a0a0a;
+  background:#000;
 }
 
 .single-postcard-fallback-card{
@@ -502,7 +504,7 @@ nav{
 .poster-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;}
 .poster-card{aspect-ratio:2/3;min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:default;transition:all .2s;padding:22px;text-align:center;}
 .poster-card:hover{transform:scale(1.02);z-index:2;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-.poster-card .poster-cta{position:absolute;left:16px;right:16px;bottom:16px;font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 10px;opacity:0;transform:translateY(4px);transition:all .2s;background:rgba(0,0,0,.28);}
+.poster-card .poster-cta{position:absolute;left:16px;right:16px;bottom:16px;font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 10px;opacity:0;transform:translateY(4px);transition:all .2s;background:rgba(0,0,0,.28);cursor:pointer;}
 .poster-card:hover .poster-cta{opacity:1;transform:translateY(0);}
 .poster-1{background:#0a0a0a;color:#fff;}
 .poster-2{background:#f4f1ec;color:#0a0a0a;}
@@ -517,6 +519,243 @@ nav{
 .postcard-visual{background:#111;gap:12px;overflow:hidden;}
 .postcard-mini{width:100px;height:65px;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:3px 3px 12px rgba(0,0,0,.5);font-family:var(--fb);font-size:7.5px;font-style:italic;text-align:center;padding:8px;line-height:1.35;}
 .postcard-single{width:160px;height:106px;background:#f4f1ec;border-radius:2px;display:flex;align-items:center;justify-content:center;box-shadow:4px 4px 16px rgba(0,0,0,.5);position:relative;font-family:var(--fb);font-size:10px;font-style:italic;color:#0a0a0a;text-align:center;line-height:1.5;}
+
+/* CART DRAWER */
+.cart-overlay{
+  position:fixed;
+  inset:0;
+  z-index:1990;
+  background:rgba(0,0,0,.58);
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .2s ease, visibility .2s ease;
+}
+.cart-overlay.open{
+  opacity:1;
+  visibility:visible;
+}
+.cart-drawer{
+  position:fixed;
+  top:0;
+  right:0;
+  z-index:2000;
+  width:min(440px,100vw);
+  height:100vh;
+  background:#0a0a0a;
+  color:#fff;
+  transform:translateX(100%);
+  transition:transform .24s ease;
+  border-left:1px solid rgba(255,255,255,.08);
+  display:flex;
+  flex-direction:column;
+  box-shadow:-20px 0 60px rgba(0,0,0,.35);
+}
+.cart-drawer.open{
+  transform:translateX(0);
+}
+.cart-drawer-header{
+  padding:22px 22px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+.cart-drawer-title{
+  font-family:var(--fd);
+  font-size:26px;
+  letter-spacing:.8px;
+  line-height:1;
+}
+.cart-close{
+  width:34px;
+  height:34px;
+  border:1px solid rgba(255,255,255,.16);
+  background:transparent;
+  color:#fff;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:var(--fu);
+  font-size:18px;
+  line-height:1;
+}
+.cart-close:hover{
+  background:#fff;
+  color:#0a0a0a;
+}
+.cart-items{
+  flex:1;
+  overflow:auto;
+  padding:14px 0;
+}
+.cart-empty{
+  padding:34px 22px;
+  font-family:var(--fb);
+  font-size:15px;
+  font-style:italic;
+  line-height:1.6;
+  color:rgba(255,255,255,.42);
+}
+.cart-line{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr);
+  gap:14px;
+  padding:16px 22px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.cart-line-img{
+  width:72px;
+  height:72px;
+  background:#000;
+  border:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.cart-line-img img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.cart-line-img-placeholder{
+  font-family:var(--fd);
+  font-size:18px;
+  color:rgba(255,255,255,.22);
+}
+.cart-line-main{
+  min-width:0;
+}
+.cart-line-title{
+  font-family:var(--fd);
+  font-size:18px;
+  line-height:1.08;
+  margin-bottom:5px;
+  color:#fff;
+}
+.cart-line-meta{
+  font-family:var(--fb);
+  font-size:12px;
+  font-style:italic;
+  line-height:1.45;
+  color:rgba(255,255,255,.38);
+  margin-bottom:12px;
+}
+.cart-line-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.cart-line-price{
+  font-family:var(--fd);
+  font-size:20px;
+  color:#fff;
+  line-height:1;
+}
+.cart-qty{
+  display:flex;
+  align-items:center;
+  border:1px solid rgba(255,255,255,.14);
+  height:30px;
+}
+.cart-qty-btn{
+  width:28px;
+  height:28px;
+  border:0;
+  background:transparent;
+  color:#fff;
+  cursor:pointer;
+  font-family:var(--fu);
+  font-size:13px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.cart-qty-btn:hover{
+  background:rgba(255,255,255,.1);
+}
+.cart-qty-num{
+  min-width:30px;
+  text-align:center;
+  font-family:var(--fu);
+  font-size:10px;
+  color:rgba(255,255,255,.72);
+}
+.cart-remove{
+  margin-top:10px;
+  border:0;
+  background:transparent;
+  color:rgba(255,255,255,.34);
+  font-family:var(--fu);
+  font-size:8px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.cart-remove:hover{
+  color:#fff;
+}
+.cart-footer{
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:18px 22px 22px;
+}
+.cart-message{
+  min-height:20px;
+  margin-bottom:12px;
+  font-family:var(--fb);
+  font-size:12px;
+  font-style:italic;
+  line-height:1.45;
+  color:rgba(255,255,255,.44);
+}
+.cart-message.error{
+  color:#ffb4a8;
+}
+.cart-subtotal{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:20px;
+  margin-bottom:18px;
+}
+.cart-subtotal-label{
+  font-family:var(--fu);
+  font-size:8px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.34);
+}
+.cart-subtotal-value{
+  font-family:var(--fd);
+  font-size:34px;
+  color:#fff;
+  line-height:1;
+}
+.cart-checkout{
+  width:100%;
+  border:0;
+  background:#fff;
+  color:#0a0a0a;
+  padding:16px 18px;
+  font-family:var(--fu);
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all .2s;
+}
+.cart-checkout:hover:not(:disabled){
+  background:var(--i2);
+  color:#fff;
+}
+.cart-checkout:disabled{
+  cursor:not-allowed;
+  opacity:.42;
+}
 
 /* BUNDLE */
 .bundle-section{background:var(--dark);padding:86px 64px;position:relative;overflow:hidden;scroll-margin-top:88px;}
@@ -618,27 +857,6 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .bundle-side-card.light{right:2px;top:80px;}
   .bundle-side-card.dark{right:12px;top:214px;}
 }
-
-/* HARD BLACK FIX FOR POSTCARD / MANIFESTO AREA */
-#postcards,
-#postcards .product-grid,
-#postcards .product-card,
-#postcards .product-info,
-#postcards .product-img,
-#postcards .visual-postcard-set,
-#postcards .postcard-set-image-wrap,
-#postcards .visual-single-postcard-carousel,
-#postcards .single-postcard-stage,
-#postcards .single-postcard-slide{
-  background:#000 !important;
-}
-
-#postcards .postcard-set-shopify-image,
-#postcards .single-postcard-image{
-  background:#000 !important;
-}
-
-
 </style>
 </head>
 <body>
@@ -704,6 +922,23 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   <div class="info-strip" id="infoStrip"></div>
 </main>
 
+<div class="cart-overlay" id="cartOverlay" aria-hidden="true"></div>
+<aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart" aria-hidden="true">
+  <div class="cart-drawer-header">
+    <div class="cart-drawer-title" id="cartDrawerTitle">CARRELLO</div>
+    <button class="cart-close" id="cartClose" type="button" aria-label="Close cart">×</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="cart-message" id="cartMessage" aria-live="polite"></div>
+    <div class="cart-subtotal">
+      <span class="cart-subtotal-label" id="cartSubtotalLabel">Subtotale</span>
+      <span class="cart-subtotal-value" id="cartSubtotalValue">€ 0</span>
+    </div>
+    <button class="cart-checkout" id="cartCheckout" type="button">Checkout</button>
+  </div>
+</aside>
+
 <footer>
   <div class="footer-top">
     <div>
@@ -734,7 +969,18 @@ const translations = {
     sideCardOne: 'Chi sei quando nessuno ti guarda?',
     sideCardTwo: "L'IRRIPETIBILE ROMPE IL MODELLO.",
     footerTagline: 'Chi sei quando nessuno ti guarda?',
-    footerLinks: 'Privacy · Cookie · Spedizioni · Resi'
+    footerLinks: 'Privacy · Cookie · Spedizioni · Resi',
+    cartTitle: 'CARRELLO',
+    cartEmpty: 'Il carrello è vuoto. Aggiungi uno o più oggetti prima del checkout.',
+    cartSubtotal: 'Subtotale',
+    cartCheckout: 'Checkout sicuro',
+    checkoutLoading: 'Preparazione checkout…',
+    checkoutError: 'Non riesco a creare il checkout. Controlla i prodotti e riprova.',
+    cartUnavailable: 'Questo prodotto non è ancora disponibile per il checkout Shopify.',
+    cartConfiguredError: 'Shopify checkout non è ancora configurato.',
+    cartRemoved: 'Rimosso',
+    cartUpdated: 'Carrello aggiornato',
+    cartAdded: 'Aggiunto al carrello'
   },
   en: {
     cart: 'Cart',
@@ -750,7 +996,18 @@ const translations = {
     sideCardOne: 'Who are you when no one is watching?',
     sideCardTwo: 'THE UNREPEATABLE BREAKS THE MODEL.',
     footerTagline: 'Who are you when no one is watching?',
-    footerLinks: 'Privacy · Cookies · Shipping · Returns'
+    footerLinks: 'Privacy · Cookies · Shipping · Returns',
+    cartTitle: 'CART',
+    cartEmpty: 'Your cart is empty. Add one or more objects before checkout.',
+    cartSubtotal: 'Subtotal',
+    cartCheckout: 'Secure checkout',
+    checkoutLoading: 'Preparing checkout…',
+    checkoutError: 'Could not create checkout. Check the products and try again.',
+    cartUnavailable: 'This product is not available for Shopify checkout yet.',
+    cartConfiguredError: 'Shopify checkout is not configured yet.',
+    cartRemoved: 'Removed',
+    cartUpdated: 'Cart updated',
+    cartAdded: 'Added to cart'
   }
 };
 
@@ -886,18 +1143,22 @@ const infoItems = [
   {icon:'🔄', title:{it:'RESI FACILI',en:'EASY RETURNS'}, desc:{it:'30 giorni per restituire i prodotti fisici · Nessuna domanda',en:'30 days to return physical products · No questions asked'}}
 ];
 
+const CART_STORAGE_KEY = 'iamNobodyShopCartV1';
 const initialLang = document.documentElement.lang === 'en' || window.location.pathname.startsWith('/en') ? 'en' : 'it';
+
 let currentLang = initialLang;
-let cartCount = 0;
+let cart = [];
 let shopifyProducts = {};
 let shopifyStoreDomain = '';
 let shopifyConfigured = false;
 let postcardCarouselState = {};
+let checkoutInProgress = false;
+let sectionObserver = null;
 
 function t(value){ return typeof value === 'object' ? value[currentLang] : value; }
-function escapeHtml(value){ return String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+function escapeHtml(value){ return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 function escapeAttr(value){ return escapeHtml(value).replace(/`/g, '&#96;'); }
-function trustedLine(value){ return String(value); }
+function trustedLine(value){ return String(value ?? ''); }
 function getShopifyProduct(handle){ return handle ? shopifyProducts[handle] : null; }
 
 function getSelectedOptionValue(variant, optionNames){
@@ -1141,13 +1402,6 @@ async function loadShopifyProducts(){
   }
 }
 
-function getShopifyUrl(handle){
-  const item = getShopifyProduct(handle);
-  if(item && item.onlineStoreUrl) return item.onlineStoreUrl;
-  if(shopifyStoreDomain && handle) return `https://${shopifyStoreDomain}/products/${handle}`;
-  return '';
-}
-
 function renderFilters(){
   document.getElementById('shopFilters').innerHTML = filters.map((item, index) => `
     <button class="filter-btn${index === 0 ? ' active' : ''}" type="button" data-scroll-target="${item.id}">${escapeHtml(item[currentLang])}</button>
@@ -1389,6 +1643,447 @@ function renderInfo(){
   document.getElementById('infoStrip').innerHTML = infoItems.map(item => `<div class="info-item"><div class="info-icon" aria-hidden="true">${item.icon}</div><div class="info-title">${escapeHtml(t(item.title))}</div><p class="info-desc">${escapeHtml(t(item.desc))}</p></div>`).join('');
 }
 
+function getProductDefinitionByHandle(handle){
+  if(!handle) return null;
+
+  for(const section of sections){
+    const product = (section.products || []).find(item => item.handle === handle);
+    if(product) return product;
+
+    const volume = (section.ebookVolumes || []).find(item => item.handle === handle);
+    if(volume){
+      return {
+        key:volume.handle,
+        handle:volume.handle,
+        visual:'ebook-volume',
+        category:{it:'Ebook tematico',en:'Thematic ebook'},
+        name:volume.title,
+        sub:volume.sub,
+        price:volume.price
+      };
+    }
+
+    if(section.inlineBundle && section.inlineBundle.handle === handle){
+      return {
+        key:section.inlineBundle.handle,
+        handle:section.inlineBundle.handle,
+        visual:'ebook-bundle',
+        category:section.inlineBundle.label,
+        name:section.inlineBundle.title,
+        sub:{it:'Bundle digitale',en:'Digital bundle'},
+        price:section.inlineBundle.price
+      };
+    }
+
+    const poster = (section.posters || []).find(item => item.handle === handle);
+    if(poster){
+      return {
+        key:poster.handle,
+        handle:poster.handle,
+        visual:'poster',
+        category:{it:'Manifesto',en:'Poster'},
+        name:{it:'Poster I AM NOBODY',en:'I AM NOBODY Poster'},
+        sub:poster.kicker,
+        price:'€ 18'
+      };
+    }
+
+    const noteButton = (section.noteButtons || []).find(item => item.handle === handle);
+    if(noteButton){
+      return {
+        key:noteButton.handle,
+        handle:noteButton.handle,
+        visual:'poster-option',
+        category:{it:'Manifesti',en:'Posters'},
+        name:{it:noteButton.it, en:noteButton.en},
+        sub:section.note,
+        price:''
+      };
+    }
+  }
+
+  if(handle === 'iam-nobody-complete-pack'){
+    return {
+      key:'complete-pack',
+      handle:'iam-nobody-complete-pack',
+      visual:'complete-pack',
+      category:{it:'Bundle',en:'Bundle'},
+      name:{it:'I AM NOBODY — Complete Box Set',en:'I AM NOBODY — Complete Box Set'},
+      sub:{it:'Cofanetto completo',en:'Complete box set'},
+      price:'€ 120'
+    };
+  }
+
+  return null;
+}
+
+function getVariantById(shopifyProduct, variantId){
+  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
+  return shopifyProduct.variants.find(variant => variant.id === variantId) || null;
+}
+
+function getOptionSummary(variant){
+  if(!variant || !Array.isArray(variant.selectedOptions)) return '';
+
+  return variant.selectedOptions
+    .filter(option => {
+      const name = String(option.name || '').trim();
+      const value = String(option.value || '').trim();
+      if(!name || !value) return false;
+      if(value.toLowerCase() === 'default title') return false;
+      return true;
+    })
+    .map(option => `${option.name}: ${option.value}`)
+    .join(' · ');
+}
+
+function getSelectedSinglePostcardVariant(product){
+  const shopifyProduct = getShopifyProduct(product.handle);
+  const slides = getSinglePostcardSlides(shopifyProduct);
+  const currentIndex = getCarouselIndex(product.key, slides.length);
+  const selectedSlide = slides[currentIndex] || slides[0] || null;
+
+  if(selectedSlide && selectedSlide.variantId){
+    const variant = getVariantById(shopifyProduct, selectedSlide.variantId);
+    return {
+      variant,
+      slide:selectedSlide
+    };
+  }
+
+  return {
+    variant:getPreferredVariant(shopifyProduct),
+    slide:selectedSlide
+  };
+}
+
+function buildCartLineFromButton(button){
+  const handle = button.getAttribute('data-shopify-handle') || '';
+  const productKey = button.getAttribute('data-product-key') || '';
+  const productDefinition = getProductDefinitionByHandle(handle);
+  const shopifyProduct = getShopifyProduct(handle);
+
+  if(!shopifyConfigured){
+    return { error: translations[currentLang].cartConfiguredError };
+  }
+
+  if(!shopifyProduct){
+    return { error: translations[currentLang].cartUnavailable };
+  }
+
+  let variant = null;
+  let selectedSlide = null;
+
+  if(productDefinition && productDefinition.visual === 'postcard-single'){
+    const selected = getSelectedSinglePostcardVariant(productDefinition);
+    variant = selected.variant;
+    selectedSlide = selected.slide;
+  }else{
+    variant = getPreferredVariant(shopifyProduct);
+  }
+
+  if(!variant || !variant.id || variant.availableForSale === false){
+    return { error: translations[currentLang].cartUnavailable };
+  }
+
+  const optionSummary = getOptionSummary(variant);
+  const selectedLabel = selectedSlide && selectedSlide.label ? selectedSlide.label : '';
+  const variantLabel = selectedLabel || optionSummary;
+  const title = shopifyProduct.title || (productDefinition && productDefinition.name ? t(productDefinition.name) : handle);
+  const image = variant.image && variant.image.url
+    ? variant.image
+    : shopifyProduct.image && shopifyProduct.image.url
+      ? shopifyProduct.image
+      : null;
+
+  return {
+    line:{
+      id:variant.id,
+      variantId:variant.id,
+      handle,
+      productKey,
+      title,
+      variantTitle: variantLabel,
+      price: variant.price || shopifyProduct.price || null,
+      imageUrl: image && image.url ? image.url : '',
+      imageAlt: image && image.altText ? image.altText : title,
+      quantity:1
+    }
+  };
+}
+
+function loadCart(){
+  try{
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    cart = Array.isArray(parsed)
+      ? parsed
+          .filter(item => item && typeof item.variantId === 'string' && Number(item.quantity) > 0)
+          .map(item => ({
+            id:String(item.variantId),
+            variantId:String(item.variantId),
+            handle:String(item.handle || ''),
+            productKey:String(item.productKey || ''),
+            title:String(item.title || ''),
+            variantTitle:String(item.variantTitle || ''),
+            price:item.price || null,
+            imageUrl:String(item.imageUrl || ''),
+            imageAlt:String(item.imageAlt || ''),
+            quantity:Math.min(Math.max(Number(item.quantity) || 1, 1), 99)
+          }))
+      : [];
+  }catch{
+    cart = [];
+  }
+}
+
+function saveCart(){
+  try{
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }catch{}
+}
+
+function setCartMessage(message, type){
+  const el = document.getElementById('cartMessage');
+  if(!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', type === 'error');
+}
+
+function updateCartCount(){
+  const total = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const count = document.querySelector('.cart-count');
+  if(count) count.textContent = String(total);
+}
+
+function calculateSubtotal(){
+  let currencyCode = '';
+  let amount = 0;
+  let canCalculate = cart.length > 0;
+
+  cart.forEach(item => {
+    if(!item.price || !item.price.amount || !item.price.currencyCode){
+      canCalculate = false;
+      return;
+    }
+
+    if(!currencyCode) currencyCode = item.price.currencyCode;
+    if(currencyCode !== item.price.currencyCode){
+      canCalculate = false;
+      return;
+    }
+
+    const value = Number(item.price.amount);
+    if(!Number.isFinite(value)){
+      canCalculate = false;
+      return;
+    }
+
+    amount += value * Number(item.quantity || 1);
+  });
+
+  if(!canCalculate || !currencyCode){
+    return '';
+  }
+
+  return formatMoney({ amount:String(amount), currencyCode });
+}
+
+function renderCart(){
+  updateCartCount();
+
+  const cartTitle = document.getElementById('cartDrawerTitle');
+  const subtotalLabel = document.getElementById('cartSubtotalLabel');
+  const subtotalValue = document.getElementById('cartSubtotalValue');
+  const checkoutButton = document.getElementById('cartCheckout');
+  const itemsEl = document.getElementById('cartItems');
+
+  if(cartTitle) cartTitle.textContent = translations[currentLang].cartTitle;
+  if(subtotalLabel) subtotalLabel.textContent = translations[currentLang].cartSubtotal;
+  if(checkoutButton) checkoutButton.textContent = checkoutInProgress ? translations[currentLang].checkoutLoading : translations[currentLang].cartCheckout;
+
+  if(!itemsEl) return;
+
+  if(!cart.length){
+    itemsEl.innerHTML = `<div class="cart-empty">${escapeHtml(translations[currentLang].cartEmpty)}</div>`;
+    if(subtotalValue) subtotalValue.textContent = formatMoney({amount:'0', currencyCode:'EUR'}) || '€ 0';
+    if(checkoutButton) checkoutButton.disabled = true;
+    return;
+  }
+
+  itemsEl.innerHTML = cart.map(item => {
+    const linePrice = item.price ? formatMoney(item.price) : '';
+    const meta = item.variantTitle ? item.variantTitle : '';
+    const img = item.imageUrl
+      ? `<img src="${escapeAttr(item.imageUrl)}" alt="${escapeAttr(item.imageAlt || item.title)}" loading="lazy" />`
+      : `<span class="cart-line-img-placeholder">IAM</span>`;
+
+    return `<div class="cart-line" data-cart-line="${escapeAttr(item.variantId)}">
+      <div class="cart-line-img">${img}</div>
+      <div class="cart-line-main">
+        <div class="cart-line-title">${escapeHtml(item.title)}</div>
+        ${meta ? `<div class="cart-line-meta">${escapeHtml(meta)}</div>` : `<div class="cart-line-meta">I AM NOBODY</div>`}
+        <div class="cart-line-bottom">
+          <div class="cart-line-price">${escapeHtml(linePrice)}</div>
+          <div class="cart-qty" aria-label="Quantity">
+            <button class="cart-qty-btn" type="button" data-cart-change="-1" data-variant-id="${escapeAttr(item.variantId)}">−</button>
+            <span class="cart-qty-num">${escapeHtml(item.quantity)}</span>
+            <button class="cart-qty-btn" type="button" data-cart-change="1" data-variant-id="${escapeAttr(item.variantId)}">+</button>
+          </div>
+        </div>
+        <button class="cart-remove" type="button" data-cart-remove="${escapeAttr(item.variantId)}">${currentLang === 'it' ? 'Rimuovi' : 'Remove'}</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if(subtotalValue) subtotalValue.textContent = calculateSubtotal() || '—';
+  if(checkoutButton) checkoutButton.disabled = checkoutInProgress || cart.length === 0;
+}
+
+function openCart(message, type){
+  const drawer = document.getElementById('cartDrawer');
+  const overlay = document.getElementById('cartOverlay');
+
+  document.body.classList.add('cart-open');
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+  drawer.setAttribute('aria-hidden','false');
+  overlay.setAttribute('aria-hidden','false');
+
+  if(message) setCartMessage(message, type);
+  renderCart();
+}
+
+function closeCart(){
+  const drawer = document.getElementById('cartDrawer');
+  const overlay = document.getElementById('cartOverlay');
+
+  document.body.classList.remove('cart-open');
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+  drawer.setAttribute('aria-hidden','true');
+  overlay.setAttribute('aria-hidden','true');
+}
+
+function addToCartFromButton(button){
+  const result = buildCartLineFromButton(button);
+
+  if(result.error){
+    openCart(result.error, 'error');
+    return;
+  }
+
+  const line = result.line;
+  const existing = cart.find(item => item.variantId === line.variantId);
+
+  if(existing){
+    existing.quantity = Math.min(Number(existing.quantity || 1) + 1, 99);
+  }else{
+    cart.push(line);
+  }
+
+  saveCart();
+
+  const original = button.textContent;
+  button.textContent = translations[currentLang].added;
+  button.classList.add('is-added');
+
+  window.setTimeout(() => {
+    button.textContent = original;
+    button.classList.remove('is-added');
+  }, 1000);
+
+  openCart(translations[currentLang].cartAdded);
+}
+
+function changeCartQuantity(variantId, delta){
+  const item = cart.find(line => line.variantId === variantId);
+  if(!item) return;
+
+  item.quantity = Number(item.quantity || 1) + delta;
+
+  if(item.quantity <= 0){
+    cart = cart.filter(line => line.variantId !== variantId);
+    setCartMessage(translations[currentLang].cartRemoved);
+  }else{
+    item.quantity = Math.min(item.quantity, 99);
+    setCartMessage(translations[currentLang].cartUpdated);
+  }
+
+  saveCart();
+  renderCart();
+}
+
+function removeCartLine(variantId){
+  cart = cart.filter(line => line.variantId !== variantId);
+  saveCart();
+  setCartMessage(translations[currentLang].cartRemoved);
+  renderCart();
+}
+
+async function checkoutCart(){
+  if(!cart.length || checkoutInProgress) return;
+
+  checkoutInProgress = true;
+  setCartMessage(translations[currentLang].checkoutLoading);
+  renderCart();
+
+  try{
+    const response = await fetch('/api/shopify/cart', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify({
+        lines:cart.map(item => ({
+          merchandiseId:item.variantId,
+          quantity:Number(item.quantity || 1)
+        }))
+      })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if(!response.ok || !data.checkoutUrl){
+      throw new Error(data.error || 'Checkout failed.');
+    }
+
+    window.location.href = data.checkoutUrl;
+  }catch(error){
+    checkoutInProgress = false;
+    setCartMessage(translations[currentLang].checkoutError, 'error');
+    renderCart();
+  }
+}
+
+function hydrateCartFromShopify(){
+  let changed = false;
+
+  cart = cart.map(item => {
+    const product = getShopifyProduct(item.handle);
+    const variant = getVariantById(product, item.variantId);
+
+    if(!product || !variant) return item;
+
+    const image = variant.image && variant.image.url
+      ? variant.image
+      : product.image && product.image.url
+        ? product.image
+        : null;
+
+    changed = true;
+
+    return {
+      ...item,
+      title:product.title || item.title,
+      variantTitle:getOptionSummary(variant) || item.variantTitle,
+      price:variant.price || item.price,
+      imageUrl:image && image.url ? image.url : item.imageUrl,
+      imageAlt:image && image.altText ? image.altText : item.imageAlt
+    };
+  });
+
+  if(changed) saveCart();
+}
+
 function applyStaticTranslations(){
   document.documentElement.lang = currentLang;
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -1457,34 +2152,62 @@ function bindActions(){
   });
 
   document.querySelectorAll('.product-add,.ebook-add,.bundle-cta,.poster-cta').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const handle = btn.getAttribute('data-shopify-handle');
-      const shopifyUrl = getShopifyUrl(handle);
-      if(shopifyConfigured && shopifyUrl){
-        window.location.href = shopifyUrl;
+    btn.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      addToCartFromButton(btn);
+    });
+  });
+
+  const navCart = document.querySelector('.nav-cart');
+  if(navCart){
+    navCart.onclick = () => openCart();
+  }
+
+  const cartClose = document.getElementById('cartClose');
+  if(cartClose){
+    cartClose.onclick = () => closeCart();
+  }
+
+  const cartOverlay = document.getElementById('cartOverlay');
+  if(cartOverlay){
+    cartOverlay.onclick = () => closeCart();
+  }
+
+  const cartCheckout = document.getElementById('cartCheckout');
+  if(cartCheckout){
+    cartCheckout.onclick = () => checkoutCart();
+  }
+
+  const cartItems = document.getElementById('cartItems');
+  if(cartItems){
+    cartItems.onclick = event => {
+      const target = event.target;
+      if(!(target instanceof Element)) return;
+
+      const removeButton = target.closest('[data-cart-remove]');
+      if(removeButton){
+        removeCartLine(removeButton.getAttribute('data-cart-remove'));
         return;
       }
 
-      cartCount += 1;
-      document.querySelector('.cart-count').textContent = cartCount;
-      const original = btn.textContent;
-      btn.textContent = translations[currentLang].added;
-      btn.style.background = 'var(--i2)';
-      btn.style.color = '#fff';
-      btn.style.borderColor = 'var(--i2)';
-      window.setTimeout(() => {
-        btn.textContent = original;
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.style.borderColor = '';
-      }, 1200);
-    });
-  });
+      const qtyButton = target.closest('[data-cart-change]');
+      if(qtyButton){
+        const variantId = qtyButton.getAttribute('data-variant-id');
+        const delta = Number(qtyButton.getAttribute('data-cart-change') || '0');
+        if(variantId && Number.isFinite(delta)) changeCartQuantity(variantId, delta);
+      }
+    };
+  }
 }
 
 function observeSections(){
+  if(sectionObserver){
+    sectionObserver.disconnect();
+  }
+
   const sectionEls = document.querySelectorAll('[data-section]');
-  const observer = new IntersectionObserver(entries => {
+  sectionObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if(entry.isIntersecting){
         const id = entry.target.getAttribute('data-section');
@@ -1492,7 +2215,8 @@ function observeSections(){
       }
     });
   }, { rootMargin:'-35% 0px -55% 0px', threshold:0 });
-  sectionEls.forEach(section => observer.observe(section));
+
+  sectionEls.forEach(section => sectionObserver.observe(section));
 }
 
 function renderPage(){
@@ -1503,6 +2227,7 @@ function renderPage(){
   renderInfo();
   bindActions();
   observeSections();
+  renderCart();
 }
 
 document.querySelector('.nav-toggle').addEventListener('click', () => {
@@ -1515,13 +2240,19 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     currentLang = btn.dataset.lang;
     updateShopLangUrl();
+    hydrateCartFromShopify();
     renderPage();
   });
 });
 
+loadCart();
 renderPage();
+
 loadShopifyProducts().then(hasShopifyProducts => {
-  if(hasShopifyProducts) renderPage();
+  if(hasShopifyProducts){
+    hydrateCartFromShopify();
+    renderPage();
+  }
 });
 </script>
 </body>
