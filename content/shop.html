@@ -171,6 +171,7 @@ nav{
 .badge-premium{background:#d4a017;color:#fff;}
 .product-quick{display:none !important;}
 .shopify-product-image{display:block;width:min(220px,100%);max-height:260px;object-fit:contain;object-position:center;filter:drop-shadow(12px 16px 38px rgba(0,0,0,.24));}
+.shopify-product-image.full-bleed{width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;filter:none;background:#000;}
 .visual-shopify-dark{background:#0a0a0a;}
 .visual-shopify-gold{background:#1a0a00;}
 .visual-shopify-white{background:#fff;}
@@ -504,8 +505,42 @@ nav{
 .poster-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;}
 .poster-card{aspect-ratio:2/3;min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:default;transition:all .2s;padding:22px;text-align:center;}
 .poster-card:hover{transform:scale(1.02);z-index:2;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-.poster-card .poster-cta{position:absolute;left:16px;right:16px;bottom:16px;font-family:var(--fu);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.5);padding:8px 10px;opacity:0;transform:translateY(4px);transition:all .2s;background:rgba(0,0,0,.28);cursor:pointer;}
-.poster-card:hover .poster-cta{opacity:1;transform:translateY(0);}
+.poster-actions{
+  position:absolute;
+  left:16px;
+  right:16px;
+  bottom:16px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  opacity:0;
+  transform:translateY(6px);
+  transition:all .2s;
+  z-index:5;
+}
+.poster-card:hover .poster-actions,
+.poster-card:focus-within .poster-actions{
+  opacity:1;
+  transform:translateY(0);
+}
+.poster-card .poster-cta{
+  width:100%;
+  font-family:var(--fu);
+  font-size:8px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.5);
+  padding:8px 10px;
+  background:rgba(0,0,0,.42);
+  cursor:pointer;
+  transition:all .2s;
+}
+.poster-card .poster-cta:hover{
+  background:#fff;
+  color:#0a0a0a;
+  border-color:#fff;
+}
 .poster-1{background:#0a0a0a;color:#fff;}
 .poster-2{background:#f4f1ec;color:#0a0a0a;}
 .poster-3{background:linear-gradient(160deg,#0a0a0a 0%,#1a0a2e 100%);color:#d4a017;}
@@ -757,9 +792,111 @@ nav{
   opacity:.42;
 }
 
+/* SHOPIFY IMAGE-DRIVEN PRODUCT VISUALS */
+.ebook-card.has-shopify-image{
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+}
+.ebook-media{
+  height:230px;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.ebook-media img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  background:#000;
+}
+.ebook-body{
+  padding:28px 24px 32px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+.ebook-body .ebook-footer{
+  margin-top:auto;
+}
+.poster-card.has-shopify-image{
+  background:#000;
+  padding:0;
+}
+.poster-image-wrap{
+  width:100%;
+  height:100%;
+}
+.poster-shopify-image{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  background:#000;
+}
+.inline-bundle.has-shopify-image{
+  padding:0;
+  overflow:hidden;
+}
+.inline-bundle-media{
+  width:160px;
+  align-self:stretch;
+  min-height:120px;
+  background:#000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  flex:0 0 160px;
+}
+.inline-bundle-media img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  background:#000;
+}
+.inline-bundle-content{
+  flex:1;
+  min-width:0;
+  padding:24px 0 24px 24px;
+}
+.inline-bundle.has-shopify-image .inline-bundle-price{
+  padding:24px 32px 24px 0;
+}
+.bundle-shopify-image-wrap{
+  width:min(460px,100%);
+  aspect-ratio:23/21;
+  min-height:0;
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  box-shadow:none;
+}
+
+.bundle-shopify-image{
+  display:block;
+  width:100%;
+  height:100%;
+  max-height:none;
+  object-fit:contain;
+  object-position:center;
+  background:transparent;
+}
+
+
 /* BUNDLE */
 .bundle-section{background:var(--dark);padding:86px 64px;position:relative;overflow:hidden;scroll-margin-top:88px;}
 .bundle-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,1fr);gap:80px;align-items:center;}
+.bundle-grid.bundle-grid-no-visual{grid-template-columns:minmax(0,760px);gap:0;}
 .bundle-label{font-family:var(--fu);font-size:8px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.34);margin-bottom:20px;display:block;line-height:1.5;}
 .bundle-title{font-family:var(--fd);font-size:clamp(48px,7vw,76px);color:#fff;line-height:1.08;margin-bottom:22px;overflow:visible;padding-bottom:.12em;}
 .bundle-desc{font-family:var(--fb);font-size:15px;font-style:italic;color:rgba(255,255,255,.44);line-height:1.75;margin-bottom:32px;max-width:570px;}
@@ -773,6 +910,7 @@ nav{
 .bundle-save{font-family:var(--fu);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--i2);}
 .bundle-cta{background:#fff;color:var(--ink);padding:17px 32px;font-size:10px;}
 .bundle-visual{position:relative;display:flex;align-items:center;justify-content:center;min-height:420px;}
+.bundle-visual.is-empty{display:none;}
 .bundle-stack{position:relative;width:min(430px,100%);height:380px;margin:0 auto;}
 .bundle-book{position:absolute;width:166px;aspect-ratio:3/4;}
 .bundle-book .book-cover{width:100%;height:100%;}
@@ -819,9 +957,14 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .product-card.featured .special-price{font-size:50px;}
   #postcards{--postcard-visual-height:440px;}
   .bundle-grid{grid-template-columns:1fr;gap:42px;}
+  .bundle-grid.bundle-grid-no-visual{grid-template-columns:1fr;}
   .bundle-visual{min-height:340px;}
   .info-strip{grid-template-columns:repeat(2,1fr);}
   .inline-bundle{align-items:flex-start;flex-direction:column;}
+  .inline-bundle.has-shopify-image{gap:0;}
+  .inline-bundle-media{width:100%;min-height:220px;flex-basis:auto;}
+  .inline-bundle-content{padding:24px 32px 0;}
+  .inline-bundle.has-shopify-image .inline-bundle-price{padding:0 32px 24px;}
 }
 
 @media (max-width:640px){
@@ -848,6 +991,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .single-postcard-prev{left:8px;}
   .single-postcard-next{right:8px;}
   .poster-note{align-items:flex-start;flex-direction:column;}
+  .poster-actions{opacity:1;transform:none;}
   .info-strip{grid-template-columns:1fr;}
   .footer-top,.footer-bottom{flex-direction:column;align-items:flex-start;}
   .bundle-stack{width:320px;transform:scale(.86);transform-origin:center;}
@@ -906,15 +1050,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
         </div>
         <button class="bundle-cta" type="button" data-product-key="complete-pack" data-shopify-handle="iam-nobody-complete-pack" data-i18n="bundleCta">Acquista il cofanetto completo</button>
       </div>
-      <div class="bundle-visual" aria-hidden="true">
-        <div class="bundle-stack">
-          <div class="bundle-book book-shadow2"><div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div></div>
-          <div class="bundle-book book-shadow1"><div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div></div>
-          <div class="bundle-book book-main"><div class="book-cover"><img src="/book-cover.png" alt="I AM NOBODY book cover" loading="lazy" /></div></div>
-          <div class="bundle-side-card light" data-i18n="sideCardOne">Chi sei quando nessuno ti guarda?</div>
-          <div class="bundle-side-card dark" data-i18n="sideCardTwo">L'IRRIPETIBILE ROMPE IL MODELLO.</div>
-        </div>
-      </div>
+      <div class="bundle-visual is-empty" aria-hidden="true"></div>
     </div>
     <div class="shop-iris iris" style="margin-top:60px;height:2px;"></div>
   </section>
@@ -1078,8 +1214,7 @@ const sections = [
       {class:'poster-4',handle:'poster-key-25-30x40',script:true,text:{it:'Chi sarai<br>quando è<br>tutto finito?',en:'Who will you be<br>when it is<br>all over?'},kicker:{it:'I AM NOBODY · CHIAVE XXV',en:'I AM NOBODY · KEY XXV'}},
       {class:'poster-5',handle:'poster-mask-reveals-30x40',text:{it:'LA MASCHERA<br>NON NASCONDE.<br>RIVELA.',en:'THE MASK<br>DOES NOT HIDE.<br>IT REVEALS.'},kicker:{it:'I AM NOBODY',en:'I AM NOBODY'}}
     ],
-    note:{it:'Disponibili anche in formato 50×70 cm · Stampa giclée su carta cotone 300g · Spedizione in tubo rigido',en:'Also available in 50×70 cm · Giclée print on 300g cotton paper · Shipped in a rigid tube'},
-    noteButtons:[{it:'50×70 — € 32',en:'50×70 — € 32',handle:'poster-50x70-upgrade'},{it:'Vedi tutti i manifesti →',en:'See all posters →',handle:'all-posters'}]
+    note:{it:'Disponibili in formato 30×40 cm e 50×70 cm · Stampa giclée su carta cotone 300g · Spedizione in tubo rigido',en:'Available in 30×40 cm and 50×70 cm · Giclée print on 300g cotton paper · Shipped in a rigid tube'}
   },
   {
     id:'postcards', theme:'section-dark', grid:'grid-3',
@@ -1161,6 +1296,16 @@ function escapeAttr(value){ return escapeHtml(value).replace(/`/g, '&#96;'); }
 function trustedLine(value){ return String(value ?? ''); }
 function getShopifyProduct(handle){ return handle ? shopifyProducts[handle] : null; }
 
+function normalizeOptionToken(value){
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[×＊*]/g, 'x')
+    .replace(/\s+/g, '')
+    .replace(/cm/g, '')
+    .replace(/[–—-]/g, '');
+}
+
 function getSelectedOptionValue(variant, optionNames){
   if(!variant || !Array.isArray(variant.selectedOptions)) return '';
   const names = optionNames.map(name => String(name).trim().toLowerCase());
@@ -1172,22 +1317,111 @@ function getSelectedOptionValue(variant, optionNames){
   return option ? String(option.value || '').trim() : '';
 }
 
-function getLanguageVariant(shopifyProduct){
-  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
+function variantMatchesCurrentLanguage(variant){
+  if(!variant || !Array.isArray(variant.selectedOptions)) return true;
+
+  const value = getSelectedOptionValue(variant, ['Language', 'Lingua']).toLowerCase();
+
+  if(!value) return true;
 
   const acceptedValues = currentLang === 'it'
     ? ['italian', 'italiano', 'it']
     : ['english', 'inglese', 'en'];
 
-  return shopifyProduct.variants.find(variant => {
-    const value = getSelectedOptionValue(variant, ['Language', 'Lingua']).toLowerCase();
-    return acceptedValues.includes(value);
-  }) || null;
+  return acceptedValues.includes(value);
+}
+
+function variantMatchesPreferredSize(variant, preferredSize){
+  if(!preferredSize) return true;
+  if(!variant || !Array.isArray(variant.selectedOptions)) return false;
+
+  const wanted = normalizeOptionToken(preferredSize);
+
+  const explicit = getSelectedOptionValue(variant, [
+    'Size',
+    'Formato',
+    'Dimensione',
+    'Dimensioni',
+    'Misura',
+    'Format',
+    'Poster size',
+    'Poster Size'
+  ]);
+
+  if(explicit && normalizeOptionToken(explicit) === wanted) return true;
+
+  return variant.selectedOptions.some(option => normalizeOptionToken(option.value) === wanted);
+}
+
+function getLanguageVariant(shopifyProduct){
+  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
+
+  return shopifyProduct.variants.find(variant => variantMatchesCurrentLanguage(variant)) || null;
 }
 
 function getPreferredVariant(shopifyProduct){
   if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
   return getLanguageVariant(shopifyProduct) || shopifyProduct.variants[0] || null;
+}
+
+function getVariantByLanguageAndSize(shopifyProduct, preferredSize, requireSizeMatch){
+  if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return null;
+
+  const variants = shopifyProduct.variants;
+  const exactAvailable = variants.find(variant =>
+    variant.availableForSale !== false &&
+    variantMatchesCurrentLanguage(variant) &&
+    variantMatchesPreferredSize(variant, preferredSize)
+  );
+
+  if(exactAvailable) return exactAvailable;
+
+  const exact = variants.find(variant =>
+    variantMatchesCurrentLanguage(variant) &&
+    variantMatchesPreferredSize(variant, preferredSize)
+  );
+
+  if(exact) return exact;
+
+  const sizeAvailable = variants.find(variant =>
+    variant.availableForSale !== false &&
+    variantMatchesPreferredSize(variant, preferredSize)
+  );
+
+  if(sizeAvailable) return sizeAvailable;
+
+  const sizeOnly = variants.find(variant => variantMatchesPreferredSize(variant, preferredSize));
+
+  if(sizeOnly) return sizeOnly;
+
+  if(requireSizeMatch) return null;
+
+  return getPreferredVariant(shopifyProduct);
+}
+
+function getShopifyImageList(shopifyProduct){
+  if(!shopifyProduct) return [];
+
+  const images = [];
+  const seen = new Set();
+
+  function pushImage(image){
+    if(!image || !image.url || seen.has(image.url)) return;
+    seen.add(image.url);
+    images.push(image);
+  }
+
+  if(Array.isArray(shopifyProduct.variants)){
+    shopifyProduct.variants.forEach(variant => pushImage(variant.image));
+  }
+
+  pushImage(shopifyProduct.image);
+
+  if(Array.isArray(shopifyProduct.images)){
+    shopifyProduct.images.forEach(pushImage);
+  }
+
+  return images;
 }
 
 function getPreferredShopifyImage(shopifyProduct){
@@ -1201,7 +1435,13 @@ function getPreferredShopifyImage(shopifyProduct){
     return shopifyProduct.image;
   }
 
-  return null;
+  const images = getShopifyImageList(shopifyProduct);
+  return images[0] || null;
+}
+
+function renderShopifyImageVisual(image, alt, className){
+  if(!image || !image.url) return '';
+  return `<img class="${escapeAttr(className)}" src="${escapeAttr(image.url)}" alt="${escapeAttr(alt || image.altText || 'I AM NOBODY product image')}" loading="lazy" />`;
 }
 
 function getDesignOptionValue(variant){
@@ -1238,22 +1478,16 @@ function getDesignOptionValue(variant){
 function getLanguageFilteredVariants(shopifyProduct){
   if(!shopifyProduct || !Array.isArray(shopifyProduct.variants)) return [];
 
-  const acceptedValues = currentLang === 'it'
-    ? ['italian', 'italiano', 'it']
-    : ['english', 'inglese', 'en'];
-
-  const languageVariants = shopifyProduct.variants.filter(variant => {
-    const value = getSelectedOptionValue(variant, ['Language', 'Lingua']).toLowerCase();
-    return acceptedValues.includes(value);
-  });
+  const languageVariants = shopifyProduct.variants.filter(variant => variantMatchesCurrentLanguage(variant));
 
   return languageVariants.length ? languageVariants : shopifyProduct.variants;
 }
 
 function getSinglePostcardSlides(shopifyProduct){
   const variants = getLanguageFilteredVariants(shopifyProduct);
+  const productImages = getShopifyImageList(shopifyProduct);
 
-  if(!variants.length){
+  if(!variants.length && !productImages.length){
     return singlePostcardFallbackSlides.map((slide, index) => ({
       key:slide.key,
       label:t(slide.label),
@@ -1279,7 +1513,7 @@ function getSinglePostcardSlides(shopifyProduct){
       label:design,
       text:'',
       tone:'light',
-      image:variant.image && variant.image.url ? variant.image : null,
+      image:variant.image && variant.image.url ? variant.image : productImages[index] || productImages[grouped.length] || null,
       variantId:variant.id,
       index
     });
@@ -1289,6 +1523,18 @@ function getSinglePostcardSlides(shopifyProduct){
 
   if(imageSlides.length){
     return imageSlides.slice(0, 5);
+  }
+
+  if(productImages.length){
+    return productImages.slice(0, 5).map((image, index) => ({
+      key:`shopify-image-${index}`,
+      label:`${currentLang === 'it' ? 'Cartolina' : 'Postcard'} ${index + 1}`,
+      text:'',
+      tone:'light',
+      image,
+      variantId:variants[index] ? variants[index].id : variants[0]?.id || null,
+      index
+    }));
   }
 
   return singlePostcardFallbackSlides.map((slide, index) => ({
@@ -1592,34 +1838,118 @@ function renderProduct(product){
 }
 
 function renderEbookVolumes(section){
-  return `<div class="ebook-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:2px;">
-    ${section.ebookVolumes.map(volume => `<article class="ebook-card" data-num="${escapeHtml(volume.num)}" data-shopify-handle="${escapeHtml(volume.handle)}" style="border-top:2px solid ${volume.stripe};">
+  const volumesHtml = section.ebookVolumes.map(volume => {
+    const shopifyProduct = getShopifyProduct(volume.handle);
+    const shopifyImage = getPreferredShopifyImage(shopifyProduct);
+    const preferredVariant = getPreferredVariant(shopifyProduct);
+    const displayPrice = preferredVariant && preferredVariant.price
+      ? formatMoney(preferredVariant.price) || volume.price
+      : shopifyProduct && shopifyProduct.price
+        ? formatMoney(shopifyProduct.price) || volume.price
+        : volume.price;
+    const displayTitle = shopifyProduct && shopifyProduct.title ? shopifyProduct.title : t(volume.title);
+    const displaySub = shopifyProduct && shopifyProduct.description ? shopifyProduct.description : t(volume.sub);
+    const imageAlt = shopifyImage && shopifyImage.altText ? shopifyImage.altText : displayTitle;
+
+    if(shopifyImage && shopifyImage.url){
+      return `<article class="ebook-card has-shopify-image" data-num="${escapeHtml(volume.num)}" data-shopify-handle="${escapeHtml(volume.handle)}" style="border-top:2px solid ${volume.stripe};">
+        <div class="ebook-media">${renderShopifyImageVisual(shopifyImage, imageAlt, 'ebook-shopify-image')}</div>
+        <div class="ebook-body">
+          <span class="ebook-vol">Volume ${escapeHtml(volume.num)} · Serie IAM Nobody</span>
+          <span class="ebook-iris" style="background:linear-gradient(to bottom,${volume.stripe},var(--i2));"></span>
+          <div class="ebook-title">${escapeHtml(displayTitle)}</div>
+          <p class="ebook-sub">${escapeHtml(displaySub)}</p>
+          <div class="ebook-footer"><span class="ebook-price">${escapeHtml(displayPrice)}</span><button class="ebook-add" type="button" data-shopify-handle="${escapeHtml(volume.handle)}">${currentLang === 'it' ? '+ Carrello' : '+ Cart'}</button></div>
+        </div>
+      </article>`;
+    }
+
+    return `<article class="ebook-card" data-num="${escapeHtml(volume.num)}" data-shopify-handle="${escapeHtml(volume.handle)}" style="border-top:2px solid ${volume.stripe};">
       <span class="ebook-vol">Volume ${escapeHtml(volume.num)} · Serie IAM Nobody</span>
       <span class="ebook-iris" style="background:linear-gradient(to bottom,${volume.stripe},var(--i2));"></span>
       <div class="ebook-title">${escapeHtml(t(volume.title))}</div>
       <p class="ebook-sub">${escapeHtml(t(volume.sub))}</p>
       <div class="ebook-chapters">${trustedLine(t(volume.chapters))}</div>
       <div class="ebook-footer"><span class="ebook-price">${escapeHtml(volume.price)}</span><button class="ebook-add" type="button" data-shopify-handle="${escapeHtml(volume.handle)}">${currentLang === 'it' ? '+ Carrello' : '+ Cart'}</button></div>
-    </article>`).join('')}
+    </article>`;
+  }).join('');
+
+  const bundleProduct = getShopifyProduct(section.inlineBundle.handle);
+  const bundleImage = getPreferredShopifyImage(bundleProduct);
+  const bundleVariant = getPreferredVariant(bundleProduct);
+  const bundlePrice = bundleVariant && bundleVariant.price
+    ? formatMoney(bundleVariant.price) || section.inlineBundle.price
+    : bundleProduct && bundleProduct.price
+      ? formatMoney(bundleProduct.price) || section.inlineBundle.price
+      : section.inlineBundle.price;
+  const bundleOldPrice = bundleVariant && bundleVariant.compareAtPrice
+    ? formatMoney(bundleVariant.compareAtPrice)
+    : bundleProduct && bundleProduct.compareAtPrice
+      ? formatMoney(bundleProduct.compareAtPrice)
+      : section.inlineBundle.oldPrice;
+
+  const bundleHtml = bundleImage && bundleImage.url
+    ? `<div class="inline-bundle has-shopify-image">
+        <div class="inline-bundle-media">${renderShopifyImageVisual(bundleImage, bundleImage.altText || t(section.inlineBundle.title), 'inline-bundle-shopify-image')}</div>
+        <div class="inline-bundle-content"><span class="inline-bundle-label">${escapeHtml(t(section.inlineBundle.label))}</span><span class="inline-bundle-title">${escapeHtml(bundleProduct && bundleProduct.title ? bundleProduct.title : t(section.inlineBundle.title))}</span></div>
+        <div class="inline-bundle-price"><div><span class="ebook-price">${escapeHtml(bundlePrice)}</span>${bundleOldPrice ? `<span class="product-price-old">${escapeHtml(bundleOldPrice)}</span>` : ''}</div><button class="product-add" type="button" data-shopify-handle="${section.inlineBundle.handle}">${escapeHtml(t(section.inlineBundle.button))}</button></div>
+      </div>`
+    : `<div class="inline-bundle">
+        <div><span class="inline-bundle-label">${escapeHtml(t(section.inlineBundle.label))}</span><span class="inline-bundle-title">${escapeHtml(t(section.inlineBundle.title))}</span></div>
+        <div class="inline-bundle-price"><div><span class="ebook-price">${section.inlineBundle.price}</span><span class="product-price-old">${section.inlineBundle.oldPrice}</span></div><button class="product-add" type="button" data-shopify-handle="${section.inlineBundle.handle}">${escapeHtml(t(section.inlineBundle.button))}</button></div>
+      </div>`;
+
+  return `<div class="ebook-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:2px;">
+    ${volumesHtml}
   </div>
-  <div class="inline-bundle">
-    <div><span class="inline-bundle-label">${escapeHtml(t(section.inlineBundle.label))}</span><span class="inline-bundle-title">${escapeHtml(t(section.inlineBundle.title))}</span></div>
-    <div class="inline-bundle-price"><div><span class="ebook-price">${section.inlineBundle.price}</span><span class="product-price-old">${section.inlineBundle.oldPrice}</span></div><button class="product-add" type="button" data-shopify-handle="${section.inlineBundle.handle}">${escapeHtml(t(section.inlineBundle.button))}</button></div>
+  ${bundleHtml}`;
+}
+
+function getPosterSizeButtonLabel(shopifyProduct, size, fallbackPrice){
+  const variant = getVariantByLanguageAndSize(shopifyProduct, size, true);
+  const price = variant && variant.price ? formatMoney(variant.price) || fallbackPrice : fallbackPrice;
+  return `${size} — ${price}`;
+}
+
+function renderPosterActions(handle){
+  const shopifyProduct = getShopifyProduct(handle);
+  const sizeOne = '30×40';
+  const sizeTwo = '50×70';
+  const labelOne = getPosterSizeButtonLabel(shopifyProduct, sizeOne, '€ 18');
+  const labelTwo = getPosterSizeButtonLabel(shopifyProduct, sizeTwo, '€ 32');
+
+  return `<div class="poster-actions">
+    <button class="poster-cta" type="button" data-shopify-handle="${escapeAttr(handle)}" data-poster-size="${escapeAttr(sizeOne)}">${escapeHtml(labelOne)}</button>
+    <button class="poster-cta" type="button" data-shopify-handle="${escapeAttr(handle)}" data-poster-size="${escapeAttr(sizeTwo)}">${escapeHtml(labelTwo)}</button>
   </div>`;
 }
 
 function renderPosters(section){
   return `<div class="poster-grid">
-    ${section.posters.map((poster) => `<article class="poster-card ${poster.class}" data-shopify-handle="${escapeHtml(poster.handle)}">
-      <div>
-        <div class="poster-kicker">${escapeHtml(t(poster.kicker))}</div>
-        <div class="${poster.script ? 'poster-script' : 'poster-main'}">${trustedLine(t(poster.text))}</div>
-        ${poster.sub ? `<div class="poster-script" style="margin-top:14px;opacity:.45;">${trustedLine(t(poster.sub))}</div>` : ''}
-      </div>
-      <button class="poster-cta" type="button" data-shopify-handle="${escapeHtml(poster.handle)}">€ 18 · 30×40</button>
-    </article>`).join('')}
+    ${section.posters.map((poster) => {
+      const shopifyProduct = getShopifyProduct(poster.handle);
+      const shopifyImage = getPreferredShopifyImage(shopifyProduct);
+      const posterActions = renderPosterActions(poster.handle);
+
+      if(shopifyImage && shopifyImage.url){
+        const alt = shopifyImage.altText || (shopifyProduct && shopifyProduct.title) || t(poster.kicker) || 'I AM NOBODY poster';
+        return `<article class="poster-card has-shopify-image" data-shopify-handle="${escapeHtml(poster.handle)}">
+          <div class="poster-image-wrap">${renderShopifyImageVisual(shopifyImage, alt, 'poster-shopify-image')}</div>
+          ${posterActions}
+        </article>`;
+      }
+
+      return `<article class="poster-card ${poster.class}" data-shopify-handle="${escapeHtml(poster.handle)}">
+        <div>
+          <div class="poster-kicker">${escapeHtml(t(poster.kicker))}</div>
+          <div class="${poster.script ? 'poster-script' : 'poster-main'}">${trustedLine(t(poster.text))}</div>
+          ${poster.sub ? `<div class="poster-script" style="margin-top:14px;opacity:.45;">${trustedLine(t(poster.sub))}</div>` : ''}
+        </div>
+        ${posterActions}
+      </article>`;
+    }).join('')}
   </div>
-  <div class="poster-note"><p>${escapeHtml(t(section.note))}</p><div style="display:flex;gap:8px;flex-wrap:wrap;">${section.noteButtons.map(btn => `<button class="product-add" type="button" data-shopify-handle="${escapeHtml(btn.handle)}">${escapeHtml(t(btn))}</button>`).join('')}</div></div>`;
+  <div class="poster-note"><p>${escapeHtml(t(section.note))}</p></div>`;
 }
 
 function renderSections(){
@@ -1635,8 +1965,32 @@ function renderSections(){
   document.getElementById('shopSections').innerHTML = html;
 }
 
+function renderBundleVisual(){
+  const visual = document.querySelector('.bundle-visual');
+  const grid = document.querySelector('#bundle .bundle-grid');
+
+  if(!visual) return;
+
+  const shopifyProduct = getShopifyProduct('iam-nobody-complete-pack');
+  const shopifyImage = getPreferredShopifyImage(shopifyProduct);
+
+  visual.classList.remove('is-empty');
+  if(grid) grid.classList.remove('bundle-grid-no-visual');
+
+  if(shopifyImage && shopifyImage.url){
+    const alt = shopifyImage.altText || (shopifyProduct && shopifyProduct.title) || 'I AM NOBODY complete box set';
+    visual.innerHTML = `<div class="bundle-shopify-image-wrap">${renderShopifyImageVisual(shopifyImage, alt, 'bundle-shopify-image')}</div>`;
+    return;
+  }
+
+  visual.innerHTML = '';
+  visual.classList.add('is-empty');
+  if(grid) grid.classList.add('bundle-grid-no-visual');
+}
+
 function renderBundle(){
   document.getElementById('bundleIncludes').innerHTML = bundleItems.map(item => `<div class="bundle-item"><div class="bundle-dot" style="background:${item.color};"></div><span class="bundle-item-name">${escapeHtml(t(item.name))}</span><span class="bundle-item-val">${escapeHtml(item.val)}</span></div>`).join('');
+  renderBundleVisual();
 }
 
 function renderInfo(){
@@ -1685,19 +2039,6 @@ function getProductDefinitionByHandle(handle){
         name:{it:'Poster I AM NOBODY',en:'I AM NOBODY Poster'},
         sub:poster.kicker,
         price:'€ 18'
-      };
-    }
-
-    const noteButton = (section.noteButtons || []).find(item => item.handle === handle);
-    if(noteButton){
-      return {
-        key:noteButton.handle,
-        handle:noteButton.handle,
-        visual:'poster-option',
-        category:{it:'Manifesti',en:'Posters'},
-        name:{it:noteButton.it, en:noteButton.en},
-        sub:section.note,
-        price:''
       };
     }
   }
@@ -1760,6 +2101,7 @@ function getSelectedSinglePostcardVariant(product){
 function buildCartLineFromButton(button){
   const handle = button.getAttribute('data-shopify-handle') || '';
   const productKey = button.getAttribute('data-product-key') || '';
+  const preferredPosterSize = button.getAttribute('data-poster-size') || '';
   const productDefinition = getProductDefinitionByHandle(handle);
   const shopifyProduct = getShopifyProduct(handle);
 
@@ -1773,11 +2115,15 @@ function buildCartLineFromButton(button){
 
   let variant = null;
   let selectedSlide = null;
+  let forcedVariantLabel = '';
 
   if(productDefinition && productDefinition.visual === 'postcard-single'){
     const selected = getSelectedSinglePostcardVariant(productDefinition);
     variant = selected.variant;
     selectedSlide = selected.slide;
+  }else if(preferredPosterSize){
+    variant = getVariantByLanguageAndSize(shopifyProduct, preferredPosterSize, true);
+    forcedVariantLabel = preferredPosterSize;
   }else{
     variant = getPreferredVariant(shopifyProduct);
   }
@@ -1788,13 +2134,13 @@ function buildCartLineFromButton(button){
 
   const optionSummary = getOptionSummary(variant);
   const selectedLabel = selectedSlide && selectedSlide.label ? selectedSlide.label : '';
-  const variantLabel = selectedLabel || optionSummary;
+  const variantLabel = selectedLabel || optionSummary || forcedVariantLabel;
   const title = shopifyProduct.title || (productDefinition && productDefinition.name ? t(productDefinition.name) : handle);
-  const image = variant.image && variant.image.url
-    ? variant.image
-    : shopifyProduct.image && shopifyProduct.image.url
-      ? shopifyProduct.image
-      : null;
+  const image = selectedSlide && selectedSlide.image && selectedSlide.image.url
+    ? selectedSlide.image
+    : variant.image && variant.image.url
+      ? variant.image
+      : getPreferredShopifyImage(shopifyProduct);
 
   return {
     line:{

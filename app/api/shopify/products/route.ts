@@ -37,6 +37,9 @@ type ShopifyProductNode = {
   availableForSale: boolean;
   onlineStoreUrl: string | null;
   featuredImage: ShopifyImage | null;
+  images: {
+    nodes: ShopifyImage[];
+  };
   priceRange: {
     minVariantPrice: ShopifyMoney;
   };
@@ -81,15 +84,15 @@ function normalizeStoreDomain(rawDomain: string | undefined) {
   return domain;
 }
 
-function getRequestedHandles(request: NextRequest) {
+function getRequestedHandles(request: NextRequest): string[] {
   const rawHandles = request.nextUrl.searchParams.get("handles") || "";
 
   return Array.from(
     new Set(
       rawHandles
         .split(",")
-        .map((handle) => handle.trim().toLowerCase())
-        .filter((handle) => HANDLE_PATTERN.test(handle))
+        .map((handle: string) => handle.trim().toLowerCase())
+        .filter((handle: string) => HANDLE_PATTERN.test(handle))
     )
   ).slice(0, MAX_HANDLES);
 }
@@ -107,6 +110,12 @@ function buildProductsQuery(handles: string[]) {
         featuredImage {
           url(transform: { maxWidth: ${SHOPIFY_IMAGE_MAX_WIDTH} })
           altText
+        }
+        images(first: 20) {
+          nodes {
+            url(transform: { maxWidth: ${SHOPIFY_IMAGE_MAX_WIDTH} })
+            altText
+          }
         }
         priceRange {
           minVariantPrice {
@@ -179,6 +188,17 @@ function normalizeProducts(data: Record<string, ShopifyProductNode | null> | und
     const compareAtPrice = product.compareAtPriceRange.minVariantPrice;
     const price = product.priceRange.minVariantPrice;
 
+    const productImages = Array.isArray(product.images?.nodes)
+      ? product.images.nodes
+          .filter((image) => image?.url)
+          .map((image) => ({
+            url: image.url,
+            altText: image.altText,
+          }))
+      : [];
+
+    const fallbackImage = product.featuredImage || productImages[0] || null;
+
     const variants = product.variants.nodes.map((variant) => ({
       id: variant.id,
       title: variant.title,
@@ -204,12 +224,13 @@ function normalizeProducts(data: Record<string, ShopifyProductNode | null> | und
       description: product.description,
       availableForSale: product.availableForSale,
       onlineStoreUrl: product.onlineStoreUrl,
-      image: product.featuredImage
+      image: fallbackImage
         ? {
-            url: product.featuredImage.url,
-            altText: product.featuredImage.altText,
+            url: fallbackImage.url,
+            altText: fallbackImage.altText,
           }
         : null,
+      images: productImages,
       price,
       compareAtPrice: hasRealCompareAt(compareAtPrice, price) ? compareAtPrice : null,
       firstVariantId: firstVariant?.id || null,
