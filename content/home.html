@@ -24,7 +24,7 @@
     }
 
     *{box-sizing:border-box;margin:0;padding:0;}
-    html{scroll-behavior:smooth;background:#000;}
+    html{scroll-behavior:smooth;background:#000;scroll-padding-top:76px;}
     body{font-family:var(--serif);background:var(--black);color:var(--soft);overflow-x:hidden;}
     a{color:inherit;text-decoration:none;}
 
@@ -57,21 +57,25 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      background:rgba(5,5,5,.72);
+      gap:24px;
+      background:rgba(5,5,5,.88);
       backdrop-filter:blur(18px);
       border-bottom:1px solid rgba(255,255,255,.08);
     }
     .brand{
       font-family:var(--display);
       letter-spacing:3.5px;
-      font-size:25px;
-      line-height:1;
+      font-size:22px;
+      line-height:1.1;
+      color:#fff;
+      white-space:nowrap;
     }
     .brand span{color:var(--gold2);}
     .nav-right{
       display:flex;
       align-items:center;
       gap:14px;
+      min-width:0;
     }
     .navlinks{
       display:flex;
@@ -83,14 +87,29 @@
       letter-spacing:2px;
       color:rgba(255,255,255,.55);
     }
-    .navlinks a:hover{color:#fff;}
+    .navlinks a{
+      display:inline-flex;
+      align-items:center;
+      transition:color .24s ease, transform .24s ease;
+      white-space:nowrap;
+    }
+    .navlinks a:hover{
+      color:#fff;
+      transform:translateY(-1px);
+    }
     .nav-cta{
       border:1px solid rgba(255,255,255,.3);
       padding:12px 17px;
       border-radius:999px;
       color:#fff;
+      transition:background .24s ease, color .24s ease, border-color .24s ease, transform .24s ease;
     }
-    .nav-cta:hover{background:#fff;color:#000!important;}
+    .nav-cta:hover{
+      background:#fff;
+      color:#000!important;
+      border-color:#fff;
+      transform:translateY(-1px);
+    }
 
     .lang-switch{
       display:flex;
@@ -113,7 +132,7 @@
       letter-spacing:1.8px;
       text-transform:uppercase;
       color:rgba(255,255,255,.52);
-      transition:all .2s;
+      transition:background .24s ease, color .24s ease;
     }
     .lang-option:hover{
       color:#fff;
@@ -121,6 +140,49 @@
     .lang-option.active{
       background:var(--soft);
       color:#050505;
+    }
+    .nav-toggle{
+      display:none;
+      width:38px;
+      height:38px;
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:999px;
+      background:transparent;
+      color:#fff;
+      cursor:pointer;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      transition:background .24s ease, border-color .24s ease, transform .24s ease;
+    }
+    .nav-toggle span,
+    .nav-toggle:before,
+    .nav-toggle:after{
+      content:"";
+      width:16px;
+      height:1px;
+      background:currentColor;
+      display:block;
+      transition:transform .24s ease, opacity .24s ease;
+    }
+    .nav-toggle{
+      flex-direction:column;
+      gap:4px;
+    }
+    .nav-toggle:hover,
+    .nav-toggle[aria-expanded="true"]{
+      background:rgba(255,255,255,.08);
+      border-color:rgba(255,255,255,.34);
+      transform:translateY(-1px);
+    }
+    .nav-toggle[aria-expanded="true"]:before{
+      transform:translateY(5px) rotate(45deg);
+    }
+    .nav-toggle[aria-expanded="true"] span{
+      opacity:0;
+    }
+    .nav-toggle[aria-expanded="true"]:after{
+      transform:translateY(-5px) rotate(-45deg);
     }
 
     .hero{
@@ -145,7 +207,8 @@
       font-size:11px;
       text-transform:uppercase;
       letter-spacing:3px;
-      color:var(--muted);
+      color:rgba(224,191,129,.86);
+      font-weight:700;
       margin-bottom:22px;
     }
     .hero h1{
@@ -174,9 +237,10 @@
     }
     .hero-copy{
       font-family:var(--sans);
-      font-size:14px;
+      font-size:15px;
       line-height:1.8;
-      color:rgba(255,255,255,.62);
+      color:rgba(255,255,255,.78);
+      font-weight:500;
       max-width:520px;
       margin-bottom:34px;
     }
@@ -196,7 +260,7 @@
       display:inline-flex;
       align-items:center;
       gap:10px;
-      transition:all .25s;
+      transition:transform .28s cubic-bezier(.2,.8,.2,1), background .28s ease, color .28s ease, border-color .28s ease, box-shadow .28s ease;
     }
     .btn.primary{background:var(--soft);color:#050505;}
     .btn.primary:hover{
@@ -211,6 +275,8 @@
     .btn.secondary:hover{
       border-color:var(--gold2);
       color:var(--gold2);
+      transform:translateY(-2px);
+      box-shadow:0 10px 26px rgba(224,191,129,.12);
     }
 
     .hero-right{
@@ -255,7 +321,7 @@
       z-index:6;
     }
 
-    section{position:relative;}
+    section{position:relative;scroll-margin-top:76px;}
     .dark{background:#070707;color:var(--soft);}
     .light{background:var(--soft);color:var(--ink);}
     .section-inner{
@@ -269,6 +335,7 @@
       text-transform:uppercase;
       letter-spacing:3px;
       color:var(--gold);
+      font-weight:700;
       margin-bottom:22px;
       display:block;
     }
@@ -283,11 +350,11 @@
       font-size:clamp(24px,3vw,42px);
       line-height:1.1;
       font-style:italic;
-      color:rgba(255,255,255,.76);
+      color:rgba(255,255,255,.86);
       max-width:850px;
       margin-top:26px;
     }
-    .light .section-lead{color:rgba(0,0,0,.68);}
+    .light .section-lead{color:rgba(0,0,0,.76);}
 
     .manifesto{
       min-height:78vh;
@@ -329,11 +396,13 @@
       border-right:1px solid rgba(255,255,255,.08);
       border-bottom:1px solid rgba(255,255,255,.08);
       background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));
-      transition:all .28s;
+      transition:transform .32s cubic-bezier(.2,.8,.2,1), background .32s ease, border-color .32s ease, box-shadow .32s ease;
     }
     .threshold:hover{
       background:rgba(255,255,255,.07);
       transform:translateY(-6px);
+      border-color:rgba(224,191,129,.24);
+      box-shadow:0 18px 46px rgba(0,0,0,.24);
     }
     .threshold-num{
       font-family:var(--display);
@@ -437,6 +506,13 @@
       display:flex;
       flex-direction:column;
       justify-content:space-between;
+      transition:background .32s ease, border-color .32s ease, box-shadow .32s ease, transform .32s cubic-bezier(.2,.8,.2,1);
+    }
+    .key-card:hover{
+      background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border-color:rgba(224,191,129,.72);
+      box-shadow:0 18px 42px rgba(0,0,0,.28);
+      transform:translateY(-5px);
     }
     .key-top{
       display:flex;
@@ -449,33 +525,51 @@
       color:var(--gold2);
     }
     .key-icon{
-      width:44px;
-      height:72px;
+      width:58px;
+      height:86px;
       position:relative;
       filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));
       flex:0 0 auto;
+      background:
+        linear-gradient(180deg,var(--gold2),#9b6f36) 27px 34px/11px 38px no-repeat,
+        linear-gradient(90deg,#9b6f36,var(--gold2),#7f5527) 22px 31px/21px 8px no-repeat,
+        linear-gradient(90deg,#8b6230,var(--gold2)) 35px 61px/17px 8px no-repeat,
+        linear-gradient(90deg,#8b6230,#c39a5b) 35px 70px/11px 8px no-repeat;
+      transition:rotate .32s ease, translate .32s ease, filter .32s ease;
+    }
+    .key-card:hover .key-icon{
+      filter:drop-shadow(0 12px 22px rgba(224,191,129,.22));
+      rotate:-8deg;
+      translate:0 -4px;
+    }
+    .key-card:hover .key-num{
+      color:#fff0c7;
     }
     .key-icon:before{
       content:"";
       position:absolute;
-      left:17px;
-      top:25px;
-      width:10px;
-      height:42px;
-      background:linear-gradient(var(--gold2),#8b6230);
-      border-radius:8px;
+      left:12px;
+      top:0;
+      width:34px;
+      height:34px;
+      border:4px solid var(--gold2);
+      border-radius:50%;
+      background:
+        radial-gradient(circle at center,rgba(5,5,5,.95) 0 36%,transparent 37%),
+        radial-gradient(circle at center,rgba(41,199,214,.34) 0 48%,rgba(5,5,5,.18) 49% 100%);
+      box-shadow:
+        inset 0 0 0 3px rgba(41,199,214,.32),
+        0 0 0 1px rgba(195,154,91,.28);
     }
     .key-icon:after{
       content:"";
       position:absolute;
-      left:7px;
-      top:2px;
-      width:30px;
-      height:30px;
-      border:4px solid var(--gold2);
-      border-radius:50%;
-      box-shadow:inset 0 0 0 3px rgba(41,199,214,.35);
-      background:rgba(5,5,5,.22);
+      left:31px;
+      top:39px;
+      width:2px;
+      height:29px;
+      border-radius:2px;
+      background:rgba(255,244,207,.42);
     }
     .key-card p{
       font-size:18px;
@@ -489,40 +583,190 @@
       margin-top:36px;
     }
 
-    .experiences{
+    .events-grid{
       display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:24px;
-      margin-top:54px;
+      grid-template-columns:2fr 1fr 1fr;
+      border-top:1px solid rgba(255,255,255,.09);
+      border-left:1px solid rgba(255,255,255,.09);
+      margin-top:64px;
     }
-    .experience{
-      background:#fff;
-      color:#000;
-      padding:36px;
-      min-height:320px;
+    .event-card{
+      min-height:245px;
+      padding:34px 36px;
+      background:rgba(255,255,255,.035);
+      border-right:1px solid rgba(255,255,255,.09);
+      border-bottom:1px solid rgba(255,255,255,.09);
       display:flex;
       flex-direction:column;
-      justify-content:space-between;
-      border-radius:2px;
+      justify-content:center;
+      transition:background .32s ease, transform .32s cubic-bezier(.2,.8,.2,1), border-color .32s ease, box-shadow .32s ease;
     }
-    .experience.dark-card{
-      background:#0d0d0d;
-      color:#fff;
-      border:1px solid rgba(255,255,255,.12);
+    .event-card:hover{
+      background:rgba(255,255,255,.072);
+      border-color:rgba(224,191,129,.28);
+      transform:translateY(-4px);
+      box-shadow:0 16px 38px rgba(0,0,0,.2);
     }
-    .experience h3{
+    .event-card.featured{
+      grid-column:span 2;
+      background:rgba(255,255,255,.07);
+    }
+    .event-date,
+    .podcast-meta{
+      font-family:var(--sans);
+      font-size:10px;
+      letter-spacing:4px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.55);
+      font-weight:700;
+    }
+    .event-card h3{
       font-family:var(--display);
-      font-size:48px;
-      line-height:.95;
+      font-size:clamp(31px,3vw,46px);
+      line-height:1;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+      margin-top:20px;
+      color:#fff;
+    }
+    .event-card p{
+      font-size:19px;
+      font-style:italic;
+      line-height:1.28;
+      color:rgba(255,255,255,.72);
+      margin-top:14px;
+    }
+    .event-pill{
+      align-self:flex-start;
+      font-family:var(--sans);
+      font-size:10px;
+      letter-spacing:2.4px;
+      text-transform:uppercase;
+      color:#050505;
+      background:var(--gold2);
+      padding:8px 12px;
+      margin-top:24px;
+      transition:background .24s ease, color .24s ease, transform .24s ease;
+    }
+    .event-card:hover .event-pill{
+      background:#fff;
+      color:#000;
+      transform:translateY(-1px);
+    }
+    .podcast-section{
+      background:var(--soft);
+      color:var(--ink);
+    }
+    .podcast-head{
+      display:grid;
+      grid-template-columns:.9fr 1.1fr;
+      gap:40px;
+      align-items:end;
+    }
+    .podcast-head .section-lead{
+      justify-self:end;
+      max-width:440px;
+      margin-top:0;
+      font-size:24px;
+      line-height:1.36;
+      color:rgba(0,0,0,.52);
+    }
+    .podcast-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      border-top:1px solid rgba(0,0,0,.09);
+      border-left:1px solid rgba(0,0,0,.09);
+      margin-top:66px;
+      background:rgba(255,255,255,.22);
+    }
+    .podcast-episode{
+      min-height:186px;
+      display:grid;
+      grid-template-columns:56px 1fr 56px;
+      gap:22px;
+      align-items:center;
+      padding:34px;
+      border-right:1px solid rgba(0,0,0,.09);
+      border-bottom:1px solid rgba(0,0,0,.09);
+      background:rgba(255,255,255,.24);
+      transition:background .32s ease, transform .32s cubic-bezier(.2,.8,.2,1), box-shadow .32s ease;
+    }
+    .podcast-episode:hover{
+      background:rgba(255,255,255,.56);
+      transform:translateY(-4px);
+      box-shadow:0 16px 34px rgba(0,0,0,.08);
+    }
+    .episode-num{
+      font-family:var(--display);
+      font-size:54px;
+      line-height:1;
+      color:rgba(0,0,0,.09);
+    }
+    .podcast-episode h3{
+      font-family:var(--display);
+      font-size:clamp(26px,2.6vw,36px);
+      line-height:1.02;
+      letter-spacing:.9px;
       text-transform:uppercase;
     }
-    .experience p{
-      font-family:var(--sans);
-      font-size:14px;
-      line-height:1.7;
-      color:rgba(0,0,0,.58);
+    .podcast-episode p{
+      font-size:18px;
+      font-style:italic;
+      color:rgba(0,0,0,.66);
+      margin-top:8px;
     }
-    .experience.dark-card p{color:rgba(255,255,255,.62);}
+    .podcast-meta{
+      color:rgba(0,0,0,.48);
+      margin-top:16px;
+      display:block;
+    }
+    .play-button{
+      width:56px;
+      height:56px;
+      border-radius:50%;
+      border:1px solid #050505;
+      background:#050505;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      transition:transform .28s cubic-bezier(.2,.8,.2,1), background .28s ease, box-shadow .28s ease;
+    }
+    .play-button:before{
+      content:"";
+      width:0;
+      height:0;
+      border-top:8px solid transparent;
+      border-bottom:8px solid transparent;
+      border-left:12px solid var(--soft);
+      transform:translateX(2px);
+      transition:border-left-color .24s;
+    }
+    .play-button:hover{
+      background:var(--gold2);
+      transform:scale(1.08);
+      box-shadow:0 14px 30px rgba(0,0,0,.16);
+    }
+    .play-button:hover:before{
+      border-left-color:#050505;
+    }
+    @media (prefers-reduced-motion:no-preference){
+      .event-card,
+      .podcast-episode{
+        animation:sectionReveal both;
+        animation-timeline:view();
+        animation-range:entry 8% cover 32%;
+      }
+      .event-card:nth-child(2),
+      .podcast-episode:nth-child(2){animation-delay:.06s;}
+      .event-card:nth-child(3),
+      .podcast-episode:nth-child(3){animation-delay:.12s;}
+      .event-card:nth-child(4),
+      .podcast-episode:nth-child(4){animation-delay:.18s;}
+    }
+    @keyframes sectionReveal{
+      from{opacity:0;translate:0 26px;}
+      to{opacity:1;translate:0 0;}
+    }
     .tagline{
       font-family:var(--sans);
       font-size:11px;
@@ -579,18 +823,51 @@
     }
 
     footer{
-      padding:42px 46px;
+      background:#050505;
+      padding:62px 46px 42px;
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    .footer-top{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      background:#000;
-      border-top:1px solid rgba(255,255,255,.08);
+      gap:30px;
+      margin-bottom:40px;
+      padding-bottom:40px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .footer-logo{
+      font-family:var(--display);
+      font-size:22px;
+      letter-spacing:3px;
+      color:#fff;
+      line-height:1.1;
+    }
+    .footer-logo span{color:var(--gold2);}
+    .footer-tagline{
+      font-family:var(--serif);
+      font-size:15px;
+      font-style:italic;
+      color:rgba(255,255,255,.54);
+      margin-top:8px;
+      line-height:1.6;
+    }
+    .footer-bottom{
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
       font-family:var(--sans);
-      font-size:11px;
+      font-size:9px;
       letter-spacing:2px;
       text-transform:uppercase;
-      color:rgba(255,255,255,.35);
+      color:rgba(255,255,255,.42);
+      line-height:1.7;
     }
+    .footer-links a{
+      color:rgba(255,255,255,.58);
+      transition:color .24s ease;
+    }
+    .footer-links a:hover{color:#fff;}
 
     @media(max-width:980px){
       nav{padding:0 22px;}
@@ -623,38 +900,83 @@
       .thresholds{grid-template-columns:1fr 1fr;}
       .book-grid{grid-template-columns:1fr;}
       .keys-board{grid-template-columns:repeat(2,1fr);}
-      .experiences{grid-template-columns:1fr;}
-      .signup{flex-direction:column;}
-      footer{
-        flex-direction:column;
-        gap:16px;
-        text-align:center;
+      .events-grid{grid-template-columns:1fr 1fr;}
+      .event-card.featured{grid-column:span 2;}
+      .podcast-head{grid-template-columns:1fr;}
+      .podcast-head .section-lead{
+        justify-self:start;
+        max-width:720px;
       }
+      .podcast-grid{grid-template-columns:1fr;}
+      .signup{flex-direction:column;}
+      footer{padding-left:28px;padding-right:28px;}
+      .footer-top,.footer-bottom{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+    }
+
+    @media(max-width:900px){
+      .nav-toggle{display:flex;}
+      .navlinks{
+        position:fixed;
+        left:0;
+        right:0;
+        top:76px;
+        display:flex;
+        flex-direction:column;
+        align-items:flex-start;
+        gap:0;
+        max-height:0;
+        overflow:hidden;
+        opacity:0;
+        pointer-events:none;
+        background:rgba(5,5,5,.98);
+        border-top:1px solid rgba(255,255,255,.08);
+        padding:0 28px;
+        transform:translateY(-8px);
+        transition:max-height .28s ease, opacity .24s ease, transform .28s ease, padding .28s ease;
+      }
+      .navlinks.open{
+        max-height:440px;
+        opacity:1;
+        pointer-events:auto;
+        padding:10px 28px 18px;
+        transform:translateY(0);
+      }
+      .navlinks a{
+        width:100%;
+        padding:13px 0;
+        border-bottom:1px solid rgba(255,255,255,.06);
+      }
+      .navlinks a:hover{transform:none;}
     }
 
     @media(max-width:620px){
       nav{
-        height:auto;
-        min-height:76px;
-        padding:18px 20px;
-        align-items:flex-start;
-        gap:18px;
-      }
-      .brand{
-        font-size:22px;
-        flex:0 0 auto;
-      }
-      .nav-right{
-        flex-direction:column;
-        align-items:flex-end;
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        height:76px;
+        padding:0 18px;
+        align-items:center;
         gap:12px;
       }
-      .navlinks{
-        justify-content:flex-end;
-        flex-wrap:wrap;
-        gap:12px 16px;
-        font-size:9px;
+      .brand{
+        font-size:20px;
+        flex:0 0 auto;
+        justify-self:start;
+        width:max-content;
       }
+      .nav-right{
+        position:fixed;
+        top:19px;
+        right:18px;
+        justify-self:end;
+        gap:8px;
+      }
+      .navlinks{font-size:9px;}
+      .lang-switch{display:none;}
+      .lang-option{padding:0 9px;}
       .thresholds{grid-template-columns:1fr;}
       .keys-board{grid-template-columns:1fr;}
       .hero h1{font-size:84px;}
@@ -663,7 +985,36 @@
         max-height:560px;
       }
       .section-inner{padding:86px 0;}
+      html{scroll-padding-top:76px;}
+      section{scroll-margin-top:76px;}
       .meta-grid{grid-template-columns:1fr;}
+      .events-grid{grid-template-columns:1fr;}
+      .event-card,
+      .event-card.featured{
+        grid-column:auto;
+      }
+      .event-card{
+        min-height:220px;
+        padding:30px 24px;
+      }
+      .podcast-episode{
+        grid-template-columns:44px 1fr 48px;
+        gap:16px;
+        padding:28px 20px;
+      }
+      .episode-num{font-size:44px;}
+      .play-button{
+        width:48px;
+        height:48px;
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto;}
+      *,*::before,*::after{
+        animation:none!important;
+        transition:none!important;
+      }
     }
   </style>
 </head>
@@ -672,11 +1023,12 @@
     <a class="brand" href="#top">I AM <span>NOBODY</span></a>
 
     <div class="nav-right">
-      <div class="navlinks">
+      <div class="navlinks" id="homeNavLinks">
         <a href="#soglie">Soglie</a>
         <a href="#libro">Libro</a>
         <a href="#chiavi">25 Chiavi</a>
-        <a href="#esperienze">Esperienze</a>
+        <a href="#eventi">Eventi</a>
+        <a href="#podcast">Podcast</a>
         <a href="/it/shop" data-shop-link>Shop</a>
         <a href="#newsletter" class="nav-cta">Join</a>
       </div>
@@ -685,6 +1037,7 @@
         <a href="/it" class="lang-option" data-lang-link="it">IT</a>
         <a href="/en" class="lang-option" data-lang-link="en">EN</a>
       </div>
+      <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="homeNavLinks" data-nav-toggle><span></span></button>
     </div>
   </nav>
 
@@ -849,29 +1202,100 @@
     </div>
   </section>
 
-  <section class="light" id="esperienze">
+  <section class="dark noise" id="eventi">
     <div class="section-inner">
-      <span class="label">Estensioni possibili</span>
-      <h2 class="section-title">Da libro a piattaforma</h2>
-      <p class="section-lead">Il sito non deve vendere solo un libro. Deve aprire un universo.</p>
+      <span class="label">Spazi dal vivo</span>
+      <h2 class="section-title">Eventi e rituali</h2>
+      <p class="section-lead">Nessuna introduzione. Spazi in cui la domanda diventa collettiva.</p>
 
-      <div class="experiences">
-        <article class="experience">
-          <span class="tagline">Editoriale</span>
-          <h3>Libro + card deck</h3>
-          <p>Vendita libro, poster A3, mazzo “Le 25 Chiavi”, edizioni limitate numerate e bundle regalo.</p>
+      <div class="events-grid">
+        <article class="event-card featured">
+          <span class="event-date">18 giugno 2026 - Milano</span>
+          <h3>I AM NOBODY - Launch</h3>
+          <p>Luogo da annunciare - 19:00</p>
+          <span class="event-pill">Launch event</span>
         </article>
 
-        <article class="experience dark-card">
-          <span class="tagline">Media</span>
-          <h3>Podcast / video rituali</h3>
-          <p>Una serie di contenuti brevi: una domanda, una soglia, una provocazione. Perfetti per social e newsletter.</p>
+        <article class="event-card">
+          <span class="event-date">Luglio 2026 - Bologna</span>
+          <h3>I AM NOBODY Talks</h3>
+          <p>Una sera, una domanda.</p>
+          <span class="event-pill">Talk</span>
         </article>
 
-        <article class="experience">
-          <span class="tagline">Live / corporate</span>
-          <h3>Keynote + workshop</h3>
-          <p>Format per aziende, scuole, community e festival: identità, AI, corpo, ruoli, sogno e legacy.</p>
+        <article class="event-card">
+          <span class="event-date">Settembre 2026</span>
+          <h3>I AM NOBODY Corporate</h3>
+          <p>Workshop per aziende.</p>
+          <span class="event-pill">Corporate</span>
+        </article>
+
+        <article class="event-card">
+          <span class="event-date">Ottobre 2026 - Roma</span>
+          <h3>I AM NOBODY Talks</h3>
+          <p>Una sera, una domanda.</p>
+          <span class="event-pill">Talk</span>
+        </article>
+
+        <article class="event-card">
+          <span class="event-date">Internazionale - TBD</span>
+          <h3>I AM NOBODY</h3>
+          <p>Edizione inglese.</p>
+          <span class="event-pill">International</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="podcast-section" id="podcast">
+    <div class="section-inner">
+      <div class="podcast-head">
+        <div>
+          <span class="label">Audio</span>
+          <h2 class="section-title">I AM<br>NOBODY<br>Podcast</h2>
+        </div>
+        <p class="section-lead">Conversazioni con chi ha fatto i conti con la domanda. Con o senza maschera.</p>
+      </div>
+
+      <div class="podcast-grid">
+        <article class="podcast-episode">
+          <span class="episode-num">01</span>
+          <div>
+            <h3>Chi sei quando perdi tutto</h3>
+            <p>Con Andrea Magelli - episodio di lancio</p>
+            <span class="podcast-meta">48 min - 18 giugno 2026</span>
+          </div>
+          <button class="play-button" type="button" aria-label="Ascolta episodio 01"></button>
+        </article>
+
+        <article class="podcast-episode">
+          <span class="episode-num">02</span>
+          <div>
+            <h3>Il ruolo che ti ha occupato</h3>
+            <p>Ospite da annunciare</p>
+            <span class="podcast-meta">Coming soon - luglio 2026</span>
+          </div>
+          <button class="play-button" type="button" aria-label="Ascolta episodio 02"></button>
+        </article>
+
+        <article class="podcast-episode">
+          <span class="episode-num">03</span>
+          <div>
+            <h3>Costruire insieme senza perdersi</h3>
+            <p>Ospite da annunciare</p>
+            <span class="podcast-meta">Coming soon - luglio 2026</span>
+          </div>
+          <button class="play-button" type="button" aria-label="Ascolta episodio 03"></button>
+        </article>
+
+        <article class="podcast-episode">
+          <span class="episode-num">04</span>
+          <div>
+            <h3>L'algoritmo non sa chi sei</h3>
+            <p>Ospite da annunciare</p>
+            <span class="podcast-meta">Coming soon - agosto 2026</span>
+          </div>
+          <button class="play-button" type="button" aria-label="Ascolta episodio 04"></button>
         </article>
       </div>
     </div>
@@ -888,8 +1312,22 @@
   </section>
 
   <footer>
-    <span>I AM NOBODY · Andrea Magelli</span>
-    <span>Viaggio dentro. Ritorno a te.</span>
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">I AM <span>NOBODY</span></div>
+        <p class="footer-tagline">Viaggio dentro. Ritorno a te.</p>
+      </div>
+      <div style="height:2px;width:60px;" class="iris footer-iris"></div>
+    </div>
+    <div class="footer-bottom">
+      <span>I AM NOBODY · Andrea Magelli</span>
+      <span class="footer-links">
+        <a href="/it/privacy" data-policy-link="privacy">Privacy</a> ·
+        <a href="/it/cookies" data-policy-link="cookies">Cookie</a> ·
+        <a href="/it/shipping" data-policy-link="shipping">Spedizioni</a> ·
+        <a href="/it/returns" data-policy-link="returns">Resi</a>
+      </span>
+    </div>
   </footer>
 
   <script>
@@ -906,6 +1344,37 @@
       const shopLink = document.querySelector('[data-shop-link]');
       if(shopLink){
         shopLink.setAttribute('href', lang === 'en' ? '/en/shop' : '/it/shop');
+      }
+
+      const policyLabels = {
+        it: { privacy:'Privacy', cookies:'Cookie', shipping:'Spedizioni', returns:'Resi' },
+        en: { privacy:'Privacy', cookies:'Cookies', shipping:'Shipping', returns:'Returns' }
+      };
+      document.querySelectorAll('[data-policy-link]').forEach(function(link){
+        const policy = link.getAttribute('data-policy-link');
+        if(!policy) return;
+        link.setAttribute('href', '/' + lang + '/' + policy);
+        link.textContent = policyLabels[lang][policy] || link.textContent;
+      });
+
+      const navToggle = document.querySelector('[data-nav-toggle]');
+      const navLinks = document.getElementById('homeNavLinks');
+      function setMenuOpen(open){
+        if(!navToggle || !navLinks) return;
+        navToggle.setAttribute('aria-expanded', String(open));
+        navLinks.classList.toggle('open', open);
+      }
+      if(navToggle && navLinks){
+        navToggle.addEventListener('click', function(){
+          setMenuOpen(navToggle.getAttribute('aria-expanded') !== 'true');
+        });
+        navLinks.addEventListener('click', function(event){
+          const target = event.target;
+          if(target && target.closest && target.closest('a')) setMenuOpen(false);
+        });
+        window.addEventListener('resize', function(){
+          if(window.innerWidth > 900) setMenuOpen(false);
+        });
       }
     })();
   </script>
