@@ -506,6 +506,10 @@
       display:flex;
       flex-direction:column;
       justify-content:space-between;
+      --key-metal:var(--gold2);
+      --key-shadow:#9b6f36;
+      --key-accent:rgba(41,199,214,.34);
+      --key-glow:rgba(41,199,214,.32);
       transition:background .32s ease, border-color .32s ease, box-shadow .32s ease, transform .32s cubic-bezier(.2,.8,.2,1);
     }
     .key-card:hover{
@@ -531,10 +535,11 @@
       filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));
       flex:0 0 auto;
       background:
-        linear-gradient(180deg,var(--gold2),#9b6f36) 27px 34px/11px 38px no-repeat,
-        linear-gradient(90deg,#9b6f36,var(--gold2),#7f5527) 22px 31px/21px 8px no-repeat,
-        linear-gradient(90deg,#8b6230,var(--gold2)) 35px 61px/17px 8px no-repeat,
-        linear-gradient(90deg,#8b6230,#c39a5b) 35px 70px/11px 8px no-repeat;
+        linear-gradient(180deg,var(--key-metal),var(--key-shadow)) var(--stem-x,27px) var(--stem-y,34px)/var(--stem-w,11px) var(--stem-h,38px) no-repeat,
+        linear-gradient(90deg,var(--key-shadow),var(--key-metal),#7f5527) var(--cross-x,22px) var(--cross-y,31px)/var(--cross-w,21px) var(--cross-h,8px) no-repeat,
+        linear-gradient(90deg,#8b6230,var(--key-metal)) var(--tooth-a-x,35px) var(--tooth-a-y,61px)/var(--tooth-a-w,17px) var(--tooth-a-h,8px) no-repeat,
+        linear-gradient(90deg,#8b6230,#c39a5b) var(--tooth-b-x,35px) var(--tooth-b-y,70px)/var(--tooth-b-w,11px) var(--tooth-b-h,8px) no-repeat,
+        var(--key-extra,transparent);
       transition:rotate .32s ease, translate .32s ease, filter .32s ease;
     }
     .key-card:hover .key-icon{
@@ -552,13 +557,14 @@
       top:0;
       width:34px;
       height:34px;
-      border:4px solid var(--gold2);
-      border-radius:50%;
+      border:var(--bow-border,4px) solid var(--key-metal);
+      border-radius:var(--bow-radius,50%);
+      transform:var(--bow-transform,none);
       background:
         radial-gradient(circle at center,rgba(5,5,5,.95) 0 36%,transparent 37%),
-        radial-gradient(circle at center,rgba(41,199,214,.34) 0 48%,rgba(5,5,5,.18) 49% 100%);
+        radial-gradient(circle at center,var(--key-accent) 0 48%,rgba(5,5,5,.18) 49% 100%);
       box-shadow:
-        inset 0 0 0 3px rgba(41,199,214,.32),
+        inset 0 0 0 var(--bow-inner,3px) var(--key-glow),
         0 0 0 1px rgba(195,154,91,.28);
     }
     .key-icon:after{
@@ -570,6 +576,135 @@
       height:29px;
       border-radius:2px;
       background:rgba(255,244,207,.42);
+    }
+    .key-card:nth-child(2){
+      --key-metal:var(--gold2);
+      --key-shadow:#9b6f36;
+      --key-accent:rgba(41,199,214,.34);
+      --key-glow:rgba(41,199,214,.32);
+      --stem-x:24px;
+      --stem-w:9px;
+      --cross-x:19px;
+      --cross-y:34px;
+      --cross-w:23px;
+      --tooth-a-x:31px;
+      --tooth-a-y:59px;
+      --tooth-a-w:19px;
+      --tooth-b-x:31px;
+      --tooth-b-y:69px;
+      --tooth-b-w:14px;
+      --bow-radius:10px;
+      --bow-transform:rotate(45deg);
+    }
+    .key-card:nth-child(2) .key-icon:after{
+      left:25px;
+      top:40px;
+      width:6px;
+      height:29px;
+      background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,244,207,.48),rgba(255,255,255,.16));
+    }
+    .key-card:nth-child(3){
+      --key-metal:var(--gold2);
+      --key-shadow:#9b6f36;
+      --key-accent:rgba(41,199,214,.34);
+      --key-glow:rgba(41,199,214,.32);
+      --stem-x:30px;
+      --stem-y:36px;
+      --stem-w:8px;
+      --stem-h:36px;
+      --cross-x:24px;
+      --cross-y:33px;
+      --cross-w:18px;
+      --tooth-a-x:18px;
+      --tooth-a-y:61px;
+      --tooth-a-w:20px;
+      --tooth-b-x:24px;
+      --tooth-b-y:71px;
+      --tooth-b-w:18px;
+      --bow-border:3px;
+      --bow-inner:4px;
+    }
+    .key-card:nth-child(3) .key-icon:before{
+      width:38px;
+      height:28px;
+      left:8px;
+      top:3px;
+      border-radius:999px 999px 12px 12px;
+    }
+    .key-card:nth-child(3) .key-icon:after{
+      left:29px;
+      top:43px;
+      height:27px;
+      box-shadow:-7px 0 0 rgba(255,244,207,.18);
+    }
+    .key-card:nth-child(4){
+      --key-metal:var(--gold2);
+      --key-shadow:#9b6f36;
+      --key-accent:rgba(41,199,214,.34);
+      --key-glow:rgba(41,199,214,.32);
+      --stem-x:25px;
+      --stem-y:37px;
+      --stem-w:12px;
+      --stem-h:34px;
+      --cross-x:18px;
+      --cross-y:32px;
+      --cross-w:28px;
+      --cross-h:7px;
+      --tooth-a-x:35px;
+      --tooth-a-y:58px;
+      --tooth-a-w:14px;
+      --tooth-b-x:19px;
+      --tooth-b-y:69px;
+      --tooth-b-w:17px;
+      --bow-radius:50% 50% 44% 44%;
+    }
+    .key-card:nth-child(4) .key-icon:before{
+      width:28px;
+      height:38px;
+      left:15px;
+      top:0;
+    }
+    .key-card:nth-child(4) .key-icon:after{
+      left:31px;
+      top:40px;
+      width:3px;
+      height:31px;
+      background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,244,207,.22));
+    }
+    .key-card:nth-child(5){
+      --key-metal:var(--gold2);
+      --key-shadow:#9b6f36;
+      --key-accent:rgba(41,199,214,.34);
+      --key-glow:rgba(41,199,214,.32);
+      --stem-x:29px;
+      --stem-y:33px;
+      --stem-w:10px;
+      --stem-h:41px;
+      --cross-x:21px;
+      --cross-y:30px;
+      --cross-w:25px;
+      --cross-h:9px;
+      --tooth-a-x:36px;
+      --tooth-a-y:60px;
+      --tooth-a-w:18px;
+      --tooth-b-x:28px;
+      --tooth-b-y:72px;
+      --tooth-b-w:20px;
+      --key-extra:radial-gradient(circle at 29px 17px,rgba(255,244,207,.28) 0 3px,transparent 4px);
+    }
+    .key-card:nth-child(5) .key-icon:before{
+      width:36px;
+      height:36px;
+      left:11px;
+      top:0;
+      border-radius:14px 14px 50% 50%;
+    }
+    .key-card:nth-child(5) .key-icon:after{
+      left:29px;
+      top:41px;
+      width:5px;
+      height:32px;
+      background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,244,207,.56));
     }
     .key-card p{
       font-size:18px;
@@ -1043,6 +1178,20 @@
       .event-card:active,
       .podcast-episode:active{
         box-shadow:0 14px 34px rgba(0,0,0,.2);
+      }
+      .key-card:active{
+        background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+        border-color:rgba(224,191,129,.72);
+        box-shadow:0 18px 42px rgba(0,0,0,.28);
+        transform:translateY(-5px);
+      }
+      .key-card:active .key-icon{
+        filter:drop-shadow(0 12px 22px rgba(224,191,129,.22));
+        rotate:-8deg;
+        translate:0 -4px;
+      }
+      .key-card:active .key-num{
+        color:#fff0c7;
       }
       .play-button:active{
         background:var(--gold2);
