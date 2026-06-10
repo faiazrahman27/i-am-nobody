@@ -54,10 +54,14 @@ nav{
 .nav-cart{
   font-family:var(--fu);font-size:10px;letter-spacing:2px;text-transform:uppercase;
   color:var(--ink);background:#fff;padding:10px 16px;text-decoration:none;
-  display:flex;align-items:center;gap:8px;transition:background .24s ease,color .24s ease,transform .24s ease;border:0;border-radius:999px;cursor:pointer;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;transition:background .24s ease,color .24s ease,transform .24s ease,border-color .24s ease;border:1px solid transparent;border-radius:999px;cursor:pointer;white-space:nowrap;
 }
 .nav-cart:hover{background:var(--i2);color:#fff;transform:translateY(-1px);}
-.cart-count{background:var(--i2);color:#fff;min-width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--fu);padding:0 5px;}
+.cart-icon{position:relative;width:18px;height:18px;display:inline-block;flex:0 0 auto;color:currentColor;}
+.cart-icon:before{content:"";position:absolute;left:3px;top:6px;width:12px;height:8px;border:2px solid currentColor;border-top:0;border-radius:0 0 2px 2px;}
+.cart-icon:after{content:"";position:absolute;left:4px;bottom:1px;width:3px;height:3px;border-radius:50%;background:currentColor;box-shadow:9px 0 0 currentColor;}
+.cart-icon span{position:absolute;left:1px;top:2px;width:8px;height:2px;background:currentColor;transform:rotate(-18deg);transform-origin:left center;}
+.cart-count{background:#d92828;color:#fff;min-width:18px;height:18px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:var(--fu);font-weight:700;padding:0 5px;box-shadow:0 0 0 2px #fff;}
 .nav-toggle{display:none;width:38px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:transparent;color:#fff;cursor:pointer;align-items:center;justify-content:center;flex:0 0 auto;flex-direction:column;gap:4px;transition:background .24s ease,border-color .24s ease,transform .24s ease;}
 .nav-toggle span,.nav-toggle:before,.nav-toggle:after{content:"";width:16px;height:1px;background:currentColor;display:block;transition:transform .24s ease,opacity .24s ease;}
 .nav-toggle:hover,.nav-toggle[aria-expanded="true"]{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.34);transform:translateY(-1px);}
@@ -507,6 +511,7 @@ nav{
 .ebook-chapters{font-family:var(--fu);font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.42);line-height:2;margin-bottom:24px;}
 .ebook-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;}
 .ebook-price{font-family:var(--fd);font-size:26px;color:#fff;}
+.ebook-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;margin-top:2px;}
 .inline-bundle{margin-top:2px;background:#1a1a1a;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
 .inline-bundle-label{font-family:var(--fu);font-size:9px;letter-spacing:3px;color:rgba(255,255,255,.54);font-weight:700;display:block;margin-bottom:6px;text-transform:uppercase;}
 .inline-bundle-title{font-family:var(--fd);font-size:20px;color:#fff;line-height:1.1;}
@@ -994,6 +999,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   nav{padding:15px 28px;}
   .shop-hero,.section-wrap,.bundle-section,.info-strip,footer{padding-left:28px;padding-right:28px;}
   .grid-4{grid-template-columns:repeat(2,1fr);}
+  .ebook-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .poster-grid{grid-template-columns:repeat(3,1fr);}
 }
 
@@ -1040,6 +1046,17 @@ footer{background:var(--dark);padding:62px 64px 42px;}
   .poster-card{min-height:360px;}
   .product-img{min-height:210px;padding:24px 18px;}
   .visual-special,.visual-ebook{flex-direction:column;align-items:flex-start;}
+  .ebook-grid{grid-template-columns:1fr;}
+  .ebook-card{padding:28px 22px;}
+  .ebook-card.has-shopify-image{min-height:auto;}
+  .ebook-media{height:220px;}
+  .ebook-body{padding:24px 22px 26px;}
+  .ebook-vol{margin-bottom:22px;}
+  .ebook-iris{height:32px;margin-bottom:16px;}
+  .ebook-sub{font-size:15px;line-height:1.55;}
+  .ebook-chapters{font-size:10px;line-height:1.8;}
+  .ebook-footer{align-items:stretch;flex-direction:column;gap:12px;}
+  .ebook-add{width:100%;min-height:42px;}
   .product-card.featured .product-img{min-height:360px;padding:32px 22px;}
   .product-card.featured .visual-special{gap:24px;}
   .product-card.featured .visual-special .book-cover{width:158px;}
@@ -1069,6 +1086,46 @@ footer{background:var(--dark);padding:62px 64px 42px;}
     transition:none!important;
   }
 }
+
+@media (hover:none){
+  .nav-links a:active,
+  .nav-cart:active,
+  .nav-toggle:active,
+  .filter-btn:active,
+  .product-add:active,
+  .ebook-add:active,
+  .bundle-cta:active,
+  .poster-cta:active,
+  .single-postcard-nav:active,
+  .cart-clear:active,
+  .cart-close:active,
+  .cart-qty-btn:active,
+  .cart-remove:active,
+  .cart-checkout:active:not(:disabled){
+    transform:translateY(-1px);
+  }
+  .product-card:active,
+  .ebook-card:active{
+    transform:translateY(-4px);
+    box-shadow:0 14px 34px rgba(0,0,0,.2);
+  }
+  .poster-card:active{
+    transform:scale(1.02);
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .poster-card:active .poster-actions{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .product-add:active,
+  .ebook-add:active,
+  .bundle-cta:active,
+  .cart-checkout:active:not(:disabled){
+    background:var(--i2);
+    color:#fff;
+    border-color:var(--i2);
+  }
+}
 </style>
 </head>
 <body>
@@ -1087,7 +1144,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
       <button class="lang-btn active" type="button" data-lang="it">IT</button>
       <button class="lang-btn" type="button" data-lang="en">EN</button>
     </div>
-    <button class="nav-cart" type="button" aria-label="Cart"><span class="cart-label" data-i18n="cart">Carrello</span><span class="cart-count">0</span></button>
+    <button class="nav-cart" type="button" aria-label="Cart"><span class="cart-icon" aria-hidden="true"><span></span></span><span class="cart-label" data-i18n="cart">Carrello</span><span class="cart-count">0</span></button>
   </div>
   <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span></button>
 </nav>
@@ -1923,7 +1980,7 @@ function renderEbookVolumes(section){
         ? formatMoney(shopifyProduct.price) || volume.price
         : volume.price;
     const displayTitle = shopifyProduct && shopifyProduct.title ? shopifyProduct.title : t(volume.title);
-    const displaySub = shopifyProduct && shopifyProduct.description ? shopifyProduct.description : t(volume.sub);
+    const displaySub = t(volume.sub);
     const imageAlt = shopifyImage && shopifyImage.altText ? shopifyImage.altText : displayTitle;
 
     if(shopifyImage && shopifyImage.url){
@@ -1974,7 +2031,7 @@ function renderEbookVolumes(section){
         <div class="inline-bundle-price"><div><span class="ebook-price">${section.inlineBundle.price}</span><span class="product-price-old">${section.inlineBundle.oldPrice}</span></div><button class="product-add" type="button" data-shopify-handle="${section.inlineBundle.handle}">${escapeHtml(t(section.inlineBundle.button))}</button></div>
       </div>`;
 
-  return `<div class="ebook-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:2px;">
+  return `<div class="ebook-grid">
     ${volumesHtml}
   </div>
   ${bundleHtml}`;
