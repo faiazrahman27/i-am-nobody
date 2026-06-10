@@ -1063,6 +1063,74 @@
         border-left-color:#050505;
       }
     }
+
+
+    /* MOBILE INTERACTION + SHARP KEY RENDERING — visual only */
+    @media (hover:none) and (pointer:coarse){
+      .key-icon{
+        width:76px;
+        height:114px;
+        background-size:100% 100%;
+        filter:none;
+        image-rendering:auto;
+        transform:translate3d(0,0,0);
+        backface-visibility:hidden;
+        -webkit-backface-visibility:hidden;
+        will-change:translate, rotate;
+      }
+      .key-card:hover .key-icon,
+      .key-card:active .key-icon,
+      html.mobile-effects-enabled .key-card.is-touch-visible .key-icon{
+        filter:none;
+        rotate:-6deg;
+        translate:0 -4px;
+      }
+      html.mobile-effects-enabled .threshold,
+      html.mobile-effects-enabled .key-card,
+      html.mobile-effects-enabled .event-card,
+      html.mobile-effects-enabled .podcast-episode{
+        transition-delay:var(--touch-effect-delay,0ms);
+      }
+      html.mobile-effects-enabled .threshold.is-touch-visible{
+        background:rgba(255,255,255,.07);
+        transform:translateY(-5px);
+        border-color:rgba(224,191,129,.24);
+        box-shadow:0 18px 46px rgba(0,0,0,.24);
+      }
+      html.mobile-effects-enabled .key-card.is-touch-visible{
+        background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+        border-color:rgba(224,191,129,.72);
+        box-shadow:0 18px 42px rgba(0,0,0,.28);
+        transform:translateY(-5px);
+      }
+      html.mobile-effects-enabled .key-card.is-touch-visible .key-num{
+        color:#fff0c7;
+      }
+      html.mobile-effects-enabled .event-card.is-touch-visible{
+        background:rgba(255,255,255,.072);
+        border-color:rgba(224,191,129,.28);
+        transform:translateY(-4px);
+        box-shadow:0 16px 38px rgba(0,0,0,.2);
+      }
+      html.mobile-effects-enabled .event-card.is-touch-visible .event-pill{
+        background:#fff;
+        color:#000;
+        transform:translateY(-1px);
+      }
+      html.mobile-effects-enabled .podcast-episode.is-touch-visible{
+        background:rgba(255,255,255,.56);
+        transform:translateY(-4px);
+        box-shadow:0 16px 34px rgba(0,0,0,.08);
+      }
+      html.mobile-effects-enabled .play-button:active{
+        background:var(--gold2);
+        transform:scale(1.06);
+      }
+      html.mobile-effects-enabled .play-button:active:before{
+        border-left-color:#050505;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1423,6 +1491,41 @@
           if(window.innerWidth > 900) setMenuOpen(false);
         });
       }
+
+
+      const touchEffectsQuery = window.matchMedia ? window.matchMedia('(hover: none) and (pointer: coarse)') : null;
+      const reducedMotionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+      if(
+        touchEffectsQuery &&
+        touchEffectsQuery.matches &&
+        (!reducedMotionQuery || !reducedMotionQuery.matches) &&
+        'IntersectionObserver' in window
+      ){
+        document.documentElement.classList.add('mobile-effects-enabled');
+
+        const touchTargets = Array.from(document.querySelectorAll('.threshold, .key-card, .event-card, .podcast-episode'));
+        touchTargets.forEach(function(element, index){
+          element.style.setProperty('--touch-effect-delay', (Math.min(index % 5, 4) * 45) + 'ms');
+        });
+
+        const touchObserver = new IntersectionObserver(function(entries){
+          entries.forEach(function(entry){
+            if(entry.isIntersecting){
+              entry.target.classList.add('is-touch-visible');
+            }else{
+              entry.target.classList.remove('is-touch-visible');
+            }
+          });
+        }, {
+          threshold:0.34,
+          rootMargin:'0px 0px -12% 0px'
+        });
+
+        touchTargets.forEach(function(element){
+          touchObserver.observe(element);
+        });
+      }
+
     })();
   </script>
 </body>
