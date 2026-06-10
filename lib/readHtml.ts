@@ -139,6 +139,7 @@ const CONSENT_BANNER_STYLES = `<style id="iam-cookie-consent-styles">
 .iam-cookie-settings-link{border:0;background:transparent;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:0;cursor:pointer;transition:color .24s ease;}
 .iam-cookie-settings-link:hover{color:#fff;}
 @media(max-width:620px){.iam-cookie-banner{left:12px;right:12px;bottom:12px;width:calc(100vw - 24px);}.iam-cookie-banner-inner{padding:18px;}.iam-cookie-actions{align-items:stretch;}.iam-cookie-btn{width:100%;}.iam-cookie-row{flex-direction:column;gap:10px;}}
+@media(hover:none){.iam-cookie-btn:active{transform:translateY(-1px);border-color:rgba(255,255,255,.46);}.iam-cookie-btn.primary:active{background:#2eaa8a;color:#fff;border-color:#2eaa8a;}.iam-cookie-settings-link:active{color:#fff;}}
 @media(prefers-reduced-motion:reduce){.iam-cookie-banner *{transition:none!important;}}
 </style>`;
 
