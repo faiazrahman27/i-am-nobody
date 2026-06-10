@@ -533,40 +533,40 @@
       height:96px;
       position:relative;
       flex:0 0 auto;
-      background-image:var(--key-svg);
-      background-repeat:no-repeat;
-      background-position:center;
-      background-size:contain;
-      filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));
+      display:block;
+      overflow:visible;
+      background:none;
+      filter:none;
       transform-origin:50% 24%;
-      transition:rotate .32s ease, translate .32s ease, filter .32s ease;
+      transition:rotate .32s ease, translate .32s ease;
+    }
+    .key-icon svg{
+      width:100%;
+      height:100%;
+      display:block;
+      overflow:visible;
+      shape-rendering:geometricPrecision;
+      text-rendering:geometricPrecision;
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.48));
+      transform:translateZ(0);
+      -webkit-font-smoothing:antialiased;
+    }
+    .key-icon svg *{
+      vector-effect:non-scaling-stroke;
     }
     .key-icon:before,
     .key-icon:after{
       display:none!important;
     }
     .key-card:hover .key-icon{
-      filter:drop-shadow(0 14px 24px rgba(224,191,129,.24));
       rotate:-7deg;
       translate:0 -4px;
     }
+    .key-card:hover .key-icon svg{
+      filter:drop-shadow(0 14px 24px rgba(224,191,129,.24));
+    }
     .key-card:hover .key-num{
       color:#fff0c7;
-    }
-    .key-card:nth-child(1) .key-icon{
-      --key-svg:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%20120%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id=%22metal%22%20x1=%2218%22%20y1=%222%22%20x2=%2262%22%20y2=%22116%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff2c4%22/%3E%20%3Cstop%20offset=%220.28%22%20stop-color=%22%23e0bd78%22/%3E%20%3Cstop%20offset=%220.58%22%20stop-color=%22%23a87535%22/%3E%20%3Cstop%20offset=%220.78%22%20stop-color=%22%2370481f%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23f0cf86%22/%3E%20%3C/linearGradient%3E%20%3ClinearGradient%20id=%22edge%22%20x1=%2228%22%20y1=%228%22%20x2=%2250%22%20y2=%22105%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff6d6%22%20stop-opacity=%22.85%22/%3E%20%3Cstop%20offset=%22.48%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.34%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.1%22/%3E%20%3C/linearGradient%3E%20%3Cfilter%20id=%22shadow%22%20x=%22-28%25%22%20y=%22-22%25%22%20width=%22156%25%22%20height=%22148%25%22%3E%20%3CfeDropShadow%20dx=%221.8%22%20dy=%223.6%22%20stdDeviation=%222.6%22%20flood-color=%22%23000000%22%20flood-opacity=%22.52%22/%3E%20%3C/filter%3E%20%3C/defs%3E%20%3Cg%20filter=%22url(%23shadow)%22%3E%20%3Cpath%20fill=%22url(%23metal)%22%20fill-rule=%22evenodd%22%20d=%22M40%205a23%2023%200%201%201%200%2046a23%2023%200%200%201%200-46Zm0%2011a12%2012%200%201%200%200%2024a12%2012%200%200%200%200-24Z%22/%3E%20%3Crect%20x=%2235%22%20y=%2246%22%20width=%2210%22%20height=%2247%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Crect%20x=%2227%22%20y=%2243%22%20width=%2226%22%20height=%228%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Cpath%20fill=%22url(%23metal)%22%20d=%22M35%2086h25v9h-9v9h-10v10h-6z%22/%3E%20%3Cpath%20d=%22M37.5%2048v39%22%20stroke=%22url(%23edge)%22%20stroke-width=%221.6%22%20stroke-linecap=%22round%22%20opacity=%22.9%22/%3E%20%3Cpath%20d=%22M29%2028a11%2011%200%200%201%2011-11%22%20stroke=%22%23fff5d0%22%20stroke-width=%221.4%22%20stroke-linecap=%22round%22%20opacity=%22.55%22/%3E%20%3C/g%3E%3C/svg%3E");
-    }
-    .key-card:nth-child(2) .key-icon{
-      --key-svg:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%20120%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id=%22metal%22%20x1=%2218%22%20y1=%222%22%20x2=%2262%22%20y2=%22116%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff2c4%22/%3E%20%3Cstop%20offset=%220.28%22%20stop-color=%22%23e0bd78%22/%3E%20%3Cstop%20offset=%220.58%22%20stop-color=%22%23a87535%22/%3E%20%3Cstop%20offset=%220.78%22%20stop-color=%22%2370481f%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23f0cf86%22/%3E%20%3C/linearGradient%3E%20%3ClinearGradient%20id=%22edge%22%20x1=%2228%22%20y1=%228%22%20x2=%2250%22%20y2=%22105%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff6d6%22%20stop-opacity=%22.85%22/%3E%20%3Cstop%20offset=%22.48%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.34%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.1%22/%3E%20%3C/linearGradient%3E%20%3Cfilter%20id=%22shadow%22%20x=%22-28%25%22%20y=%22-22%25%22%20width=%22156%25%22%20height=%22148%25%22%3E%20%3CfeDropShadow%20dx=%221.8%22%20dy=%223.6%22%20stdDeviation=%222.6%22%20flood-color=%22%23000000%22%20flood-opacity=%22.52%22/%3E%20%3C/filter%3E%20%3C/defs%3E%20%3Cg%20filter=%22url(%23shadow)%22%3E%20%3Cpath%20fill=%22url(%23metal)%22%20fill-rule=%22evenodd%22%20d=%22M40%208c18%200%2030%2010%2030%2022S58%2052%2040%2052S10%2042%2010%2030S22%208%2040%208Zm0%2011c-10%200-18%205-18%2011s8%2011%2018%2011s18-5%2018-11s-8-11-18-11Z%22/%3E%20%3Crect%20x=%2236%22%20y=%2250%22%20width=%228%22%20height=%2244%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Crect%20x=%2224%22%20y=%2247%22%20width=%2232%22%20height=%228%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Cpath%20fill=%22url(%23metal)%22%20d=%22M36%2086h27v8h-12v8h8v9H40v-17h-4z%22/%3E%20%3Cpath%20d=%22M38%2052v36%22%20stroke=%22url(%23edge)%22%20stroke-width=%221.4%22%20stroke-linecap=%22round%22%20opacity=%22.9%22/%3E%20%3Cpath%20d=%22M24%2030c0-5%207-10%2016-10%22%20stroke=%22%23fff5d0%22%20stroke-width=%221.3%22%20stroke-linecap=%22round%22%20opacity=%22.52%22/%3E%20%3C/g%3E%3C/svg%3E");
-    }
-    .key-card:nth-child(3) .key-icon{
-      --key-svg:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%20120%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id=%22metal%22%20x1=%2218%22%20y1=%222%22%20x2=%2262%22%20y2=%22116%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff2c4%22/%3E%20%3Cstop%20offset=%220.28%22%20stop-color=%22%23e0bd78%22/%3E%20%3Cstop%20offset=%220.58%22%20stop-color=%22%23a87535%22/%3E%20%3Cstop%20offset=%220.78%22%20stop-color=%22%2370481f%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23f0cf86%22/%3E%20%3C/linearGradient%3E%20%3ClinearGradient%20id=%22edge%22%20x1=%2228%22%20y1=%228%22%20x2=%2250%22%20y2=%22105%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff6d6%22%20stop-opacity=%22.85%22/%3E%20%3Cstop%20offset=%22.48%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.34%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.1%22/%3E%20%3C/linearGradient%3E%20%3Cfilter%20id=%22shadow%22%20x=%22-28%25%22%20y=%22-22%25%22%20width=%22156%25%22%20height=%22148%25%22%3E%20%3CfeDropShadow%20dx=%221.8%22%20dy=%223.6%22%20stdDeviation=%222.6%22%20flood-color=%22%23000000%22%20flood-opacity=%22.52%22/%3E%20%3C/filter%3E%20%3C/defs%3E%20%3Cg%20filter=%22url(%23shadow)%22%3E%20%3Cpath%20fill=%22url(%23metal)%22%20fill-rule=%22evenodd%22%20d=%22M40%203l29%2029l-29%2029l-29-29Zm0%2015l14%2014l-14%2014l-14-14Z%22/%3E%20%3Crect%20x=%2235%22%20y=%2258%22%20width=%2210%22%20height=%2237%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Crect%20x=%2226%22%20y=%2255%22%20width=%2228%22%20height=%228%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Cpath%20fill=%22url(%23metal)%22%20d=%22M45%2087h-25v9h11v9h-7v9h21z%22/%3E%20%3Cpath%20d=%22M37.5%2061v29%22%20stroke=%22url(%23edge)%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20opacity=%22.85%22/%3E%20%3Cpath%20d=%22M28%2032l12-12l12%2012%22%20stroke=%22%23fff5d0%22%20stroke-width=%221.3%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%20opacity=%22.5%22/%3E%20%3C/g%3E%3C/svg%3E");
-    }
-    .key-card:nth-child(4) .key-icon{
-      --key-svg:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%20120%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id=%22metal%22%20x1=%2218%22%20y1=%222%22%20x2=%2262%22%20y2=%22116%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff2c4%22/%3E%20%3Cstop%20offset=%220.28%22%20stop-color=%22%23e0bd78%22/%3E%20%3Cstop%20offset=%220.58%22%20stop-color=%22%23a87535%22/%3E%20%3Cstop%20offset=%220.78%22%20stop-color=%22%2370481f%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23f0cf86%22/%3E%20%3C/linearGradient%3E%20%3ClinearGradient%20id=%22edge%22%20x1=%2228%22%20y1=%228%22%20x2=%2250%22%20y2=%22105%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff6d6%22%20stop-opacity=%22.85%22/%3E%20%3Cstop%20offset=%22.48%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.34%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.1%22/%3E%20%3C/linearGradient%3E%20%3Cfilter%20id=%22shadow%22%20x=%22-28%25%22%20y=%22-22%25%22%20width=%22156%25%22%20height=%22148%25%22%3E%20%3CfeDropShadow%20dx=%221.8%22%20dy=%223.6%22%20stdDeviation=%222.6%22%20flood-color=%22%23000000%22%20flood-opacity=%22.52%22/%3E%20%3C/filter%3E%20%3C/defs%3E%20%3Cg%20filter=%22url(%23shadow)%22%3E%20%3Cpath%20fill=%22url(%23metal)%22%20fill-rule=%22evenodd%22%20d=%22M40%204c12%200%2022%208%2023%2020c1%2014-10%2029-23%2029S16%2038%2017%2024C18%2012%2028%204%2040%204Zm0%2011c-7%200-13%205-13%2012c0%208%206%2015%2013%2015s13-7%2013-15c0-7-6-12-13-12Z%22/%3E%20%3Cpath%20fill=%22url(%23metal)%22%20d=%22M35%2050h10v43H35z%22/%3E%20%3Crect%20x=%2225%22%20y=%2249%22%20width=%2230%22%20height=%228%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Cpath%20fill=%22url(%23metal)%22%20d=%22M35%2086h24v8h-8v8h-8v10h-8z%22/%3E%20%3Crect%20x=%2232%22%20y=%2266%22%20width=%2216%22%20height=%227%22%20rx=%223.5%22%20fill=%22url(%23metal)%22/%3E%20%3Cpath%20d=%22M37%2053v34%22%20stroke=%22url(%23edge)%22%20stroke-width=%221.4%22%20stroke-linecap=%22round%22%20opacity=%22.86%22/%3E%20%3Cpath%20d=%22M29%2027c0-7%205-12%2011-12%22%20stroke=%22%23fff5d0%22%20stroke-width=%221.2%22%20stroke-linecap=%22round%22%20opacity=%22.5%22/%3E%20%3C/g%3E%3C/svg%3E");
-    }
-    .key-card:nth-child(5) .key-icon{
-      --key-svg:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2080%20120%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id=%22metal%22%20x1=%2218%22%20y1=%222%22%20x2=%2262%22%20y2=%22116%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff2c4%22/%3E%20%3Cstop%20offset=%220.28%22%20stop-color=%22%23e0bd78%22/%3E%20%3Cstop%20offset=%220.58%22%20stop-color=%22%23a87535%22/%3E%20%3Cstop%20offset=%220.78%22%20stop-color=%22%2370481f%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23f0cf86%22/%3E%20%3C/linearGradient%3E%20%3ClinearGradient%20id=%22edge%22%20x1=%2228%22%20y1=%228%22%20x2=%2250%22%20y2=%22105%22%20gradientUnits=%22userSpaceOnUse%22%3E%20%3Cstop%20offset=%220%22%20stop-color=%22%23fff6d6%22%20stop-opacity=%22.85%22/%3E%20%3Cstop%20offset=%22.48%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.34%22/%3E%20%3Cstop%20offset=%221%22%20stop-color=%22%23fff0bd%22%20stop-opacity=%22.1%22/%3E%20%3C/linearGradient%3E%20%3Cfilter%20id=%22shadow%22%20x=%22-28%25%22%20y=%22-22%25%22%20width=%22156%25%22%20height=%22148%25%22%3E%20%3CfeDropShadow%20dx=%221.8%22%20dy=%223.6%22%20stdDeviation=%222.6%22%20flood-color=%22%23000000%22%20flood-opacity=%22.52%22/%3E%20%3C/filter%3E%20%3C/defs%3E%20%3Cg%20filter=%22url(%23shadow)%22%3E%20%3Cpath%20fill=%22url(%23metal)%22%20fill-rule=%22evenodd%22%20d=%22M22%208h36c6%200%2011%205%2011%2011v21c0%206-5%2011-11%2011H22c-6%200-11-5-11-11V19c0-6%205-11%2011-11Zm9%2012c-4%200-7%203-7%207v5c0%204%203%207%207%207h18c4%200%207-3%207-7v-5c0-4-3-7-7-7Z%22/%3E%20%3Crect%20x=%2235%22%20y=%2248%22%20width=%2210%22%20height=%2243%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Crect%20x=%2225%22%20y=%2245%22%20width=%2230%22%20height=%228%22%20rx=%224%22%20fill=%22url(%23metal)%22/%3E%20%3Cpath%20fill=%22url(%23metal)%22%20d=%22M35%2084h28v8h-10v7h10v8h-18v8H35z%22/%3E%20%3Cpath%20d=%22M37.5%2050v36%22%20stroke=%22url(%23edge)%22%20stroke-width=%221.5%22%20stroke-linecap=%22round%22%20opacity=%22.88%22/%3E%20%3Cpath%20d=%22M23%2020h31%22%20stroke=%22%23fff5d0%22%20stroke-width=%221.3%22%20stroke-linecap=%22round%22%20opacity=%22.48%22/%3E%20%3C/g%3E%3C/svg%3E");
     }
     .key-card p{
       font-size:18px;
@@ -747,18 +747,23 @@
       border-left-color:#050505;
     }
     @media (prefers-reduced-motion:no-preference){
+      .key-card,
       .event-card,
       .podcast-episode{
         animation:sectionReveal both;
         animation-timeline:view();
         animation-range:entry 8% cover 32%;
       }
+      .key-card:nth-child(2),
       .event-card:nth-child(2),
       .podcast-episode:nth-child(2){animation-delay:.06s;}
+      .key-card:nth-child(3),
       .event-card:nth-child(3),
       .podcast-episode:nth-child(3){animation-delay:.12s;}
+      .key-card:nth-child(4),
       .event-card:nth-child(4),
       .podcast-episode:nth-child(4){animation-delay:.18s;}
+      .key-card:nth-child(5){animation-delay:.24s;}
     }
     @keyframes sectionReveal{
       from{opacity:0;translate:0 26px;}
@@ -1070,23 +1075,42 @@
       .key-icon{
         width:76px;
         height:114px;
-        background-size:100% 100%;
-        filter:none;
-        image-rendering:auto;
-        transform:translate3d(0,0,0);
-        backface-visibility:hidden;
-        -webkit-backface-visibility:hidden;
-        will-change:translate, rotate;
+        rotate:0deg!important;
+        translate:0 0!important;
+        transform:none!important;
+        will-change:auto;
+      }
+      .key-icon svg{
+        filter:none!important;
+        transform:translateZ(0);
+        shape-rendering:geometricPrecision;
+      }
+      .key-card:hover,
+      .key-card:active{
+        background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+        border-color:rgba(195,154,91,.44);
+        box-shadow:none;
+        transform:none;
       }
       .key-card:hover .key-icon,
       .key-card:active .key-icon,
       html.mobile-effects-enabled .key-card.is-touch-visible .key-icon{
-        filter:none;
-        rotate:-6deg;
-        translate:0 -4px;
+        rotate:0deg!important;
+        translate:0 0!important;
+        transform:none!important;
+        filter:none!important;
+      }
+      .key-card:hover .key-icon svg,
+      .key-card:active .key-icon svg,
+      html.mobile-effects-enabled .key-card.is-touch-visible .key-icon svg{
+        filter:none!important;
+      }
+      .key-card:hover .key-num,
+      .key-card:active .key-num,
+      html.mobile-effects-enabled .key-card.is-touch-visible .key-num{
+        color:var(--gold2);
       }
       html.mobile-effects-enabled .threshold,
-      html.mobile-effects-enabled .key-card,
       html.mobile-effects-enabled .event-card,
       html.mobile-effects-enabled .podcast-episode{
         transition-delay:var(--touch-effect-delay,0ms);
@@ -1096,15 +1120,6 @@
         transform:translateY(-5px);
         border-color:rgba(224,191,129,.24);
         box-shadow:0 18px 46px rgba(0,0,0,.24);
-      }
-      html.mobile-effects-enabled .key-card.is-touch-visible{
-        background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-        border-color:rgba(224,191,129,.72);
-        box-shadow:0 18px 42px rgba(0,0,0,.28);
-        transform:translateY(-5px);
-      }
-      html.mobile-effects-enabled .key-card.is-touch-visible .key-num{
-        color:#fff0c7;
       }
       html.mobile-effects-enabled .event-card.is-touch-visible{
         background:rgba(255,255,255,.072);
@@ -1273,7 +1288,7 @@
         <article class="key-card">
           <div class="key-top">
             <span class="key-num">01</span>
-            <span class="key-icon"></span>
+            <span class="key-icon" aria-hidden="true"><svg class="key-svg" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120"><defs><linearGradient id="metal1" x1="18" y1="2" x2="62" y2="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c4"/><stop offset="0.28" stop-color="#e0bd78"/><stop offset="0.58" stop-color="#a87535"/><stop offset="0.78" stop-color="#70481f"/><stop offset="1" stop-color="#f0cf86"/></linearGradient><linearGradient id="edge1" x1="28" y1="8" x2="50" y2="105" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff6d6" stop-opacity=".85"/><stop offset=".48" stop-color="#fff0bd" stop-opacity=".34"/><stop offset="1" stop-color="#fff0bd" stop-opacity=".1"/></linearGradient></defs><g><path fill="url(#metal1)" fill-rule="evenodd" d="M40 5a23 23 0 1 1 0 46a23 23 0 0 1 0-46Zm0 11a12 12 0 1 0 0 24a12 12 0 0 0 0-24Z"/><rect x="35" y="46" width="10" height="47" rx="4" fill="url(#metal1)"/><rect x="27" y="43" width="26" height="8" rx="4" fill="url(#metal1)"/><path fill="url(#metal1)" d="M35 86h25v9h-9v9h-10v10h-6z"/><path d="M37.5 48v39" stroke="url(#edge1)" stroke-width="1.6" stroke-linecap="round" opacity=".9"/><path d="M29 28a11 11 0 0 1 11-11" stroke="#fff5d0" stroke-width="1.4" stroke-linecap="round" opacity=".55"/></g></svg></span>
           </div>
           <p>Chi sei quando nessuno ti guarda?</p>
         </article>
@@ -1281,7 +1296,7 @@
         <article class="key-card">
           <div class="key-top">
             <span class="key-num">04</span>
-            <span class="key-icon"></span>
+            <span class="key-icon" aria-hidden="true"><svg class="key-svg" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120"><defs><linearGradient id="metal2" x1="18" y1="2" x2="62" y2="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c4"/><stop offset="0.28" stop-color="#e0bd78"/><stop offset="0.58" stop-color="#a87535"/><stop offset="0.78" stop-color="#70481f"/><stop offset="1" stop-color="#f0cf86"/></linearGradient><linearGradient id="edge2" x1="28" y1="8" x2="50" y2="105" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff6d6" stop-opacity=".85"/><stop offset=".48" stop-color="#fff0bd" stop-opacity=".34"/><stop offset="1" stop-color="#fff0bd" stop-opacity=".1"/></linearGradient></defs><g><path fill="url(#metal2)" fill-rule="evenodd" d="M40 8c18 0 30 10 30 22S58 52 40 52S10 42 10 30S22 8 40 8Zm0 11c-10 0-18 5-18 11s8 11 18 11s18-5 18-11s-8-11-18-11Z"/><rect x="36" y="50" width="8" height="44" rx="4" fill="url(#metal2)"/><rect x="24" y="47" width="32" height="8" rx="4" fill="url(#metal2)"/><path fill="url(#metal2)" d="M36 86h27v8h-12v8h8v9H40v-17h-4z"/><path d="M38 52v36" stroke="url(#edge2)" stroke-width="1.4" stroke-linecap="round" opacity=".9"/><path d="M24 30c0-5 7-10 16-10" stroke="#fff5d0" stroke-width="1.3" stroke-linecap="round" opacity=".52"/></g></svg></span>
           </div>
           <p>Quante volte lasci decidere all’algoritmo?</p>
         </article>
@@ -1289,7 +1304,7 @@
         <article class="key-card">
           <div class="key-top">
             <span class="key-num">08</span>
-            <span class="key-icon"></span>
+            <span class="key-icon" aria-hidden="true"><svg class="key-svg" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120"><defs><linearGradient id="metal3" x1="18" y1="2" x2="62" y2="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c4"/><stop offset="0.28" stop-color="#e0bd78"/><stop offset="0.58" stop-color="#a87535"/><stop offset="0.78" stop-color="#70481f"/><stop offset="1" stop-color="#f0cf86"/></linearGradient><linearGradient id="edge3" x1="28" y1="8" x2="50" y2="105" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff6d6" stop-opacity=".85"/><stop offset=".48" stop-color="#fff0bd" stop-opacity=".34"/><stop offset="1" stop-color="#fff0bd" stop-opacity=".1"/></linearGradient></defs><g><path fill="url(#metal3)" fill-rule="evenodd" d="M40 3l29 29l-29 29l-29-29Zm0 15l14 14l-14 14l-14-14Z"/><rect x="35" y="58" width="10" height="37" rx="4" fill="url(#metal3)"/><rect x="26" y="55" width="28" height="8" rx="4" fill="url(#metal3)"/><path fill="url(#metal3)" d="M45 87h-25v9h11v9h-7v9h21z"/><path d="M37.5 61v29" stroke="url(#edge3)" stroke-width="1.5" stroke-linecap="round" opacity=".85"/><path d="M28 32l12-12l12 12" stroke="#fff5d0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".5"/></g></svg></span>
           </div>
           <p>Se spegnessi tutto, cosa resterebbe acceso?</p>
         </article>
@@ -1297,7 +1312,7 @@
         <article class="key-card">
           <div class="key-top">
             <span class="key-num">16</span>
-            <span class="key-icon"></span>
+            <span class="key-icon" aria-hidden="true"><svg class="key-svg" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120"><defs><linearGradient id="metal4" x1="18" y1="2" x2="62" y2="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c4"/><stop offset="0.28" stop-color="#e0bd78"/><stop offset="0.58" stop-color="#a87535"/><stop offset="0.78" stop-color="#70481f"/><stop offset="1" stop-color="#f0cf86"/></linearGradient><linearGradient id="edge4" x1="28" y1="8" x2="50" y2="105" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff6d6" stop-opacity=".85"/><stop offset=".48" stop-color="#fff0bd" stop-opacity=".34"/><stop offset="1" stop-color="#fff0bd" stop-opacity=".1"/></linearGradient></defs><g><path fill="url(#metal4)" fill-rule="evenodd" d="M40 4c12 0 22 8 23 20c1 14-10 29-23 29S16 38 17 24C18 12 28 4 40 4Zm0 11c-7 0-13 5-13 12c0 8 6 15 13 15s13-7 13-15c0-7-6-12-13-12Z"/><path fill="url(#metal4)" d="M35 50h10v43H35z"/><rect x="25" y="49" width="30" height="8" rx="4" fill="url(#metal4)"/><path fill="url(#metal4)" d="M35 86h24v8h-8v8h-8v10h-8z"/><rect x="32" y="66" width="16" height="7" rx="3.5" fill="url(#metal4)"/><path d="M37 53v34" stroke="url(#edge4)" stroke-width="1.4" stroke-linecap="round" opacity=".86"/><path d="M29 27c0-7 5-12 11-12" stroke="#fff5d0" stroke-width="1.2" stroke-linecap="round" opacity=".5"/></g></svg></span>
           </div>
           <p>L’AI può aiutarti a produrre. Ma tu cosa vuoi generare?</p>
         </article>
@@ -1305,7 +1320,7 @@
         <article class="key-card">
           <div class="key-top">
             <span class="key-num">25</span>
-            <span class="key-icon"></span>
+            <span class="key-icon" aria-hidden="true"><svg class="key-svg" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 120"><defs><linearGradient id="metal5" x1="18" y1="2" x2="62" y2="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff2c4"/><stop offset="0.28" stop-color="#e0bd78"/><stop offset="0.58" stop-color="#a87535"/><stop offset="0.78" stop-color="#70481f"/><stop offset="1" stop-color="#f0cf86"/></linearGradient><linearGradient id="edge5" x1="28" y1="8" x2="50" y2="105" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff6d6" stop-opacity=".85"/><stop offset=".48" stop-color="#fff0bd" stop-opacity=".34"/><stop offset="1" stop-color="#fff0bd" stop-opacity=".1"/></linearGradient></defs><g><path fill="url(#metal5)" fill-rule="evenodd" d="M22 8h36c6 0 11 5 11 11v21c0 6-5 11-11 11H22c-6 0-11-5-11-11V19c0-6 5-11 11-11Zm9 12c-4 0-7 3-7 7v5c0 4 3 7 7 7h18c4 0 7-3 7-7v-5c0-4-3-7-7-7Z"/><rect x="35" y="48" width="10" height="43" rx="4" fill="url(#metal5)"/><rect x="25" y="45" width="30" height="8" rx="4" fill="url(#metal5)"/><path fill="url(#metal5)" d="M35 84h28v8h-10v7h10v8h-18v8H35z"/><path d="M37.5 50v36" stroke="url(#edge5)" stroke-width="1.5" stroke-linecap="round" opacity=".88"/><path d="M23 20h31" stroke="#fff5d0" stroke-width="1.3" stroke-linecap="round" opacity=".48"/></g></svg></span>
           </div>
           <p>Chi sarai quando tutto finirà?</p>
         </article>
@@ -1503,7 +1518,7 @@
       ){
         document.documentElement.classList.add('mobile-effects-enabled');
 
-        const touchTargets = Array.from(document.querySelectorAll('.threshold, .key-card, .event-card, .podcast-episode'));
+        const touchTargets = Array.from(document.querySelectorAll('.threshold, .event-card, .podcast-episode'));
         touchTargets.forEach(function(element, index){
           element.style.setProperty('--touch-effect-delay', (Math.min(index % 5, 4) * 45) + 'ms');
         });
