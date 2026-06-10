@@ -6,7 +6,7 @@ type HtmlFileName = "home.html" | "shop.html";
 
 const HOME_EN_TRANSLATIONS: Array<[string, string]> = [
   ['<html lang="it">', '<html lang="en">'],
-  ["I AM NOBODY — Andrea Magelli", "I AM NOBODY — Official Site"],
+  ["I AM NOBODY — Andrea Magelli", "I AM NOBODY — Andrea Magelli"],
   ["Andrea Magelli · progetto editoriale / culturale / esperienziale", "Andrea Magelli · editorial / cultural / experiential project"],
   ["Chi sei quando nessuno ti guarda?", "Who are you when no one is watching?"],
   [
