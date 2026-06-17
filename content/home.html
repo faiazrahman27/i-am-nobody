@@ -769,6 +769,49 @@
       from{opacity:0;translate:0 26px;}
       to{opacity:1;translate:0 0;}
     }
+    .is-prelaunch-hidden,
+    .prelaunch-hidden-original{
+      display:none!important;
+    }
+    .prelaunch-soon-card{
+      margin-top:54px;
+      border:1px solid rgba(224,191,129,.26);
+      background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+      padding:46px;
+      min-height:240px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:18px;
+      box-shadow:0 18px 46px rgba(0,0,0,.18);
+    }
+    .prelaunch-soon-card h3{
+      font-family:var(--display);
+      font-size:clamp(42px,5vw,74px);
+      line-height:.92;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:#fff;
+    }
+    .prelaunch-soon-card p{
+      font-size:24px;
+      font-style:italic;
+      line-height:1.28;
+      color:rgba(255,255,255,.66);
+      max-width:620px;
+    }
+    .podcast-section .prelaunch-soon-card{
+      border-color:rgba(0,0,0,.14);
+      background:rgba(255,255,255,.34);
+      box-shadow:0 16px 36px rgba(0,0,0,.08);
+    }
+    .podcast-section .prelaunch-soon-card h3{
+      color:#050505;
+    }
+    .podcast-section .prelaunch-soon-card p{
+      color:rgba(0,0,0,.58);
+    }
+
     .tagline{
       font-family:var(--sans);
       font-size:11px;
@@ -1017,6 +1060,11 @@
         width:48px;
         height:48px;
       }
+      .prelaunch-soon-card{
+        margin-top:38px;
+        padding:34px 24px;
+        min-height:210px;
+      }
     }
 
     @media (prefers-reduced-motion:reduce){
@@ -1156,7 +1204,7 @@
       <div class="navlinks" id="homeNavLinks">
         <a href="#soglie">Soglie</a>
         <a href="#libro">Libro</a>
-        <a href="#chiavi">25 Chiavi</a>
+        <a href="#chiavi" class="is-prelaunch-hidden" data-preserved-link="keys">25 Chiavi</a>
         <a href="#eventi">Eventi</a>
         <a href="#podcast">Podcast</a>
         <a href="/it/shop" data-shop-link>Shop</a>
@@ -1179,7 +1227,7 @@
       <p class="hero-copy">Un libro-manifesto, una maschera, venticinque chiavi e un viaggio in quattro soglie: Nobody, Somebody, Anybody, Infinite.</p>
       <div class="actions">
         <a href="#libro" class="btn primary">Scopri il libro →</a>
-        <a href="#chiavi" class="btn secondary">Apri le 25 chiavi</a>
+        <a href="#chiavi" class="btn secondary is-prelaunch-hidden" data-preserved-link="keys">Apri le 25 chiavi</a>
       </div>
     </div>
 
@@ -1193,7 +1241,7 @@
 
   <section class="manifesto noise">
     <div>
-      <h2>Non sei ciò che mostri.<span>Sei ciò che rimane.</span></h2>
+      <h2>Non sei ciò che mostri.<span>Sei ciò che rimane negli altri.</span></h2>
       <p>Un progetto per tornare interi, non perfetti.</p>
     </div>
   </section>
@@ -1278,7 +1326,7 @@
     </div>
   </section>
 
-  <section class="keys noise" id="chiavi">
+  <section class="keys noise is-prelaunch-hidden" id="chiavi" data-preserved-section="keys">
     <div class="section-inner">
       <span class="label">Oggetto derivato</span>
       <h2 class="section-title">Le 25 chiavi</h2>
@@ -1338,7 +1386,14 @@
       <h2 class="section-title">Eventi e rituali</h2>
       <p class="section-lead">Nessuna introduzione. Spazi in cui la domanda diventa collettiva.</p>
 
-      <div class="events-grid">
+      <div class="prelaunch-soon-card" data-current-placeholder="events">
+        <span class="event-date">Coming soon</span>
+        <h3>Stay tuned</h3>
+        <p>Eventi, rituali e date saranno annunciati qui.</p>
+      </div>
+
+      <!-- Preserved for later launch: original events grid is hidden, not deleted. -->
+      <div class="events-grid prelaunch-hidden-original" data-preserved-section="events">
         <article class="event-card featured">
           <span class="event-date">18 giugno 2026 - Milano</span>
           <h3>I AM NOBODY - Launch</h3>
@@ -1387,7 +1442,14 @@
         <p class="section-lead">Conversazioni con chi ha fatto i conti con la domanda. Con o senza maschera.</p>
       </div>
 
-      <div class="podcast-grid">
+      <div class="prelaunch-soon-card" data-current-placeholder="podcast">
+        <span class="podcast-meta">Coming soon</span>
+        <h3>Stay tuned</h3>
+        <p>Episodi e conversazioni saranno annunciati qui.</p>
+      </div>
+
+      <!-- Preserved for later launch: original podcast grid is hidden, not deleted. -->
+      <div class="podcast-grid prelaunch-hidden-original" data-preserved-section="podcast">
         <article class="podcast-episode">
           <span class="episode-num">01</span>
           <div>
@@ -1445,7 +1507,7 @@
     <div class="footer-top">
       <div>
         <div class="footer-logo">I AM <span>NOBODY</span></div>
-        <p class="footer-tagline">Viaggio dentro. Ritorno a te.</p>
+        <p class="footer-tagline">Chi sei quando nessuno ti guarda?</p>
       </div>
       <div style="height:2px;width:60px;" class="iris footer-iris"></div>
     </div>

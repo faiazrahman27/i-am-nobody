@@ -16,7 +16,7 @@ const HOME_EN_TRANSLATIONS: Array<[string, string]> = [
   ["Scopri il libro →", "Discover the book →"],
   ["Apri le 25 chiavi", "Open the 25 keys"],
   ["Non sei ciò che mostri.", "You are not what you show."],
-  ["Sei ciò che rimane.", "You are what remains."],
+  ["Sei ciò che rimane negli altri.", "You are what remains in others."],
   ["Un progetto per tornare interi, non perfetti.", "A project for becoming whole again, not perfect."],
   ["Architettura narrativa", "Narrative architecture"],
   ["Le quattro soglie", "The four thresholds"],
@@ -82,6 +82,7 @@ const HOME_EN_TRANSLATIONS: Array<[string, string]> = [
   ["Spazi dal vivo", "Live spaces"],
   ["Eventi e rituali", "Events and rituals"],
   ["Nessuna introduzione. Spazi in cui la domanda diventa collettiva.", "No introductions. Spaces where the question becomes collective."],
+  ["Eventi, rituali e date saranno annunciati qui.", "Events, rituals, and dates will be announced here."],
   ["18 giugno 2026 - Milano", "June 18, 2026 - Milan"],
   ["Luogo da annunciare - 19:00", "Location to be announced - 7:00 pm"],
   ["Luglio 2026 - Bologna", "July 2026 - Bologna"],
@@ -92,6 +93,7 @@ const HOME_EN_TRANSLATIONS: Array<[string, string]> = [
   ["Internazionale - TBD", "International - TBD"],
   ["Edizione inglese.", "English edition."],
   ["Conversazioni con chi ha fatto i conti con la domanda. Con o senza maschera.", "Conversations with those who have come to terms with the question. With or without a mask."],
+  ["Episodi e conversazioni saranno annunciati qui.", "Episodes and conversations will be announced here."],
   ["Chi sei quando perdi tutto", "Who you are when you lose everything"],
   ["Con Andrea Magelli - episodio di lancio", "With Andrea Magelli - launch episode"],
   ["48 min - 18 giugno 2026", "48 min - June 18, 2026"],
@@ -187,7 +189,7 @@ const CONSENT_BANNER_SCRIPT = `<script id="iam-cookie-consent-script">
       optionalBody:'Non sono attivi su questo sito. Se verranno aggiunti, saranno bloccati finche non scegli di abilitarli.',
       alwaysOn:'Sempre attivi',
       off:'Non attivi',
-      footer:'Cookie'
+      footer:'Impostazioni cookie'
     },
     en: {
       eyebrow:'Privacy & cookies',
