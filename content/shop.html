@@ -1131,6 +1131,25 @@ footer{background:var(--dark);padding:62px 64px 42px;}
     border-color:var(--i2);
   }
 }
+
+/* MOBILE LANGUAGE SWITCH STABILITY — layout only */
+@media(max-width:900px){
+  .lang-switch{display:flex;flex:0 0 auto;}
+}
+@media(max-width:640px){
+  .nav-logo{max-width:calc(100vw - 202px);overflow:hidden;}
+  .nav-actions{right:64px;gap:8px;}
+  .lang-switch{display:flex!important;height:34px;background:rgba(5,5,5,.72);backdrop-filter:blur(14px);}
+  .lang-btn{padding:0 9px;font-size:9px;letter-spacing:1.4px;}
+  .nav-cart{padding:9px 10px;}
+}
+@media(max-width:370px){
+  .nav-logo{font-size:18px;letter-spacing:1.8px;max-width:calc(100vw - 190px);}
+  .lang-switch{height:32px;}
+  .lang-btn{padding:0 8px;}
+  .nav-actions{gap:6px;right:60px;}
+}
+
 </style>
 </head>
 <body class="shop-preorder-launch">

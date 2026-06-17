@@ -1194,6 +1194,142 @@
       }
     }
 
+
+    /* RESPONSIVE HEADER + HERO STABILITY FIX — layout only */
+    @media(max-width:980px){
+      .hero{
+        grid-template-columns:1fr;
+        min-height:auto;
+        align-items:start;
+        overflow:hidden;
+      }
+      .hero-left{
+        min-height:auto;
+        padding:112px 8vw 34px;
+        justify-content:flex-start;
+      }
+      .hero-right{
+        order:0;
+        min-height:auto;
+        padding:18px 6vw 76px;
+        align-items:flex-start;
+      }
+      .hero h1{
+        font-size:clamp(82px,18vw,150px);
+        line-height:.86;
+        max-width:min(720px,100%);
+      }
+      .hero .iam{
+        letter-spacing:clamp(7px,1.8vw,12px);
+      }
+      .hero-sub{
+        font-size:clamp(25px,5vw,42px);
+        margin:24px 0 22px;
+      }
+      .hero-copy{
+        max-width:620px;
+        margin-bottom:28px;
+      }
+      .book-cover-display{
+        width:min(440px,76vw);
+        aspect-ratio:906/1280;
+        max-height:none;
+        overflow:hidden;
+      }
+      .book-cover-display img{
+        width:100%;
+        height:100%;
+        display:block;
+        object-fit:contain;
+        object-position:center;
+      }
+      .cover-line{
+        height:clamp(4px,.7vw,7px);
+      }
+    }
+
+    @media(max-width:900px){
+      .nav-right{
+        z-index:70;
+      }
+      .lang-switch{
+        display:flex;
+        flex:0 0 auto;
+      }
+    }
+
+    @media(max-width:760px){
+      .hero-left{
+        padding:102px 7vw 26px;
+      }
+      .hero-right{
+        padding:8px 7vw 68px;
+      }
+      .book-cover-display{
+        width:min(380px,84vw);
+      }
+      .eyebrow{
+        max-width:100%;
+        font-size:10px;
+        letter-spacing:2.4px;
+        line-height:1.55;
+      }
+      .hero h1{
+        font-size:clamp(76px,21vw,118px);
+        letter-spacing:1px;
+      }
+      .hero-sub{
+        font-size:clamp(24px,6vw,34px);
+        line-height:1.1;
+      }
+      .hero-copy{
+        font-size:14px;
+        line-height:1.7;
+      }
+    }
+
+    @media(max-width:620px){
+      .brand{
+        max-width:calc(100vw - 154px);
+        overflow:hidden;
+        font-size:19px;
+        letter-spacing:3px;
+      }
+      .lang-switch{
+        display:flex!important;
+        height:34px;
+        background:rgba(5,5,5,.72);
+        backdrop-filter:blur(14px);
+      }
+      .lang-option{
+        padding:0 9px;
+        font-size:9px;
+        letter-spacing:1.4px;
+      }
+    }
+
+    @media(max-width:420px){
+      .book-cover-display{
+        width:min(340px,84vw);
+      }
+      .hero h1{
+        font-size:clamp(72px,23vw,98px);
+      }
+    }
+
+    @media(max-width:360px){
+      .brand{
+        font-size:18px;
+        letter-spacing:2.4px;
+      }
+      .lang-switch{
+        height:32px;
+      }
+      .lang-option{
+        padding:0 8px;
+      }
+    }
+
   </style>
 </head>
 <body>
