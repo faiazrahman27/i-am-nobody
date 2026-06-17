@@ -749,7 +749,8 @@
     @media (prefers-reduced-motion:no-preference){
       .key-card,
       .event-card,
-      .podcast-episode{
+      .podcast-episode,
+      .about-author-copy{
         animation:sectionReveal both;
         animation-timeline:view();
         animation-range:entry 8% cover 32%;
@@ -818,6 +819,53 @@
       letter-spacing:2px;
       text-transform:uppercase;
       color:var(--gold);
+    }
+
+
+
+    .about-author{
+      background:
+        radial-gradient(circle at 18% 22%,rgba(224,191,129,.12),transparent 34%),
+        radial-gradient(circle at 82% 72%,rgba(41,199,214,.08),transparent 30%),
+        #070707;
+      color:var(--soft);
+      border-top:1px solid rgba(255,255,255,.08);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .about-author-grid{
+      display:block;
+    }
+    .about-author-copy{
+      max-width:920px;
+      margin:0 auto;
+    }
+    .about-author-lead{
+      font-size:clamp(26px,3vw,42px);
+      line-height:1.12;
+      font-style:italic;
+      color:rgba(242,238,230,.9);
+      margin-top:24px;
+    }
+    .about-author-text{
+      margin-top:34px;
+      display:grid;
+      gap:20px;
+    }
+    .about-author-text p{
+      font-size:22px;
+      line-height:1.48;
+      color:rgba(255,255,255,.68);
+    }
+    .about-author-question{
+      margin:8px 0;
+      padding:26px 0 26px 26px;
+      border-left:3px solid var(--gold2);
+      font-family:var(--display);
+      font-size:clamp(38px,5vw,70px);
+      line-height:.95;
+      letter-spacing:1.2px;
+      text-transform:uppercase;
+      color:#fff;
     }
 
     .newsletter{
@@ -953,6 +1001,7 @@
         max-width:720px;
       }
       .podcast-grid{grid-template-columns:1fr;}
+      .about-author-copy{max-width:100%;}
       .signup{flex-direction:column;}
       footer{padding-left:28px;padding-right:28px;}
       .footer-top,.footer-bottom{
@@ -1038,6 +1087,8 @@
         max-height:560px;
       }
       .section-inner{padding:86px 0;}
+      .about-author-text p{font-size:19px;line-height:1.52;}
+      .about-author-question{padding-left:18px;font-size:40px;}
       html{scroll-padding-top:76px;}
       section{scroll-margin-top:76px;}
       .meta-grid{grid-template-columns:1fr;}
@@ -1160,7 +1211,8 @@
       }
       html.mobile-effects-enabled .threshold,
       html.mobile-effects-enabled .event-card,
-      html.mobile-effects-enabled .podcast-episode{
+      html.mobile-effects-enabled .podcast-episode,
+      html.mobile-effects-enabled .about-author-copy{
         transition-delay:var(--touch-effect-delay,0ms);
       }
       html.mobile-effects-enabled .threshold.is-touch-visible{
@@ -1184,6 +1236,9 @@
         background:rgba(255,255,255,.56);
         transform:translateY(-4px);
         box-shadow:0 16px 34px rgba(0,0,0,.08);
+      }
+      html.mobile-effects-enabled .about-author-copy.is-touch-visible{
+        transform:translateY(-2px);
       }
       html.mobile-effects-enabled .play-button:active{
         background:var(--gold2);
@@ -1343,6 +1398,7 @@
         <a href="#chiavi" class="is-prelaunch-hidden" data-preserved-link="keys">25 Chiavi</a>
         <a href="#eventi">Eventi</a>
         <a href="#podcast">Podcast</a>
+        <a href="#autore">Autore</a>
         <a href="/it/shop" data-shop-link>Shop</a>
         <a href="#newsletter" class="nav-cta">Join</a>
       </div>
@@ -1629,6 +1685,28 @@
     </div>
   </section>
 
+  <section class="about-author noise" id="autore">
+    <div class="section-inner about-author-grid">
+      <div class="about-author-copy">
+        <span class="label">L'autore</span>
+        <h2 class="section-title">Andrea Magelli</h2>
+        <p class="about-author-lead">Andrea Magelli è un imprenditore, storyteller e costruttore di comunità.</p>
+
+        <div class="about-author-text">
+          <p>Per più di vent’anni ha lavorato all’incrocio tra innovazione, food, educazione, tecnologia e connessione umana, fondando e guidando progetti capaci di coinvolgere milioni di persone nel mondo.</p>
+          <p>Eppure questo libro non nasce dal successo professionale, dagli eventi globali o dai risultati raggiunti.</p>
+          <p>Nasce da una domanda più semplice.</p>
+          <blockquote class="about-author-question">Chi sei quando nessuno ti guarda?</blockquote>
+          <p>Come padre, imprenditore e lifelong learner, Andrea esplora da anni la tensione tra identità e performance, successo e significato, tecnologia e umanità.</p>
+          <p>Attraverso progetti che attraversano ospitalità, innovazione food, educazione globale e sviluppo rigenerativo, ha ritrovato ovunque la stessa sfida: siamo più connessi che mai, ma spesso lontani da noi stessi.</p>
+          <p>I AM Nobody non prova a dare risposte. È un invito a fermarsi, riflettere e ritrovare quella parte di noi che esiste oltre titoli, ruoli e aspettative.</p>
+          <p>Andrea vive tra idee, progetti e conversazioni che cercano di lasciare il mondo un po’ più consapevole, connesso e rigenerativo di come lo ha trovato.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
   <section class="newsletter" id="newsletter">
     <h2>Entra nella soglia.</h2>
     <p>Una domanda alla volta. Nessun rumore. Solo ciò che resta.</p>
@@ -1716,7 +1794,7 @@
       ){
         document.documentElement.classList.add('mobile-effects-enabled');
 
-        const touchTargets = Array.from(document.querySelectorAll('.threshold, .event-card, .podcast-episode'));
+        const touchTargets = Array.from(document.querySelectorAll('.threshold, .event-card, .podcast-episode, .about-author-copy'));
         touchTargets.forEach(function(element, index){
           element.style.setProperty('--touch-effect-delay', (Math.min(index % 5, 4) * 45) + 'ms');
         });
