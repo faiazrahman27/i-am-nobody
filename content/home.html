@@ -889,12 +889,16 @@
     .signup{
       display:flex;
       justify-content:center;
+      align-items:stretch;
+      flex-wrap:wrap;
       gap:10px;
       max-width:680px;
       margin:0 auto;
+      position:relative;
     }
     .signup input{
-      flex:1;
+      flex:1 1 420px;
+      min-width:min(420px,100%);
       background:rgba(255,255,255,.08);
       border:1px solid rgba(255,255,255,.16);
       padding:18px 20px;
@@ -904,6 +908,8 @@
       outline:none;
     }
     .signup button{
+      flex:0 0 auto;
+      min-width:148px;
       border:0;
       border-radius:999px;
       padding:18px 24px;
@@ -918,20 +924,23 @@
       opacity:.62;
       cursor:not-allowed;
     }
-    .signup-status{
+    .newsletter .signup-status{
+      flex:0 0 100%;
       width:100%;
       min-height:20px;
-      margin-top:2px;
+      margin:4px 0 0;
       font-family:var(--sans);
       font-size:10px;
+      font-style:normal;
       line-height:1.55;
       letter-spacing:1.7px;
       text-transform:uppercase;
       color:rgba(255,255,255,.62);
       text-align:left;
+      max-width:none;
     }
-    .signup-status.is-success{color:var(--gold2);}
-    .signup-status.is-error{color:#f3b7bf;}
+    .newsletter .signup-status.is-success{color:var(--gold2);}
+    .newsletter .signup-status.is-error{color:#f3b7bf;}
 
     footer{
       background:#050505;
@@ -1020,7 +1029,9 @@
       }
       .podcast-grid{grid-template-columns:1fr;}
       .about-author-copy{max-width:100%;}
-      .signup{flex-direction:column;}
+      .signup{flex-direction:column;align-items:stretch;}
+      .signup input{flex:1 1 auto;min-width:0;width:100%;}
+      .signup button{width:100%;min-width:0;}
       footer{padding-left:28px;padding-right:28px;}
       .footer-top,.footer-bottom{
         flex-direction:column;
