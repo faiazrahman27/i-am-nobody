@@ -914,6 +914,24 @@
       text-transform:uppercase;
       letter-spacing:2px;
     }
+    .signup button:disabled{
+      opacity:.62;
+      cursor:not-allowed;
+    }
+    .signup-status{
+      width:100%;
+      min-height:20px;
+      margin-top:2px;
+      font-family:var(--sans);
+      font-size:10px;
+      line-height:1.55;
+      letter-spacing:1.7px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.62);
+      text-align:left;
+    }
+    .signup-status.is-success{color:var(--gold2);}
+    .signup-status.is-error{color:#f3b7bf;}
 
     footer{
       background:#050505;
@@ -1711,9 +1729,11 @@
     <h2>Entra nella soglia.</h2>
     <p>Una domanda alla volta. Nessun rumore. Solo ciò che resta.</p>
 
-    <form class="signup">
-      <input type="email" placeholder="la tua email" />
-      <button type="button">Join</button>
+    <form class="signup" data-join-form novalidate>
+      <input type="email" placeholder="la tua email" autocomplete="email" required data-join-email aria-label="Email" />
+      <input type="text" name="company" autocomplete="off" tabindex="-1" aria-hidden="true" data-join-honeypot style="position:absolute;left:-9999px;opacity:0;pointer-events:none;" />
+      <button type="submit" data-join-submit>Join</button>
+      <p class="signup-status" data-join-status role="status" aria-live="polite"></p>
     </form>
   </section>
 
@@ -1780,6 +1800,83 @@
         });
         window.addEventListener('resize', function(){
           if(window.innerWidth > 900) setMenuOpen(false);
+        });
+      }
+
+
+      const joinCopy = {
+        it:{
+          invalid:'Inserisci un indirizzo email valido.',
+          sending:'Invio...',
+          success:'Grazie. La tua email è stata ricevuta.',
+          error:'Qualcosa non ha funzionato. Riprova tra poco.'
+        },
+        en:{
+          invalid:'Enter a valid email address.',
+          sending:'Sending...',
+          success:'Thank you. Your email has been received.',
+          error:'Something did not work. Please try again shortly.'
+        }
+      };
+
+      const joinForm = document.querySelector('[data-join-form]');
+      if(joinForm){
+        const emailInput = joinForm.querySelector('[data-join-email]');
+        const honeypot = joinForm.querySelector('[data-join-honeypot]');
+        const submitButton = joinForm.querySelector('[data-join-submit]');
+        const status = joinForm.querySelector('[data-join-status]');
+        const defaultButtonText = submitButton ? submitButton.textContent : 'Join';
+        const copy = joinCopy[lang] || joinCopy.it;
+
+        function setJoinStatus(message, type){
+          if(!status) return;
+          status.textContent = message || '';
+          status.classList.remove('is-success','is-error');
+          if(type) status.classList.add(type === 'success' ? 'is-success' : 'is-error');
+        }
+
+        joinForm.addEventListener('submit', async function(event){
+          event.preventDefault();
+          const email = emailInput && emailInput.value ? emailInput.value.trim() : '';
+          const trap = honeypot && honeypot.value ? honeypot.value.trim() : '';
+
+          if(trap) return;
+
+          if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+            setJoinStatus(copy.invalid, 'error');
+            if(emailInput) emailInput.focus();
+            return;
+          }
+
+          if(submitButton){
+            submitButton.disabled = true;
+            submitButton.textContent = copy.sending;
+          }
+          setJoinStatus('', null);
+
+          try{
+            const response = await fetch('/api/join', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({
+                email:email,
+                language:lang,
+                page:window.location.pathname || '/',
+                source:'homepage-newsletter'
+              })
+            });
+
+            if(!response.ok) throw new Error('Join request failed');
+            if(emailInput) emailInput.value = '';
+            setJoinStatus(copy.success, 'success');
+          }catch(_error){
+            setJoinStatus(copy.error, 'error');
+          }finally{
+            if(submitButton){
+              submitButton.disabled = false;
+              submitButton.textContent = defaultButtonText || 'Join';
+            }
+          }
         });
       }
 
