@@ -319,6 +319,141 @@ const CONSENT_BANNER_SCRIPT = `<script id="iam-cookie-consent-script">
 })();
 </script>`;
 
+const PREORDER_PROMPT_STYLES = `<style id="iam-preorder-prompt-styles">
+.iam-preorder-prompt{position:fixed;left:20px;right:20px;bottom:20px;z-index:2990;width:min(640px,calc(100vw - 40px));display:none;background:rgba(5,5,5,.96);color:#fff;border:1px solid rgba(255,255,255,.14);box-shadow:0 22px 70px rgba(0,0,0,.42);backdrop-filter:blur(18px);font-family:'DM Sans',Arial,sans-serif;}
+.iam-preorder-prompt.is-visible{display:block;}
+.iam-preorder-inner{padding:22px;display:grid;gap:15px;}
+.iam-preorder-eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#d4a017;font-weight:700;}
+.iam-preorder-title{font-family:'Bebas Neue',Arial,sans-serif;font-size:31px;line-height:1;color:#fff;letter-spacing:.8px;margin:0;}
+.iam-preorder-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.48;color:rgba(255,255,255,.74);margin:0;max-width:560px;}
+.iam-preorder-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.iam-preorder-btn{border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;min-height:42px;padding:0 16px;font-family:'DM Sans',Arial,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .24s ease,color .24s ease,border-color .24s ease,transform .24s ease;display:inline-flex;align-items:center;justify-content:center;}
+.iam-preorder-btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.46);}
+.iam-preorder-btn.primary{background:#fff;color:#050505;border-color:#fff;text-decoration:none;}
+.iam-preorder-btn.primary:hover{background:#d4a017;color:#050505;border-color:#d4a017;}
+@media(max-width:620px){.iam-preorder-prompt{left:12px;right:12px;bottom:12px;width:calc(100vw - 24px);}.iam-preorder-inner{padding:18px;}.iam-preorder-title{font-size:28px;}.iam-preorder-text{font-size:17px;}.iam-preorder-actions{align-items:stretch;}.iam-preorder-btn{width:100%;}}
+@media(hover:none){.iam-preorder-btn:active{transform:translateY(-1px);border-color:rgba(255,255,255,.46);}.iam-preorder-btn.primary:active{background:#d4a017;color:#050505;border-color:#d4a017;}}
+@media(prefers-reduced-motion:reduce){.iam-preorder-prompt *{transition:none!important;}}
+</style>`;
+
+const PREORDER_PROMPT_MARKUP = `<div class="iam-preorder-prompt" data-preorder-prompt role="dialog" aria-modal="false" aria-labelledby="iamPreorderTitle" hidden>
+  <div class="iam-preorder-inner">
+    <div>
+      <span class="iam-preorder-eyebrow" data-preorder-copy="eyebrow">Pre-order</span>
+      <h2 class="iam-preorder-title" id="iamPreorderTitle" data-preorder-copy="title">The book is now in pre-order.</h2>
+    </div>
+    <p class="iam-preorder-text" data-preorder-copy="body"></p>
+    <div class="iam-preorder-actions">
+      <a class="iam-preorder-btn primary" href="/it/shop" data-preorder-shop-link data-preorder-copy="primary">Vai allo shop</a>
+      <button class="iam-preorder-btn" type="button" data-preorder-close data-preorder-copy="secondary">Continua</button>
+    </div>
+  </div>
+</div>`;
+
+const PREORDER_PROMPT_SCRIPT = `<script id="iam-preorder-prompt-script">
+(function(){
+  var STORAGE_KEY = 'iamNobodyPreorderPromptDismissedV1';
+  var COPY = {
+    it: {
+      eyebrow:'Pre-order',
+      title:'Il libro è in pre-ordine.',
+      body:'I AM NOBODY è disponibile in italiano e in inglese. Il prezzo di pre-ordine è attivo ora nello shop.',
+      primary:'Vai allo shop',
+      secondary:'Continua'
+    },
+    en: {
+      eyebrow:'Pre-order',
+      title:'The book is now in pre-order.',
+      body:'I AM NOBODY is available in Italian and English. The pre-order rate is active now in the shop.',
+      primary:'Go to shop',
+      secondary:'Continue'
+    }
+  };
+
+  function getLang(){
+    return document.documentElement.lang === 'en' || window.location.pathname.indexOf('/en') === 0 ? 'en' : 'it';
+  }
+
+  function isShopPage(){
+    var path = (window.location.pathname || '').replace(/\\/+$/, '');
+    return path === '/shop' || path === '/it/shop' || path === '/en/shop';
+  }
+
+  function wasDismissed(){
+    try{return window.localStorage.getItem(STORAGE_KEY) === 'true';}catch(_error){return false;}
+  }
+
+  function markDismissed(){
+    try{window.localStorage.setItem(STORAGE_KEY, 'true');}catch(_error){}
+  }
+
+  function hasCookieConsent(){
+    try{return !!window.localStorage.getItem('iamNobodyCookieConsentV1');}catch(_error){return false;}
+  }
+
+  function isCookieBannerVisible(){
+    var banner = document.querySelector('[data-cookie-banner]');
+    return !!(banner && !banner.hidden && banner.classList.contains('is-visible'));
+  }
+
+  function setCopy(root){
+    var lang = getLang();
+    var copy = COPY[lang] || COPY.it;
+    root.querySelectorAll('[data-preorder-copy]').forEach(function(el){
+      var key = el.getAttribute('data-preorder-copy');
+      if(copy[key]) el.textContent = copy[key];
+    });
+    var shopLink = root.querySelector('[data-preorder-shop-link]');
+    if(shopLink) shopLink.setAttribute('href', lang === 'en' ? '/en/shop' : '/it/shop');
+  }
+
+  function setVisible(root, visible){
+    root.hidden = !visible;
+    root.classList.toggle('is-visible', visible);
+  }
+
+  function showWhenReady(){
+    var prompt = document.querySelector('[data-preorder-prompt]');
+    if(!prompt || isShopPage() || wasDismissed()) return;
+    if(!hasCookieConsent() || isCookieBannerVisible()) return;
+    setCopy(prompt);
+    window.setTimeout(function(){
+      if(!wasDismissed() && !isCookieBannerVisible()) setVisible(prompt, true);
+    }, 420);
+  }
+
+  function init(){
+    var prompt = document.querySelector('[data-preorder-prompt]');
+    if(!prompt) return;
+    setCopy(prompt);
+
+    var close = prompt.querySelector('[data-preorder-close]');
+    if(close){
+      close.addEventListener('click', function(){
+        markDismissed();
+        setVisible(prompt, false);
+      });
+    }
+
+    var shopLink = prompt.querySelector('[data-preorder-shop-link]');
+    if(shopLink){
+      shopLink.addEventListener('click', function(){
+        markDismissed();
+      });
+    }
+
+    window.addEventListener('iamNobodyCookieConsent', function(){ window.setTimeout(showWhenReady, 460); });
+    window.setTimeout(showWhenReady, 700);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  }else{
+    init();
+  }
+})();
+</script>`;
+
 function replaceAllText(html: string, translations: Array<[string, string]>) {
   let output = html;
 
@@ -350,11 +485,11 @@ function injectConsentBanner(html: string) {
   let output = html;
 
   if (!output.includes('id="iam-cookie-consent-styles"')) {
-    output = output.replace(/<\/head>/i, `${CONSENT_BANNER_STYLES}</head>`);
+    output = output.replace(/<\/head>/i, `${CONSENT_BANNER_STYLES}${PREORDER_PROMPT_STYLES}</head>`);
   }
 
   if (!output.includes('data-cookie-banner')) {
-    output = output.replace(/<\/body>/i, `${CONSENT_BANNER_MARKUP}${CONSENT_BANNER_SCRIPT}</body>`);
+    output = output.replace(/<\/body>/i, `${CONSENT_BANNER_MARKUP}${CONSENT_BANNER_SCRIPT}${PREORDER_PROMPT_MARKUP}${PREORDER_PROMPT_SCRIPT}</body>`);
   }
 
   return output;
