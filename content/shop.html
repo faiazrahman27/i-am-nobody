@@ -30,6 +30,10 @@ button,a{-webkit-tap-highlight-color:transparent;}
 button{font:inherit;}
 .iris{background:linear-gradient(90deg,var(--i1),var(--i2),var(--i3),var(--i4),var(--i1));}
 .no-crop{line-height:1.12;overflow:visible;padding:.08em 0 .14em;display:block;}
+body.shop-preorder-launch [data-nav]:not([data-nav="books"]){display:none!important;}
+body.shop-preorder-launch .bundle-section,
+body.shop-preorder-launch .info-strip{display:none!important;}
+body.shop-preorder-launch .shop-filters .filter-btn[data-scroll-target]:not([data-scroll-target="top"]):not([data-scroll-target="books"]){display:none!important;}
 
 /* NAV */
 nav{
@@ -1129,7 +1133,7 @@ footer{background:var(--dark);padding:62px 64px 42px;}
 }
 </style>
 </head>
-<body>
+<body class="shop-preorder-launch">
 <nav aria-label="Shop navigation">
   <a href="/" class="nav-logo" data-scroll>I AM <span>NOBODY</span></a>
   <div class="nav-links" id="navLinks">
@@ -1295,15 +1299,47 @@ const filters = [
   { id:'bundle', it:'Bundle', en:'Bundle' }
 ];
 
+const BOOK_PREORDER_LAUNCH_ENABLED = true;
+const BOOK_PREORDER_PRODUCT_HANDLES = new Set([
+  'iam-nobody-book-italian',
+  'iam-nobody-book-english'
+]);
+const BOOK_PREORDER_VISIBLE_SECTION_IDS = new Set(['books']);
+
+function isBookPreorderLaunch(){
+  return BOOK_PREORDER_LAUNCH_ENABLED;
+}
+
+function isLaunchVisibleProduct(product){
+  return !isBookPreorderLaunch() || BOOK_PREORDER_PRODUCT_HANDLES.has(product && product.handle);
+}
+
+function getVisibleFilters(){
+  if(!isBookPreorderLaunch()) return filters;
+  return filters.filter(item => item.id === 'top' || item.id === 'books');
+}
+
+function getVisibleSections(){
+  if(!isBookPreorderLaunch()) return sections;
+
+  return sections
+    .filter(section => BOOK_PREORDER_VISIBLE_SECTION_IDS.has(section.id))
+    .map(section => ({
+      ...section,
+      grid:section.id === 'books' ? 'grid-2' : section.grid,
+      products:(section.products || []).filter(isLaunchVisibleProduct)
+    }));
+}
+
 const sections = [
   {
     id:'books', theme:'section-light', grid:'grid-4',
     tag:{it:'Il libro',en:'The book'},
     title:{it:'IL LIBRO',en:'THE BOOK'},
-    desc:{it:'Disponibile in italiano e inglese, in edizione standard e in edizione speciale numerata.',en:'Available in Italian and English, in standard edition and numbered special edition.'},
+    desc:{it:'Pre-order aperto per il libro in italiano e inglese. Gli altri oggetti restano nascosti fino alla prossima apertura dello shop.',en:'Pre-order is open for the Italian and English books. The other objects stay hidden until the next shop opening.'},
     products:[
-      {key:'book-it',handle:'iam-nobody-book-italian',visual:'book-it',badge:null,price:'€ 22',oldPrice:'',category:{it:'Libro · Italiano',en:'Book · Italian'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Chi sei quando nessuno ti guarda?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'+ Carrello',en:'+ Cart'}},
-      {key:'book-en',handle:'iam-nobody-book-english',visual:'book-en',badge:{class:'badge-new',it:'EN',en:'EN'},price:'€ 25',oldPrice:'',category:{it:'Book · English',en:'Book · English'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'+ Cart',en:'+ Cart'}},
+      {key:'book-it',handle:'iam-nobody-book-italian',visual:'book-it',badge:{class:'badge-new',it:'Pre-order',en:'Pre-order'},price:'€ 22',oldPrice:'',category:{it:'Pre-order · Libro · Italiano',en:'Pre-order · Book · Italian'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Chi sei quando nessuno ti guarda?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'Pre-ordina',en:'Pre-order'}},
+      {key:'book-en',handle:'iam-nobody-book-english',visual:'book-en',badge:{class:'badge-new',it:'Pre-order',en:'Pre-order'},price:'€ 25',oldPrice:'',category:{it:'Pre-order · Book · English',en:'Pre-order · Book · English'},name:{it:'I AM NOBODY',en:'I AM NOBODY'},sub:{it:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.',en:'Who are you when no one is watching?<br>Andrea Magelli · 240 pp.'},button:{it:'Pre-order',en:'Pre-order'}},
       {key:'special-edition',handle:'iam-nobody-special-edition',visual:'special',featured:true,badge:{class:'badge-limited',it:'Limited',en:'Limited'},price:'€ 95',oldPrice:'',category:{it:'Cofanetto · Edizione limitata',en:'Box · Limited edition'},name:{it:'EDIZIONE SPECIALE',en:'SPECIAL EDITION'},sub:{it:"500 copie numerate · Firmato dall'autore",en:'500 numbered copies · Signed by the author'},button:{it:'Prenota ora',en:'Book now'}}
     ]
   },
@@ -1754,6 +1790,10 @@ function formatCompactMoney(money, fallback){
 }
 
 function collectShopifyHandles(){
+  if(isBookPreorderLaunch()){
+    return Array.from(BOOK_PREORDER_PRODUCT_HANDLES);
+  }
+
   const handles = new Set();
   sections.forEach(section => {
     (section.products || []).forEach(product => product.handle && handles.add(product.handle));
@@ -1782,7 +1822,8 @@ async function loadShopifyProducts(){
 }
 
 function renderFilters(){
-  document.getElementById('shopFilters').innerHTML = filters.map((item, index) => `
+  const visibleFilters = getVisibleFilters();
+  document.getElementById('shopFilters').innerHTML = visibleFilters.map((item, index) => `
     <button class="filter-btn${index === 0 ? ' active' : ''}" type="button" data-scroll-target="${item.id}">${escapeHtml(item[currentLang])}</button>
   `).join('');
 }
@@ -2086,10 +2127,11 @@ function renderPosters(section){
 }
 
 function renderSections(){
-  const html = sections.map(section => {
+  const visibleSections = getVisibleSections();
+  const html = visibleSections.map(section => {
     const content = section.poster
       ? renderPosters(section)
-      : `<div class="product-grid ${section.grid}">${section.products.map(renderProduct).join('')}</div>${section.ebookVolumes ? renderEbookVolumes(section) : ''}`;
+      : `<div class="product-grid ${section.grid}">${(section.products || []).map(renderProduct).join('')}</div>${section.ebookVolumes ? renderEbookVolumes(section) : ''}`;
     return `<section class="section-wrap ${section.theme}" id="${section.id}" data-section="${section.id}">
       <div class="section-header"><div><span class="section-tag">${escapeHtml(t(section.tag))}</span><div class="section-title no-crop">${trustedLine(t(section.title))}</div></div><p class="section-desc">${escapeHtml(t(section.desc))}</p></div>
       ${content}
@@ -2732,8 +2774,10 @@ function renderPage(){
   applyStaticTranslations();
   renderFilters();
   renderSections();
-  renderBundle();
-  renderInfo();
+  if(!isBookPreorderLaunch()){
+    renderBundle();
+    renderInfo();
+  }
   bindActions();
   observeSections();
   renderCart();
