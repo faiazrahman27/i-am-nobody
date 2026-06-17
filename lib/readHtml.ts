@@ -364,7 +364,7 @@ const PREORDER_PROMPT_SCRIPT = `<script id="iam-preorder-prompt-script">
     en: {
       eyebrow:'Pre-order',
       title:'The book is now in pre-order.',
-      body:'I AM NOBODY is available in Italian and English. The pre-order rate is active now in the shop.',
+      body:'I AM NOBODY is available in Italian and English. The pre-order price is active now in the shop.',
       primary:'Go to shop',
       secondary:'Continue'
     }
