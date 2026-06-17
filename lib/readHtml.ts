@@ -363,7 +363,6 @@ const PREORDER_PROMPT_MARKUP = `<div class="iam-preorder-prompt" data-preorder-p
 
 const PREORDER_PROMPT_SCRIPT = `<script id="iam-preorder-prompt-script">
 (function(){
-  var STORAGE_KEY = 'iamNobodyPreorderPromptDismissedV1';
   var COPY = {
     it: {
       eyebrow:'Pre-order',
@@ -388,14 +387,6 @@ const PREORDER_PROMPT_SCRIPT = `<script id="iam-preorder-prompt-script">
   function isShopPage(){
     var path = (window.location.pathname || '').replace(/\\/+$/, '');
     return path === '/shop' || path === '/it/shop' || path === '/en/shop';
-  }
-
-  function wasDismissed(){
-    try{return window.localStorage.getItem(STORAGE_KEY) === 'true';}catch(_error){return false;}
-  }
-
-  function markDismissed(){
-    try{window.localStorage.setItem(STORAGE_KEY, 'true');}catch(_error){}
   }
 
   function hasCookieConsent(){
@@ -425,11 +416,11 @@ const PREORDER_PROMPT_SCRIPT = `<script id="iam-preorder-prompt-script">
 
   function showWhenReady(){
     var prompt = document.querySelector('[data-preorder-prompt]');
-    if(!prompt || isShopPage() || wasDismissed()) return;
+    if(!prompt || isShopPage()) return;
     if(!hasCookieConsent() || isCookieBannerVisible()) return;
     setCopy(prompt);
     window.setTimeout(function(){
-      if(!wasDismissed() && !isCookieBannerVisible()) setVisible(prompt, true);
+      if(!isCookieBannerVisible()) setVisible(prompt, true);
     }, 420);
   }
 
@@ -441,15 +432,7 @@ const PREORDER_PROMPT_SCRIPT = `<script id="iam-preorder-prompt-script">
     var close = prompt.querySelector('[data-preorder-close]');
     if(close){
       close.addEventListener('click', function(){
-        markDismissed();
         setVisible(prompt, false);
-      });
-    }
-
-    var shopLink = prompt.querySelector('[data-preorder-shop-link]');
-    if(shopLink){
-      shopLink.addEventListener('click', function(){
-        markDismissed();
       });
     }
 
