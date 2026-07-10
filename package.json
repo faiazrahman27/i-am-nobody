@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "validate:brand": "node scripts/validate-nobody-brand.mjs",
+    "prebuild": "npm run validate:brand"
   },
   "dependencies": {
     "next": "16.2.6",
