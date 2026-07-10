@@ -1,16 +1,24 @@
 .page {
   min-height: 100svh;
+
   display: grid;
-  grid-template-columns: minmax(320px, 0.92fr) minmax(420px, 1.08fr);
-  background: #11100f;
-  color: #f5f0e8;
+  grid-template-columns:
+    minmax(320px, 0.92fr)
+    minmax(420px, 1.08fr);
+
+  background: var(--brand-black);
+  color: var(--brand-soft);
+
+  font-family: var(--font-sans);
 }
 
 .coverPanel {
   position: relative;
   min-height: 100svh;
+
   overflow: hidden;
-  background: #2b241e;
+
+  background: #211b17;
 }
 
 .cover {
@@ -21,47 +29,127 @@
 .coverShade {
   position: absolute;
   inset: 0;
+
   background:
-    linear-gradient(90deg, rgba(12, 11, 10, 0.03), rgba(12, 11, 10, 0.48)),
-    linear-gradient(0deg, rgba(12, 11, 10, 0.22), transparent 42%);
+    linear-gradient(
+      90deg,
+      rgba(5, 5, 5, 0.02),
+      rgba(5, 5, 5, 0.52)
+    ),
+    linear-gradient(
+      0deg,
+      rgba(5, 5, 5, 0.28),
+      transparent 42%
+    );
 }
 
 .formPanel {
+  position: relative;
+
   min-height: 100svh;
+
   display: grid;
   place-items: center;
+
+  overflow: hidden;
+
   padding: clamp(32px, 6vw, 96px);
+
   background:
-    radial-gradient(circle at 74% 14%, rgba(139, 112, 82, 0.18), transparent 30%),
-    #11100f;
+    radial-gradient(
+      circle at 74% 14%,
+      rgba(195, 154, 91, 0.13),
+      transparent 30%
+    ),
+    var(--brand-charcoal);
+}
+
+.formPanel::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+
+  height: 3px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--brand-cyan),
+      var(--brand-green),
+      var(--brand-gold-light),
+      var(--brand-rose),
+      var(--brand-violet),
+      var(--brand-cyan)
+    );
+
+  background-size: 220% 100%;
+
+  animation: irisShift 7s linear infinite;
+}
+
+@keyframes irisShift {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 220% 50%;
+  }
 }
 
 .formInner {
+  position: relative;
+  z-index: 1;
+
   width: min(100%, 520px);
 }
 
 .eyebrow {
   margin: 0 0 18px;
-  color: #aa9175;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.3em;
+
+  color: var(--brand-gold-light);
+
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 700;
+
+  letter-spacing: 0.25rem;
+  line-height: 1.4;
+
+  text-transform: uppercase;
 }
 
 .formInner h1 {
   margin: 0;
-  font-size: clamp(2.7rem, 6vw, 5.4rem);
-  font-weight: 560;
-  letter-spacing: -0.055em;
-  line-height: 0.92;
+
+  color: #ffffff;
+
+  font-family: var(--font-display);
+  font-size: clamp(3.6rem, 8vw, 6.8rem);
+  font-weight: 400;
+
+  letter-spacing: 0.055em;
+  line-height: 0.88;
+
+  text-transform: uppercase;
 }
 
 .intro {
-  max-width: 44ch;
+  max-width: 40ch;
+
   margin: 30px 0 42px;
-  color: #bdb5aa;
-  font-size: 1rem;
-  line-height: 1.7;
+
+  color: rgba(242, 238, 230, 0.78);
+
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 2.1vw, 1.55rem);
+  font-style: italic;
+  font-weight: 400;
+
+  line-height: 1.35;
 }
 
 .form {
@@ -72,51 +160,98 @@
 .field {
   display: grid;
   gap: 9px;
-  color: #d9d1c7;
-  font-size: 0.75rem;
-  font-weight: 600;
+
+  color: rgba(242, 238, 230, 0.8);
+
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 700;
+
   letter-spacing: 0.14em;
+
   text-transform: uppercase;
 }
 
 .field input {
   width: 100%;
-  border: 1px solid #3a342e;
-  border-radius: 2px;
-  background: #181614;
-  color: #f7f2eb;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0;
+
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--brand-soft);
+
   padding: 15px 16px;
-  font: inherit;
+
+  font-family: var(--font-sans);
   font-size: 1rem;
+  font-weight: 400;
+
   letter-spacing: normal;
+
   outline: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.field input::placeholder {
+  color: rgba(242, 238, 230, 0.34);
 }
 
 .field input:focus {
-  border-color: #a98d6d;
-  box-shadow: 0 0 0 3px rgba(169, 141, 109, 0.12);
+  border-color: var(--brand-gold-light);
+
+  background: rgba(255, 255, 255, 0.055);
+
+  box-shadow:
+    0 0 0 3px rgba(224, 191, 129, 0.1);
 }
 
 .submit {
-  min-height: 52px;
+  min-height: 50px;
+
   margin-top: 8px;
-  border: 1px solid #d6c0a5;
-  border-radius: 2px;
-  background: #eee6dc;
-  color: #171411;
-  padding: 14px 20px;
-  font: inherit;
-  font-size: 0.8rem;
+
+  border: 1px solid var(--brand-soft);
+  border-radius: 999px;
+
+  background: var(--brand-soft);
+  color: var(--brand-black);
+
+  padding: 14px 22px;
+
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+
+  letter-spacing: 0.14rem;
+
   text-transform: uppercase;
+
   cursor: pointer;
-  transition: transform 160ms ease, opacity 160ms ease;
+
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease;
 }
 
 .submit:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+
+  border-color: var(--brand-green);
+
+  background: var(--brand-green);
+  color: #ffffff;
+
+  box-shadow:
+    0 12px 30px rgba(40, 182, 139, 0.18);
 }
 
 .submit:disabled {
@@ -126,19 +261,29 @@
 
 .error {
   margin: 0;
+
   border-left: 2px solid #b66a5e;
+
   background: rgba(182, 106, 94, 0.08);
   color: #e8c4bd;
+
   padding: 12px 14px;
-  font-size: 0.88rem;
+
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+
   line-height: 1.55;
 }
 
 .notice {
   margin: 28px 0 0;
-  color: #716a62;
-  font-size: 0.78rem;
-  line-height: 1.6;
+
+  color: rgba(157, 148, 136, 0.68);
+
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+
+  line-height: 1.65;
 }
 
 @media (max-width: 880px) {
@@ -155,11 +300,26 @@
   }
 
   .coverShade {
-    background: linear-gradient(0deg, #11100f, transparent 45%);
+    background:
+      linear-gradient(
+        0deg,
+        var(--brand-charcoal),
+        transparent 45%
+      );
   }
 
   .formPanel {
     min-height: auto;
-    padding-top: 34px;
+    padding-top: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formPanel::before {
+    animation: none;
+  }
+
+  .submit {
+    transition: none;
   }
 }
