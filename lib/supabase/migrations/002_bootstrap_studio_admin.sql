@@ -6,8 +6,8 @@ begin;
 
 do $$
 declare
-  target_email text := 'mdazmayeenfaiaz@gmail.com';
-  target_display_name text := 'FAIAZ';
+  target_email text := 'andreamagelli@iamnobody.live';
+  target_display_name text := 'ANDREA MAGELLI';
   target_user_id uuid;
 begin
   select id
