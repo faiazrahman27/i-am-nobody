@@ -135,17 +135,17 @@ export default async function StudioHomePage() {
   );
 
   const systemMessage = !studioReady
-    ? "The studio foundation still needs attention."
+    ? "Artwork creation is temporarily unavailable. Please check the studio configuration."
     : generationEnabled
-      ? "The canonical reference is verified. Live generation and review are available."
-      : "The studio is complete. Live generation remains intentionally locked until the server key is added.";
+      ? "Artwork creation and review are ready."
+      : "The studio is ready. Artwork creation is currently unavailable.";
 
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <p className={styles.kicker}>
-            Private visual laboratory
+            Private image studio
           </p>
 
           <h1>
@@ -154,11 +154,7 @@ export default async function StudioHomePage() {
           </h1>
 
           <p className={styles.heroLead}>
-            A controlled workspace for creating
-            official I AM NOBODY artworks, testing
-            them against the canonical visual
-            grammar, and preparing only the strongest
-            images for release.
+            Create official I AM NOBODY artworks, compare them with the original cover, and prepare only the strongest images for publication.
           </p>
 
           <blockquote className={styles.manifesto}>
@@ -171,7 +167,7 @@ export default async function StudioHomePage() {
               className={styles.primaryAction}
               href="#generator-title"
             >
-              Start a private generation
+              Create a new artwork
               <span aria-hidden="true">↘</span>
             </Link>
 
@@ -179,7 +175,7 @@ export default async function StudioHomePage() {
               className={styles.secondaryAction}
               href="/studio/artworks?filter=review"
             >
-              Open the review queue
+              Review existing artworks
               <span aria-hidden="true">→</span>
             </Link>
           </div>
@@ -196,7 +192,7 @@ export default async function StudioHomePage() {
             <div>
               <strong>
                 {studioReady
-                  ? "Studio integrity confirmed"
+                  ? "Studio ready"
                   : "Setup incomplete"}
               </strong>
 
@@ -212,13 +208,13 @@ export default async function StudioHomePage() {
           />
 
           <div className={styles.referenceTopline}>
-            <span>Canonical reference</span>
-            <strong>Locked</strong>
+            <span>Original book cover</span>
+            <strong>Active</strong>
           </div>
 
           <div className={styles.coverStage}>
             <Image
-              alt="Original I AM NOBODY canonical book cover"
+              alt="Original I AM NOBODY book cover"
               className={styles.cover}
               height={
                 NOBODY_BRAND
@@ -238,46 +234,35 @@ export default async function StudioHomePage() {
 
           <div className={styles.coverMeta}>
             <div>
-              <span>Visual authority</span>
+              <span>Primary reference</span>
 
               <strong>
-                {
-                  NOBODY_BRAND
-                    .canonicalReference.id
-                }
+                Original I AM NOBODY cover
               </strong>
             </div>
 
             <dl>
               <div>
-                <dt>Master</dt>
+                <dt>Artwork size</dt>
                 <dd>906 × 1280</dd>
               </div>
 
               <div>
-                <dt>Reference</dt>
-                <dd>Server-attached</dd>
+                <dt>Used for</dt>
+                <dd>Every generation</dd>
               </div>
 
               <div>
-                <dt>Integrity</dt>
+                <dt>Status</dt>
                 <dd>
                   {referenceReady
-                    ? "Verified"
-                    : "Check required"}
+                    ? "Ready"
+                    : "Unavailable"}
                 </dd>
               </div>
             </dl>
 
-            <small>
-              SHA-256{" "}
-              {NOBODY_BRAND
-                .canonicalReference.sha256.slice(
-                  0,
-                  16,
-                )}
-              …
-            </small>
+
           </div>
         </aside>
       </section>
@@ -292,13 +277,12 @@ export default async function StudioHomePage() {
           </span>
 
           <div>
-            <small>Generation sessions</small>
+            <small>Created sessions</small>
             <strong>{generations.count}</strong>
           </div>
 
           <p>
-            Every private image request recorded in
-            the studio.
+            Every artwork creation session in the studio.
           </p>
         </article>
 
@@ -313,8 +297,7 @@ export default async function StudioHomePage() {
           </div>
 
           <p>
-            Automated guidance is ready; the creative
-            decision is still human.
+            Artworks waiting for your creative decision.
           </p>
         </article>
 
@@ -324,13 +307,12 @@ export default async function StudioHomePage() {
           </span>
 
           <div>
-            <small>Approved masters</small>
+            <small>Approved artworks</small>
             <strong>{approved.count}</strong>
           </div>
 
           <p>
-            Clean artworks protected as immutable
-            official candidates.
+            Artworks approved for final formats and publication.
           </p>
         </article>
 
@@ -345,8 +327,7 @@ export default async function StudioHomePage() {
           </div>
 
           <p>
-            Works deliberately published after the
-            complete approval path.
+            Artworks currently visible in the public gallery.
           </p>
         </article>
       </section>
@@ -357,16 +338,11 @@ export default async function StudioHomePage() {
 
           <div>
             <h2>
-              The production foundation is incomplete
+              The studio needs attention
             </h2>
 
             <p>
-              Verify migrations <code>006</code>{" "}
-              through <code>010</code>, confirm that{" "}
-              <code>nobody-private</code> is the only
-              I AM NOBODY storage bucket, and restore
-              the approved canonical cover if its
-              integrity check fails.
+              Artwork creation is unavailable right now. Check the studio configuration and try again.
             </p>
           </div>
         </section>
@@ -383,17 +359,14 @@ export default async function StudioHomePage() {
         <div className={styles.processHeading}>
           <div>
             <p className={styles.eyebrow}>
-              Controlled production path
+              Artwork workflow
             </p>
 
-            <h2>From mask to release.</h2>
+            <h2>From artwork to publication.</h2>
           </div>
 
           <p>
-            The artwork remains pure. Typography,
-            formats, publication, and all future
-            certification layers are handled
-            separately and deliberately.
+            Create the artwork first, approve it, prepare the formats you need, and decide when it is ready for the public gallery.
           </p>
         </div>
 
@@ -403,13 +376,11 @@ export default async function StudioHomePage() {
             <h3>Create</h3>
 
             <p>
-              Generate a clean, text-free artwork from
-              the permanent canonical cover and mask
-              reference.
+              Create a text-free artwork guided by the original cover and the I AM NOBODY visual identity.
             </p>
 
             <strong className={styles.complete}>
-              Reference locked
+              Original cover applied
             </strong>
           </article>
 
@@ -418,13 +389,11 @@ export default async function StudioHomePage() {
             <h3>Validate</h3>
 
             <p>
-              Compare composition, anonymity, mask
-              proportion, restraint, and editorial
-              quality before a human sees the result.
+              Review composition, anonymity, mask proportion, restraint, and editorial quality before approval.
             </p>
 
             <strong className={styles.complete}>
-              Two-stage review
+              Visual review
             </strong>
           </article>
 
@@ -433,13 +402,11 @@ export default async function StudioHomePage() {
             <h3>Compose</h3>
 
             <p>
-              Apply the title, author, social sizes,
-              poster layout, or gallery thumbnail only
-              after the clean master is approved.
+              Create the book cover, social, story, poster, and gallery versions after the artwork is approved.
             </p>
 
             <strong className={styles.complete}>
-              Deterministic templates
+              Formats ready
             </strong>
           </article>
 
@@ -448,17 +415,14 @@ export default async function StudioHomePage() {
             <h3>Release</h3>
 
             <p>
-              Create a private gallery draft, inspect
-              the final rendering, and publish or
-              withdraw it through a human-controlled
-              decision.
+              Prepare the gallery entry, inspect the finished artwork, and publish or remove it whenever needed.
             </p>
 
             <Link
               className={styles.pending}
               href="/studio/artworks"
             >
-              Enter the private archive
+              Open the artwork archive
               <span aria-hidden="true">→</span>
             </Link>
           </article>

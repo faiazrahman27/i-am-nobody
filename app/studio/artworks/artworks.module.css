@@ -560,6 +560,17 @@
   line-height: 1.65;
 }
 
+.brief a,
+.detailsPanel dd a {
+  color: var(--brand-gold-light);
+  border-bottom: 1px solid rgba(224, 191, 129, 0.32);
+}
+
+.brief a:hover,
+.detailsPanel dd a:hover {
+  border-bottom-color: var(--brand-gold-light);
+}
+
 .reviewPanel > h2 {
   font-size:
     clamp(3.1rem, 5.5vw, 5.3rem);

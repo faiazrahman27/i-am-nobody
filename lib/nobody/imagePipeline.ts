@@ -44,11 +44,17 @@ export type GeneratedArtwork = Readonly<{
   thumbnailImage: Buffer;
   sha256: string;
   technicalValidation: Readonly<{
+    sourceWidth: number;
+    sourceHeight: number;
+    sourceAspectRatio: number;
+    requestedAspectRatio: number;
+    aspectDifferencePercent: number;
     width: number;
     height: number;
     format: "png";
     hasAlpha: boolean;
     canonicalRatio: number;
+    normalization: "centre-edge-trim";
   }>;
 }>;
 
@@ -264,7 +270,7 @@ export async function loadCanonicalReferenceAssets(): Promise<CanonicalReference
     NOBODY_BRAND.canonicalReference.sha256
   ) {
     throw new Error(
-      "The canonical book cover failed its SHA-256 check. Restore the approved public/book-cover.png before generating artwork.",
+      "The original book cover could not be verified. Restore the approved cover before creating artwork.",
     );
   }
 
@@ -328,10 +334,9 @@ async function callOpenAIImageEdit(input: {
   form.set("moderation", "auto");
 
   /*
-   * The canonical cover and mask are brand-control references,
-   * not merely loose inspiration.
+   * GPT Image 2 processes image references at high fidelity automatically.
+   * Do not send input_fidelity for this model.
    */
-  form.set("input_fidelity", "high");
 
   form.append(
     "image[]",
@@ -443,10 +448,50 @@ async function finalizeCleanArtwork(
   const { width, height } =
     NOBODY_BRAND.generationCanvas;
 
+  const sourceMetadata =
+    await sharp(rawModelImage).metadata();
+
+  if (
+    !sourceMetadata.width ||
+    !sourceMetadata.height
+  ) {
+    throw new Error(
+      "The generated artwork has no readable dimensions.",
+    );
+  }
+
+  const sourceAspectRatio =
+    sourceMetadata.width /
+    sourceMetadata.height;
+
+  const requestedAspectRatio =
+    NOBODY_BRAND.modelCanvas.aspectRatio;
+
+  const aspectDifferencePercent =
+    Math.abs(
+      sourceAspectRatio -
+        requestedAspectRatio,
+    ) /
+    requestedAspectRatio *
+    100;
+
+  /*
+   * Reject an unexpected canvas instead of destructively cropping it.
+   * The requested 896x1264 canvas differs from the 906x1280 book-cover
+   * canvas by only about 0.15%, so normal output needs only a sub-pixel
+   * centre-edge trim when it is normalized to the exact final size.
+   */
+  if (aspectDifferencePercent > 1) {
+    throw new Error(
+      "The generated artwork returned an unexpected aspect ratio. No final artwork was saved.",
+    );
+  }
+
   const cleanArtworkImage =
     await sharp(rawModelImage)
       .resize(width, height, {
-        fit: "fill",
+        fit: "cover",
+        position: "centre",
       })
       .removeAlpha()
       .png({
@@ -465,7 +510,7 @@ async function finalizeCleanArtwork(
     metadata.height !== height
   ) {
     throw new Error(
-      `Clean artwork validation failed. Expected ${width}x${height}, received ${metadata.width}x${metadata.height}.`,
+      `The artwork could not be prepared at ${width}x${height}.`,
     );
   }
 
@@ -489,6 +534,13 @@ async function finalizeCleanArtwork(
         cleanArtworkImage,
       ),
     technicalValidation: {
+      sourceWidth:
+        sourceMetadata.width,
+      sourceHeight:
+        sourceMetadata.height,
+      sourceAspectRatio,
+      requestedAspectRatio,
+      aspectDifferencePercent,
       width,
       height,
       format: "png",
@@ -498,6 +550,8 @@ async function finalizeCleanArtwork(
         ),
       canonicalRatio:
         width / height,
+      normalization:
+        "centre-edge-trim",
     },
   };
 }

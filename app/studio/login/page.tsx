@@ -69,9 +69,9 @@ export default async function StudioLoginPage({
           </div>
 
           <div className={styles.referenceLabel}>
-            <span>Canonical reference</span>
+            <span>Original book cover</span>
             <strong>
-              906 × 1280 · full cover preserved
+              The visual origin of every artwork
             </strong>
           </div>
         </div>
@@ -103,10 +103,7 @@ export default async function StudioLoginPage({
           </h1>
 
           <p className={styles.intro}>
-            A controlled space for creating,
-            reviewing, and preparing official visual
-            masks. Every artwork remains private
-            until a human chooses to release it.
+            A private space for creating, reviewing, and preparing official I AM NOBODY artworks. Nothing reaches the gallery until you choose to publish it.
           </p>
 
           <LoginForm

@@ -349,14 +349,7 @@ export default async function ArtworksPage({
           <h2>Review the masks</h2>
 
           <p>
-            Clean masters remain private
-            here. Automated review is
-            guidance, not publication
-            authority: a person approves
-            the artwork, creates a
-            controlled template, then
-            separately publishes a gallery
-            draft.
+            Review each artwork, approve the strongest version, create the final formats you need, and choose when it is ready for the public gallery.
           </p>
         </div>
 
@@ -405,9 +398,7 @@ export default async function ArtworksPage({
             available.
           </h2>
           <p>
-            Run migrations 006–009 and
-            verify the private storage
-            bucket.
+            The studio archive could not be loaded. Please check the studio setup and try again.
           </p>
         </section>
       ) : cards.length === 0 ? (
@@ -416,9 +407,7 @@ export default async function ArtworksPage({
             No artworks in this view.
           </h2>
           <p>
-            Generated clean masters will
-            appear here after their
-            automated review.
+            New artworks will appear here after creation and visual review.
           </p>
         </section>
       ) : (
@@ -461,7 +450,7 @@ export default async function ArtworksPage({
                   {card.visual_score !==
                   null ? (
                     <p>
-                      Automated score{" "}
+                      Visual score{" "}
                       {
                         card.visual_score
                       }
@@ -484,8 +473,7 @@ export default async function ArtworksPage({
               <div className={styles.cardFooter}>
                 <small>
                   {card.width} ×{" "}
-                  {card.height} · clean
-                  master
+                  {card.height} · artwork
                 </small>
 
                 <Link

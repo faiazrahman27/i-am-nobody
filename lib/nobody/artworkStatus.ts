@@ -32,10 +32,10 @@ const STATUS_LABELS: Readonly<
   Record<ArtworkStatus, string>
 > = {
   candidate: "New",
-  reviewing: "Automated review",
-  auto_rejected: "Automated review failed",
-  auto_review_failed: "Review service error",
-  ready_for_review: "Ready for human review",
+  reviewing: "Visual review",
+  auto_rejected: "Another version recommended",
+  auto_review_failed: "Review unavailable",
+  ready_for_review: "Ready for review",
   approved_artwork: "Artwork approved",
   needs_regeneration: "Another version requested",
   wrong_mask: "Mask needs correction",
@@ -43,7 +43,7 @@ const STATUS_LABELS: Readonly<
   too_busy: "Too busy",
   too_literal: "Too literal",
   too_generic: "Too generic",
-  approved_for_template: "Template ready",
+  approved_for_template: "Formats ready",
   published: "Published",
   archived: "Archived",
 };

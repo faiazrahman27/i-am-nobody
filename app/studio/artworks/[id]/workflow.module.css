@@ -451,6 +451,22 @@
   font-size: 0.57rem;
 }
 
+.renderGrid a {
+  width: fit-content;
+  color: var(--brand-gold-light);
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.renderGrid a:hover {
+  transform: translateX(3px);
+  color: #f1d49d;
+}
+
 @media (max-width: 680px) {
   .comparisonGrid,
   .scoreGrid,

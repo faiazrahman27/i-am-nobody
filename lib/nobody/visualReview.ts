@@ -20,8 +20,6 @@ const OPENAI_RESPONSES_URL =
 const DEFAULT_REVIEW_MODEL =
   "gpt-5.6-luna";
 
-const REVIEW_THRESHOLD = 75;
-
 const CATEGORY_NAMES = [
   "universeConsistency",
   "composition",
@@ -252,6 +250,7 @@ function normalizeScore(
 
 function normalizeReview(
   value: unknown,
+  threshold: number,
 ): QualityReviewResult {
   if (
     !value ||
@@ -357,7 +356,7 @@ function normalizeReview(
   );
 
   const approvedForHumanReview =
-    score >= REVIEW_THRESHOLD &&
+    score >= threshold &&
     hardBlockers.length === 0;
 
   let recommendation:
@@ -420,6 +419,7 @@ export async function reviewNobodyArtwork(
     canonicalCover: Buffer;
     artwork: Buffer;
     archetype: ArchetypeDefinition;
+    threshold: number;
   },
 ): Promise<AutomatedVisualReview> {
   const apiKey =
@@ -431,6 +431,11 @@ export async function reviewNobodyArtwork(
   const model =
     getReviewModel();
 
+  const threshold = Math.max(
+    0,
+    Math.min(100, input.threshold),
+  );
+
   const instructions = [
     "You are the strict visual quality controller for the official I AM NOBODY project.",
     "Compare image 1, the canonical book cover, with image 2, the newly generated clean artwork.",
@@ -439,7 +444,7 @@ export async function reviewNobodyArtwork(
     "Judge visual identity and production suitability, not whether the two images are pixel-identical.",
     "The new artwork must contain no typography, border, spine, QR code, logo, author name, metadata, or template layer.",
     "A hard blocker means the image must not proceed to human review.",
-    "Use the full 0-100 range. A score of 75 is the minimum for human review.",
+    `Use the full 0-100 range. A score of ${threshold} is the minimum for human review.`,
     "Do not be generous merely because the image is attractive.",
     "",
     "Mandatory checklist:",
@@ -554,7 +559,10 @@ export async function reviewNobodyArtwork(
     reviewVersion:
       NOBODY_REVIEW_VERSION,
     result:
-      normalizeReview(parsed),
+      normalizeReview(
+        parsed,
+        threshold,
+      ),
     rawResponse: payload,
     usage:
       payload.usage ?? null,

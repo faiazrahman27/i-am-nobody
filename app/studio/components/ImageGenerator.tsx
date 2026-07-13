@@ -245,17 +245,17 @@ export default function ImageGenerator({
       <div className={styles.headingRow}>
         <div>
           <p className={styles.eyebrow}>
-            New clean artwork
+            New artwork
           </p>
 
           <h2 id="generator-title">
-            Choose the next mask
+            Create the next mask
           </h2>
         </div>
 
         <div className={styles.scopeLock}>
           <span>
-            Canonical master
+            Original cover ratio
           </span>
 
           <strong>
@@ -269,14 +269,10 @@ export default function ImageGenerator({
       </div>
 
       <div className={styles.scopeNotice}>
-        The server automatically attaches
-        the verified original cover and a
-        mask-detail reference to every
-        request. The AI creates only the
-        clean artwork. Title, author, frame,
-        social formats, and future metadata
-        are added later by controlled
-        templates.
+        The original book cover guides the composition, posture, mask, light,
+        and atmosphere of every generation. Each result begins as an artwork
+        without text. After approval, this studio can create the finished book
+        cover, social, story, poster, and gallery versions.
       </div>
 
       <form
@@ -348,8 +344,7 @@ export default function ImageGenerator({
             </select>
 
             <small>
-              Only controlled warm,
-              neutral studio backgrounds.
+              Warm, neutral studio backgrounds that remain faithful to the visual universe.
             </small>
           </label>
 
@@ -389,13 +384,12 @@ export default function ImageGenerator({
             </select>
 
             <small>
-              At most one quiet, approved
-              symbolic object.
+              Use no more than one subtle symbolic object.
             </small>
           </label>
 
           <label className={styles.field}>
-            <span>Finish</span>
+            <span>Image quality</span>
 
             <select
               disabled={isGenerating}
@@ -408,10 +402,10 @@ export default function ImageGenerator({
               value={quality}
             >
               <option value="low">
-                Draft
+                Exploration
               </option>
               <option value="medium">
-                Standard
+                Refined
               </option>
               <option value="high">
                 Final
@@ -419,8 +413,7 @@ export default function ImageGenerator({
             </select>
 
             <small>
-              Explore in Draft. Reserve
-              Final for selected concepts.
+              Use Exploration for first ideas, Refined for stronger versions, and Final for approved directions.
             </small>
           </label>
 
@@ -470,7 +463,7 @@ export default function ImageGenerator({
 
           <label className={styles.fieldWide}>
             <span>
-              Variation direction
+              Creative direction
             </span>
 
             <textarea
@@ -481,7 +474,7 @@ export default function ImageGenerator({
                   event.target.value,
                 )
               }
-              placeholder="Optional: one controlled difference from previous attempts."
+              placeholder="Optional: describe a specific styling, material, silhouette, or atmosphere for this artwork."
               rows={3}
               value={creativeNote}
             />
@@ -525,28 +518,20 @@ export default function ImageGenerator({
             </select>
 
             <small>
-              Each option is stored
-              privately and reviewed
-              separately.
+              Each option becomes its own artwork and is reviewed separately.
             </small>
           </label>
         </div>
 
         {!generationEnabled ? (
           <p className={styles.reviewerNotice}>
-            Add the server-only OpenAI key
-            and pinned model names in
-            Vercel after the database
-            migrations are complete. No
-            browser receives the key.
+            Artwork creation is currently unavailable. You can continue reviewing and preparing existing artworks.
           </p>
         ) : null}
 
         {!canGenerate ? (
           <p className={styles.reviewerNotice}>
-            This account can review
-            artworks but cannot create new
-            ones.
+            This account can review artworks but cannot create new versions.
           </p>
         ) : null}
 
@@ -566,16 +551,11 @@ export default function ImageGenerator({
           >
             {isGenerating
               ? "Generating and reviewing…"
-              : "Generate clean artwork"}
+              : "Create artwork"}
           </button>
 
           <p>
-            Nothing is published
-            automatically. Every output
-            stays private through automated
-            review, human review, template
-            rendering, and a separate
-            publish decision.
+            Every result enters the artwork archive for review. Nothing appears in the public gallery until you choose to publish it.
           </p>
         </div>
       </form>
@@ -585,12 +565,14 @@ export default function ImageGenerator({
           <div className={styles.resultHeader}>
             <div>
               <p className={styles.eyebrow}>
-                Generation complete
+                Artwork created
               </p>
 
               <h3>
                 {result.variants.length}{" "}
-                new option(s)
+                {result.variants.length === 1
+                  ? "new artwork"
+                  : "new artworks"}
               </h3>
             </div>
 
@@ -613,7 +595,7 @@ export default function ImageGenerator({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      alt={`${selectedArchetype.title.en} clean artwork`}
+                      alt={`${selectedArchetype.title.en} artwork`}
                       src={
                         variant.thumbnailUrl
                       }
@@ -637,7 +619,7 @@ export default function ImageGenerator({
                     {variant.visualScore !==
                     null ? (
                       <small>
-                        Automated score:{" "}
+                        Visual score:{" "}
                         {
                           variant.visualScore
                         }

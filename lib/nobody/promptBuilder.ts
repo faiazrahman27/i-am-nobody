@@ -294,7 +294,7 @@ export function buildNobodyArtworkPrompt(
   const variationSentence =
     variationDirection
       ? [
-          "Variation direction:",
+          "Creative direction:",
           `${variationDirection}.`,
           "Change only restrained secondary details;",
           "preserve the same Nobody identity, composition,",

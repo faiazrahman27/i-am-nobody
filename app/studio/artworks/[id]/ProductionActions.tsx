@@ -27,7 +27,7 @@ const TEMPLATE_OPTIONS: ReadonlyArray<
   },
   {
     value: "poster",
-    label: "Poster draft — 1359 × 1920",
+    label: "Poster — 1359 × 1920",
   },
   {
     value: "gallery_thumbnail",
@@ -35,7 +35,7 @@ const TEMPLATE_OPTIONS: ReadonlyArray<
   },
   {
     value: "clean_artwork",
-    label: "Normalized clean master",
+    label: "Artwork PNG — 906 × 1280",
   },
 ];
 
@@ -112,18 +112,18 @@ export default function ProductionActions({
       ) {
         throw new Error(
           payload.message ||
-            "The production action failed.",
+            "The action could not be completed.",
         );
       }
 
       setMessage(
         action === "render"
-          ? "Template created."
+          ? "Format created."
           : action === "create_draft"
-            ? "Private gallery draft created."
+            ? "Gallery entry prepared."
             : action === "publish"
               ? "Artwork published."
-              : "Artwork unpublished and returned to a private draft.",
+              : "Artwork removed from the public gallery.",
       );
 
       router.refresh();
@@ -133,7 +133,7 @@ export default function ProductionActions({
       setMessage(
         error instanceof Error
           ? error.message
-          : "The production action failed.",
+          : "The action could not be completed.",
       );
     } finally {
       setPending(null);
@@ -148,11 +148,11 @@ export default function ProductionActions({
         }
       >
         <p className={styles.eyebrow}>
-          Production
+          Final formats
         </p>
 
         <h2>
-          Template & gallery
+          Finish & publish
         </h2>
 
         <p
@@ -160,10 +160,7 @@ export default function ProductionActions({
             workflowStyles.mutedCopy
           }
         >
-          Reviewer accounts may make
-          creative decisions but cannot
-          render or publish production
-          files.
+          Reviewer accounts can approve artworks, while owners and editors create final formats and manage publication.
         </p>
       </section>
     );
@@ -176,11 +173,11 @@ export default function ProductionActions({
       }
     >
       <p className={styles.eyebrow}>
-        Production
+        Final formats
       </p>
 
       <h2>
-        Template & gallery
+        Finish & publish
       </h2>
 
       <div
@@ -194,7 +191,7 @@ export default function ProductionActions({
           }
         >
           <span>
-            Controlled output
+            Choose a format
           </span>
 
           <select
@@ -255,14 +252,13 @@ export default function ProductionActions({
           type="button"
         >
           {pending === "render"
-            ? "Rendering…"
-            : "Render template"}
+            ? "Creating…"
+            : "Create format"}
         </button>
 
         {!canRender ? (
           <small>
-            Approve the clean artwork
-            before rendering templates.
+            Approve the artwork before creating final formats.
           </small>
         ) : null}
       </div>
@@ -309,7 +305,7 @@ export default function ProductionActions({
             {pending ===
             "create_draft"
               ? "Creating…"
-              : "Create private gallery draft"}
+              : "Prepare gallery entry"}
           </button>
         ) : isPublished ? (
           <button
@@ -382,22 +378,17 @@ export default function ProductionActions({
           >
             {pending === "publish"
               ? "Publishing…"
-              : "Publish gallery draft"}
+              : "Publish to gallery"}
           </button>
         )}
 
         {gallery ? (
           <small>
-            Draft: /gallery · image
-            endpoint
-            /api/gallery/image/
-            {gallery.slug}
+            Gallery entry: {gallery.slug}
           </small>
         ) : (
           <small>
-            A book-cover render is
-            required before the gallery
-            draft can be created.
+            Create the Book cover format first, then prepare the gallery entry.
           </small>
         )}
       </div>

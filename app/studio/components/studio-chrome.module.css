@@ -1,8 +1,7 @@
 .shell {
-  position: relative;
   min-height: 100svh;
-  isolation: isolate;
   background: var(--brand-black);
+  isolation: isolate;
 }
 
 .iridescentLine {
@@ -32,7 +31,7 @@
   background: linear-gradient(
     180deg,
     rgba(5, 5, 5, 0.98),
-    rgba(5, 5, 5, 0.82)
+    rgba(5, 5, 5, 0.84)
   );
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -42,92 +41,44 @@
   position: relative;
   display: grid;
   grid-template-columns:
-    minmax(220px, 0.8fr)
-    minmax(440px, 1.4fr)
-    minmax(230px, 0.8fr);
+    minmax(210px, 0.78fr)
+    minmax(470px, 1.45fr)
+    minmax(220px, 0.77fr);
   align-items: center;
-  gap: clamp(20px, 3vw, 44px);
+  gap: clamp(18px, 3vw, 42px);
   width: min(100%, 1440px);
   min-height: 86px;
   margin: 0 auto;
-  border-bottom: 1px solid
-    rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 13px;
-  width: fit-content;
-  color: #fff;
-}
-
-.brandMark {
   position: relative;
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 48px;
-  flex: 0 0 auto;
-  border: 1px solid
-    rgba(224, 191, 129, 0.58);
-  border-radius:
-    45% 45% 40% 40% /
-    38% 38% 58% 58%;
-  background:
-    radial-gradient(
-      circle at 34% 22%,
-      rgba(41, 199, 214, 0.55),
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at 72% 40%,
-      rgba(118, 84, 216, 0.52),
-      transparent 30%
-    ),
-    radial-gradient(
-      circle at 46% 78%,
-      rgba(224, 191, 129, 0.44),
-      transparent 36%
-    ),
-    #121212;
-  box-shadow:
-    inset 0 0 0 3px rgba(0, 0, 0, 0.6),
-    0 10px 26px rgba(0, 0, 0, 0.26);
-  overflow: hidden;
-  transition:
-    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 260ms ease,
-    box-shadow 260ms ease;
+  display: inline-flex;
+  width: fit-content;
+  min-width: 0;
+  color: #fff;
+  padding-left: 15px;
 }
 
-.brandMark::after {
+.brand::before {
   content: "";
   position: absolute;
-  inset: 4px;
-  border: 1px solid
-    rgba(255, 255, 255, 0.12);
-  border-radius: inherit;
-}
-
-.brandMark > span {
-  width: 74%;
-  height: 1px;
+  inset: 1px auto 1px 0;
+  width: 2px;
   background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.78),
-    transparent
+    180deg,
+    var(--brand-cyan),
+    var(--brand-gold-light) 48%,
+    var(--brand-violet)
   );
-  transform: rotate(-11deg);
+  box-shadow: 0 0 18px rgba(224, 191, 129, 0.18);
+  transition: width 220ms ease, box-shadow 220ms ease;
 }
 
-.brand:hover .brandMark {
-  transform: translateY(-2px) rotate(1.5deg);
-  border-color: var(--brand-gold-light);
-  box-shadow:
-    inset 0 0 0 3px rgba(0, 0, 0, 0.6),
-    0 15px 38px rgba(118, 84, 216, 0.16);
+.brand:hover::before {
+  width: 4px;
+  box-shadow: 0 0 28px rgba(224, 191, 129, 0.3);
 }
 
 .brandCopy {
@@ -137,19 +88,21 @@
 
 .brandCopy strong {
   font-family: var(--font-display);
-  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-size: clamp(1.32rem, 2vw, 1.76rem);
   font-weight: 400;
-  letter-spacing: 0.13em;
-  line-height: 1;
+  letter-spacing: 0.14em;
+  line-height: 0.95;
+  white-space: nowrap;
 }
 
 .brandCopy small {
-  color: rgba(224, 191, 129, 0.72);
+  color: rgba(224, 191, 129, 0.75);
   font-family: var(--font-sans);
-  font-size: 0.58rem;
+  font-size: 0.57rem;
   font-weight: 700;
-  letter-spacing: 0.17em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .navigation {
@@ -165,13 +118,10 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding: 14px clamp(10px, 1.4vw, 18px);
+  padding: 14px clamp(10px, 1.35vw, 18px);
   color: rgba(242, 238, 230, 0.58);
   font-family: var(--font-sans);
-  transition:
-    color 180ms ease,
-    background 180ms ease,
-    transform 180ms ease;
+  transition: color 180ms ease, background 180ms ease, transform 180ms ease;
 }
 
 .navLink::after {
@@ -215,7 +165,7 @@
 }
 
 .navLink small {
-  color: rgba(157, 148, 136, 0.58);
+  color: rgba(157, 148, 136, 0.6);
   font-size: 0.57rem;
   line-height: 1.2;
   white-space: nowrap;
@@ -279,8 +229,7 @@
   gap: 7px;
   min-height: 38px;
   flex: 0 0 auto;
-  border: 1px solid
-    rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.025);
   color: rgba(242, 238, 230, 0.68);
@@ -310,8 +259,7 @@
 
 .signOutButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color:
-    rgba(208, 138, 155, 0.65);
+  border-color: rgba(208, 138, 155, 0.65);
   background: rgba(208, 138, 155, 0.08);
   color: #e8b9c5;
 }
@@ -329,17 +277,12 @@
   position: relative;
   z-index: 10;
   display: grid;
-  grid-template-columns:
-    auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
-  width: min(
-    calc(100% - clamp(32px, 6vw, 84px)),
-    1440px
-  );
+  width: min(calc(100% - clamp(32px, 6vw, 84px)), 1440px);
   margin: 18px auto 0;
-  border: 1px solid
-    rgba(224, 191, 129, 0.17);
+  border: 1px solid rgba(224, 191, 129, 0.17);
   background:
     linear-gradient(
       90deg,
@@ -348,14 +291,9 @@
       transparent
     ),
     rgba(12, 12, 12, 0.9);
-  box-shadow:
-    0 18px 54px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.16);
   padding: 14px 17px;
-  animation:
-    welcomeIn
-    520ms
-    cubic-bezier(0.2, 0.8, 0.2, 1)
-    both;
+  animation: welcomeIn 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .welcomeSymbol {
@@ -364,8 +302,7 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 1px solid
-    rgba(224, 191, 129, 0.34);
+  border: 1px solid rgba(224, 191, 129, 0.34);
   border-radius: 50%;
   background: rgba(224, 191, 129, 0.05);
 }
@@ -389,15 +326,10 @@
 }
 
 .welcomeSymbol > span {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #fff 0 18%,
-    var(--brand-gold-light) 20% 46%,
-    transparent 50%
-  );
+  box-shadow: 0 0 12px rgba(224, 191, 129, 0.58);
 }
 
 .welcomeCopy {
@@ -423,8 +355,7 @@
   display: grid;
   gap: 4px;
   min-width: 190px;
-  border-left: 1px solid
-    rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
   padding-left: 17px;
   text-align: right;
   font-family: var(--font-sans);
@@ -453,33 +384,18 @@
 }
 
 @keyframes iridescentDrift {
-  from {
-    background-position: 0% 50%;
-  }
-
-  to {
-    background-position: 220% 50%;
-  }
+  from { background-position: 0% 50%; }
+  to { background-position: 220% 50%; }
 }
 
 @keyframes welcomeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 1180px) {
   .navbar {
-    grid-template-columns:
-      minmax(200px, 0.8fr)
-      minmax(360px, 1.2fr)
-      auto;
+    grid-template-columns: minmax(190px, 0.8fr) minmax(360px, 1.2fr) auto;
   }
 
   .navLink small,
@@ -489,13 +405,10 @@
 }
 
 @media (max-width: 860px) {
-  .navDock {
-    padding-inline: 16px;
-  }
+  .navDock { padding-inline: 16px; }
 
   .navbar {
-    grid-template-columns:
-      minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     min-height: 76px;
   }
 
@@ -507,8 +420,7 @@
     width: 42px;
     height: 42px;
     order: 2;
-    border: 1px solid
-      rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.025);
     cursor: pointer;
@@ -522,13 +434,11 @@
     transition: transform 180ms ease;
   }
 
-  .menuButton[aria-expanded="true"]
-    span:first-child {
+  .menuButton[aria-expanded="true"] span:first-child {
     transform: translateY(3px) rotate(45deg);
   }
 
-  .menuButton[aria-expanded="true"]
-    span:last-child {
+  .menuButton[aria-expanded="true"] span:last-child {
     transform: translateY(-3px) rotate(-45deg);
   }
 
@@ -538,8 +448,7 @@
     right: 0;
     left: 0;
     display: grid;
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1px;
     overflow: hidden;
     max-height: 0;
@@ -557,8 +466,7 @@
 
   .navigationOpen {
     max-height: 310px;
-    border-color:
-      rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.12);
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0);
@@ -566,27 +474,17 @@
 
   .navLink {
     min-height: 74px;
-    border: 1px solid
-      rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     padding: 15px 18px;
   }
 
-  .navLink small {
-    display: block;
-  }
-
-  .accountArea {
-    order: 3;
-  }
-
-  .accountCopy {
-    display: none;
-  }
+  .navLink small { display: block; }
+  .accountArea { order: 3; }
+  .accountCopy { display: none; }
 
   .welcomeBar {
     width: calc(100% - 32px);
-    grid-template-columns:
-      auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .welcomeMeta {
@@ -599,27 +497,18 @@
 }
 
 @media (max-width: 560px) {
-  .navbar {
-    gap: 9px;
-  }
+  .navbar { gap: 9px; }
 
   .brand {
-    gap: 9px;
-  }
-
-  .brandMark {
-    width: 31px;
-    height: 40px;
+    padding-left: 11px;
   }
 
   .brandCopy strong {
-    font-size: 1.18rem;
+    font-size: 1.2rem;
     letter-spacing: 0.09em;
   }
 
-  .brandCopy small {
-    display: none;
-  }
+  .brandCopy small { display: none; }
 
   .signOutButton {
     width: 40px;
@@ -635,13 +524,8 @@
     height: 17px;
   }
 
-  .navigation {
-    grid-template-columns: 1fr;
-  }
-
-  .navigationOpen {
-    max-height: 420px;
-  }
+  .navigation { grid-template-columns: 1fr; }
+  .navigationOpen { max-height: 420px; }
 
   .welcomeBar {
     align-items: start;
@@ -650,31 +534,19 @@
     padding: 13px;
   }
 
-  .welcomeCopy strong {
-    font-size: 0.7rem;
-  }
-
-  .welcomeCopy p {
-    font-size: 0.64rem;
-  }
-
-  .welcomeMeta {
-    display: none;
-  }
+  .welcomeCopy strong { font-size: 0.7rem; }
+  .welcomeCopy p { font-size: 0.64rem; }
+  .welcomeMeta { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .iridescentLine,
-  .welcomeBar {
-    animation: none;
-  }
+  .welcomeBar { animation: none; }
 
-  .brandMark,
+  .brand::before,
   .navLink,
   .navLink::after,
   .signOutButton,
   .menuButton span,
-  .navigation {
-    transition: none;
-  }
+  .navigation { transition: none; }
 }

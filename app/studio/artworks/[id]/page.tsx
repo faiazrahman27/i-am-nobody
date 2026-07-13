@@ -48,6 +48,9 @@ type VariantRow = Readonly<{
     string | null;
   rejection_reason:
     string | null;
+  parent_variant_id:
+    string | null;
+  generation_attempt: number;
   created_at: string;
 }>;
 
@@ -105,6 +108,12 @@ type RenderRow = Readonly<{
   height: number | null;
   mime_type: string;
   created_at: string;
+}>;
+
+type LineageRow = Readonly<{
+  id: string;
+  artwork_code: string;
+  generation_attempt: number;
 }>;
 
 type GalleryRow = Readonly<{
@@ -176,6 +185,28 @@ function getStatusClass(
   return styles.changes;
 }
 
+
+
+function getQualityLabel(
+  value: string | undefined,
+) {
+  if (value === "low") return "Exploration";
+  if (value === "medium") return "Refined";
+  if (value === "high") return "Final";
+  return "—";
+}
+
+function getReviewStatusLabel(
+  value: string,
+) {
+  if (value === "passed") return "Ready for review";
+  if (value === "failed") return "Another version recommended";
+  if (value === "running") return "Reviewing";
+  if (value === "error") return "Review unavailable";
+  if (value === "skipped") return "Not reviewed";
+  return "Waiting";
+}
+
 function humanizeKey(
   value: string,
 ) {
@@ -216,7 +247,7 @@ export default async function ArtworkReviewPage({
   } = await supabase
     .from("artwork_variants")
     .select(
-      "id,artwork_code,job_id,status,storage_bucket,storage_path,width,height,sha256,reference_sha256,image_model,visual_score,automated_review_status,automated_review_model,automated_reviewed_at,human_notes,rejection_reason,created_at",
+      "id,artwork_code,job_id,status,storage_bucket,storage_path,width,height,sha256,reference_sha256,image_model,visual_score,automated_review_status,automated_review_model,automated_reviewed_at,human_notes,rejection_reason,parent_variant_id,generation_attempt,created_at",
     )
     .eq(
       "id",
@@ -308,6 +339,33 @@ export default async function ArtworkReviewPage({
       | GalleryRow
       | null;
 
+  const [
+    { data: parentData },
+    { data: childData },
+  ] = await Promise.all([
+    variant.parent_variant_id
+      ? supabase
+          .from("artwork_variants")
+          .select("id,artwork_code,generation_attempt")
+          .eq("id", variant.parent_variant_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+
+    supabase
+      .from("artwork_variants")
+      .select("id,artwork_code,generation_attempt")
+      .eq("parent_variant_id", variant.id)
+      .order("generation_attempt", {
+        ascending: true,
+      }),
+  ]);
+
+  const parentVariant =
+    parentData as LineageRow | null;
+
+  const childVariants =
+    (childData ?? []) as LineageRow[];
+
   const archetype =
     job &&
     isNobodyArchetypeSlug(
@@ -352,21 +410,36 @@ export default async function ArtworkReviewPage({
     Promise.all(
       renders.map(
         async (render) => {
-          const { data } =
-            await supabase.storage
-              .from(
-                render.storage_bucket,
-              )
-              .createSignedUrl(
-                render.storage_path,
-                60 * 30,
-              );
+          const filename =
+            render.storage_path
+              .split("/")
+              .pop() ||
+            `${variant.artwork_code.toLowerCase()}-${render.template_type}`;
+
+          const [preview, download] =
+            await Promise.all([
+              supabase.storage
+                .from(render.storage_bucket)
+                .createSignedUrl(
+                  render.storage_path,
+                  60 * 30,
+                ),
+
+              supabase.storage
+                .from(render.storage_bucket)
+                .createSignedUrl(
+                  render.storage_path,
+                  60 * 15,
+                  { download: filename },
+                ),
+            ]);
 
           return {
             ...render,
             previewUrl:
-              data?.signedUrl ??
-              null,
+              preview.data?.signedUrl ?? null,
+            downloadUrl:
+              download.data?.signedUrl ?? null,
           };
         },
       ),
@@ -463,7 +536,7 @@ export default async function ArtworkReviewPage({
                 }
               >
                 <Image
-                  alt="Canonical I AM NOBODY book cover"
+                  alt="Original I AM NOBODY book cover"
                   height={
                     NOBODY_BRAND
                       .canonicalReference
@@ -483,7 +556,7 @@ export default async function ArtworkReviewPage({
               </div>
 
               <figcaption>
-                Canonical reference
+                Original cover
               </figcaption>
             </figure>
 
@@ -497,7 +570,7 @@ export default async function ArtworkReviewPage({
                   ?.signedUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
-                    alt={`${title} clean artwork`}
+                    alt={`${title} artwork`}
                     src={
                       previewResult
                         .data
@@ -512,7 +585,7 @@ export default async function ArtworkReviewPage({
               </div>
 
               <figcaption>
-                Generated clean master
+                Artwork
               </figcaption>
             </figure>
           </div>
@@ -529,7 +602,7 @@ export default async function ArtworkReviewPage({
                   .signedUrl
               }
             >
-              Download clean master PNG
+              Download artwork PNG
             </a>
           ) : null}
 
@@ -545,7 +618,7 @@ export default async function ArtworkReviewPage({
                   styles.eyebrow
                 }
               >
-                Controlled derivatives
+                Final formats
               </p>
 
               <div
@@ -578,13 +651,14 @@ export default async function ArtworkReviewPage({
                         </strong>
 
                         <small>
-                          {render.width ??
-                            "—"}{" "}
-                          ×{" "}
-                          {render.height ??
-                            "—"}{" "}
-                          · {render.status}
+                          {render.width ?? "—"} × {render.height ?? "—"}
                         </small>
+
+                        {render.downloadUrl ? (
+                          <a href={render.downloadUrl}>
+                            Download
+                          </a>
+                        ) : null}
                       </div>
                     </article>
                   ),
@@ -652,7 +726,7 @@ export default async function ArtworkReviewPage({
               </div>
 
               <div>
-                <dt>Clean master</dt>
+                <dt>Size</dt>
                 <dd>
                   {variant.width} ×{" "}
                   {variant.height}
@@ -660,57 +734,72 @@ export default async function ArtworkReviewPage({
               </div>
 
               <div>
-                <dt>Model</dt>
+                <dt>Version</dt>
                 <dd>
-                  {variant.image_model}
+                  V{String(variant.generation_attempt).padStart(2, "0")}
                 </dd>
               </div>
 
               <div>
-                <dt>Finish</dt>
+                <dt>Quality</dt>
                 <dd>
-                  {job?.quality ??
-                    "—"}
+                  {getQualityLabel(
+                    job?.quality,
+                  )}
                 </dd>
               </div>
 
               <div>
                 <dt>Background</dt>
                 <dd>
-                  {job
-                    ?.background_variant ??
-                    "—"}
-                </dd>
-              </div>
-
-              <div>
-                <dt>
-                  Reference integrity
-                </dt>
-
-                <dd>
-                  {variant.reference_sha256 ===
-                  NOBODY_BRAND
-                    .canonicalReference
-                    .sha256
-                    ? "Verified"
-                    : "Mismatch"}
-                </dd>
-              </div>
-
-              <div>
-                <dt>Master hash</dt>
-
-                <dd>
-                  {variant.sha256
-                    ? `${variant.sha256.slice(
-                        0,
-                        16,
-                      )}…`
+                  {job?.background_variant
+                    ? humanizeKey(job.background_variant)
                     : "—"}
                 </dd>
               </div>
+
+              <div>
+                <dt>Created from</dt>
+                <dd>
+                  {parentVariant ? (
+                    <Link href={`/studio/artworks/${parentVariant.id}`}>
+                      {parentVariant.artwork_code}
+                    </Link>
+                  ) : (
+                    "New artwork"
+                  )}
+                </dd>
+              </div>
+
+              <div>
+                <dt>Guided by</dt>
+                <dd>Original book cover</dd>
+              </div>
             </dl>
+
+            {parentVariant || childVariants.length > 0 ? (
+              <div className={styles.brief}>
+                <h3>Version history</h3>
+
+                {parentVariant ? (
+                  <p>
+                    Previous version:{" "}
+                    <Link href={`/studio/artworks/${parentVariant.id}`}>
+                      {parentVariant.artwork_code}
+                    </Link>
+                  </p>
+                ) : null}
+
+                {childVariants.map((child) => (
+                  <p key={child.id}>
+                    Next version:{" "}
+                    <Link href={`/studio/artworks/${child.id}`}>
+                      {child.artwork_code}
+                    </Link>
+                  </p>
+                ))}
+              </div>
+            ) : null}
 
             {job?.clothing_notes ||
             job?.mood_notes ||
@@ -743,7 +832,7 @@ export default async function ArtworkReviewPage({
 
                 {job.variation_direction ? (
                   <p>
-                    Variation:{" "}
+                    Direction:{" "}
                     {
                       job.variation_direction
                     }
@@ -775,8 +864,7 @@ export default async function ArtworkReviewPage({
                     styles.eyebrow
                   }
                 >
-                  Automated quality
-                  control
+                  Visual review
                 </p>
 
                 <h2>
@@ -794,9 +882,9 @@ export default async function ArtworkReviewPage({
                     : styles.changes
                 }
               >
-                {
-                  variant.automated_review_status
-                }
+                {getReviewStatusLabel(
+                  variant.automated_review_status,
+                )}
               </span>
             </div>
 
@@ -807,7 +895,7 @@ export default async function ArtworkReviewPage({
             >
               {review?.summary ||
                 variant.rejection_reason ||
-                "The automated reviewer did not return a report."}
+                "Visual review is not available yet."}
             </p>
 
             {review ? (
@@ -847,7 +935,7 @@ export default async function ArtworkReviewPage({
                     }
                   >
                     <h3>
-                      Hard blockers
+                      Main issues
                     </h3>
 
                     <ul>
@@ -868,8 +956,7 @@ export default async function ArtworkReviewPage({
                   }
                 >
                   <summary>
-                    Open full quality
-                    checklist
+                    View full review
                   </summary>
 
                   <ol>

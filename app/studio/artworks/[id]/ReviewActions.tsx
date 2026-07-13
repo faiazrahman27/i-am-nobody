@@ -400,17 +400,11 @@ export default function ReviewActions({
           </p>
 
           <h3>
-            Regenerate from this artwork
+            Create a corrected version
           </h3>
 
           <p>
-            The new option reuses the
-            original controlled
-            archetype, clothing, mood,
-            background and prop, then
-            adds the selected correction
-            and your notes. It is saved
-            as a linked new variant.
+            The next version keeps this artwork’s archetype, clothing, mood, background, and object choices. Your correction reason and notes guide the new result, which is saved in the same version history.
           </p>
         </div>
 
@@ -454,7 +448,7 @@ export default function ReviewActions({
 
         <label>
           <span>
-            Generation finish
+            Quality
           </span>
 
           <select
@@ -474,11 +468,11 @@ export default function ReviewActions({
             }
           >
             <option value="low">
-              Draft
+              Exploration
             </option>
 
             <option value="medium">
-              Standard
+              Refined
             </option>
 
             <option value="high">
@@ -509,9 +503,7 @@ export default function ReviewActions({
 
         {!canRegenerate ? (
           <small>
-            Reviewer accounts can save
-            decisions but cannot spend
-            image-generation credits.
+            Reviewer accounts can save decisions, while owners and editors can create another version.
           </small>
         ) : null}
       </div>

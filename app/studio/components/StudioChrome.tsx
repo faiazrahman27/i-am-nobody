@@ -1,14 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import {
-  usePathname,
-} from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import SignOutButton from "./SignOutButton";
 import styles from "./studio-chrome.module.css";
 
@@ -17,10 +11,7 @@ type StudioSession = Readonly<{
   admin?: Readonly<{
     email: string;
     displayName: string | null;
-    role:
-      | "owner"
-      | "editor"
-      | "reviewer";
+    role: "owner" | "editor" | "reviewer";
   }>;
 }>;
 
@@ -28,69 +19,45 @@ type NavigationItem = Readonly<{
   href: string;
   label: string;
   description: string;
-  external?: boolean;
-  active: (
-    pathname: string,
-  ) => boolean;
-  icon:
-    | "create"
-    | "archive"
-    | "gallery"
-    | "site";
+  active: (pathname: string) => boolean;
+  icon: "create" | "archive" | "gallery" | "site";
 }>;
 
-const NAVIGATION:
-  readonly NavigationItem[] = [
-    {
-      href: "/studio",
-      label: "Create",
-      description:
-        "Direct a new mask",
-      active: (pathname) =>
-        pathname === "/studio",
-      icon: "create",
-    },
-    {
-      href: "/studio/artworks",
-      label: "Archive",
-      description:
-        "Review every artwork",
-      active: (pathname) =>
-        pathname.startsWith(
-          "/studio/artworks",
-        ),
-      icon: "archive",
-    },
-    {
-      href: "/gallery",
-      label: "Public gallery",
-      description:
-        "See released works",
-      active: () => false,
-      icon: "gallery",
-    },
-    {
-      href: "/",
-      label: "Website",
-      description:
-        "Return to I AM NOBODY",
-      active: () => false,
-      icon: "site",
-    },
-  ];
+const NAVIGATION: readonly NavigationItem[] = [
+  {
+    href: "/studio",
+    label: "Create",
+    description: "Create a new artwork",
+    active: (pathname) => pathname === "/studio",
+    icon: "create",
+  },
+  {
+    href: "/studio/artworks",
+    label: "Artworks",
+    description: "Review and finish artworks",
+    active: (pathname) => pathname.startsWith("/studio/artworks"),
+    icon: "archive",
+  },
+  {
+    href: "/gallery",
+    label: "Gallery",
+    description: "View published artworks",
+    active: () => false,
+    icon: "gallery",
+  },
+  {
+    href: "/",
+    label: "Website",
+    description: "Return to I AM NOBODY",
+    active: () => false,
+    icon: "site",
+  },
+];
 
-function NavIcon({
-  name,
-}: Readonly<{
-  name:
-    NavigationItem["icon"];
-}>) {
+function NavIcon({ name }: Readonly<{ name: NavigationItem["icon"] }>) {
   if (name === "create") {
     return (
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-      >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
         <path d="M12 5v14M5 12h14" />
       </svg>
     );
@@ -98,289 +65,115 @@ function NavIcon({
 
   if (name === "archive") {
     return (
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-      >
-        <rect
-          height="6"
-          rx="1"
-          width="6"
-          x="3"
-          y="3"
-        />
-
-        <rect
-          height="6"
-          rx="1"
-          width="6"
-          x="15"
-          y="3"
-        />
-
-        <rect
-          height="6"
-          rx="1"
-          width="6"
-          x="3"
-          y="15"
-        />
-
-        <rect
-          height="6"
-          rx="1"
-          width="6"
-          x="15"
-          y="15"
-        />
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <rect height="6" rx="1" width="6" x="3" y="3" />
+        <rect height="6" rx="1" width="6" x="15" y="3" />
+        <rect height="6" rx="1" width="6" x="3" y="15" />
+        <rect height="6" rx="1" width="6" x="15" y="15" />
       </svg>
     );
   }
 
   if (name === "gallery") {
     return (
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-      >
-        <rect
-          height="16"
-          rx="2"
-          width="18"
-          x="3"
-          y="4"
-        />
-
-        <circle
-          cx="9"
-          cy="9"
-          r="1.5"
-        />
-
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <rect height="16" rx="2" width="18" x="3" y="4" />
+        <circle cx="9" cy="9" r="1.5" />
         <path d="m5.5 17 4.2-4.2 2.8 2.8 2.2-2.2 3.8 3.6" />
       </svg>
     );
   }
 
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-    >
+    <svg aria-hidden="true" viewBox="0 0 24 24">
       <path d="M7 17 17 7M8 7h9v9" />
     </svg>
   );
 }
 
-function getSectionLabel(
-  pathname: string,
-) {
-  if (
-    pathname.startsWith(
-      "/studio/artworks/",
-    )
-  ) {
+function getSectionLabel(pathname: string) {
+  if (pathname.startsWith("/studio/artworks/")) {
     return "Artwork review";
   }
 
-  if (
-    pathname.startsWith(
-      "/studio/artworks",
-    )
-  ) {
-    return "Private archive";
+  if (pathname.startsWith("/studio/artworks")) {
+    return "Artwork archive";
   }
 
-  return "Creation desk";
+  return "Creation studio";
 }
 
-function formatRole(
-  role?:
-    | "owner"
-    | "editor"
-    | "reviewer",
-) {
-  if (role === "owner") {
-    return "Studio owner";
-  }
-
-  if (role === "editor") {
-    return "Creative editor";
-  }
-
-  if (role === "reviewer") {
-    return "Creative reviewer";
-  }
-
+function formatRole(role?: "owner" | "editor" | "reviewer") {
+  if (role === "owner") return "Studio owner";
+  if (role === "editor") return "Creative editor";
+  if (role === "reviewer") return "Creative reviewer";
   return "Creative team";
 }
 
 export default function StudioChrome({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const pathname =
-    usePathname();
-
-  const isLogin =
-    pathname ===
-    "/studio/login";
-
-  const [
-    menuOpen,
-    setMenuOpen,
-  ] = useState(false);
-
-  const [
-    session,
-    setSession,
-  ] =
-    useState<StudioSession | null>(
-      null,
-    );
+}: Readonly<{ children: React.ReactNode }>) {
+  const pathname = usePathname();
+  const isLogin = pathname === "/studio/login";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [session, setSession] = useState<StudioSession | null>(null);
 
   useEffect(() => {
-    if (isLogin) {
-      return;
-    }
+    if (isLogin) return;
 
-    const controller =
-      new AbortController();
+    const controller = new AbortController();
 
     async function loadSession() {
       try {
-        const response =
-          await fetch(
-            "/api/studio/session",
-            {
-              cache:
-                "no-store",
+        const response = await fetch("/api/studio/session", {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
+        });
 
-              credentials:
-                "same-origin",
-
-              signal:
-                controller.signal,
-            },
-          );
-
-        if (!response.ok) {
-          return;
-        }
-
-        const payload =
-          (await response.json()) as
-            StudioSession;
-
-        setSession(payload);
+        if (!response.ok) return;
+        setSession((await response.json()) as StudioSession);
       } catch {
-        // Protected studio pages perform the authoritative redirect.
+        // Protected studio pages handle authentication and redirects.
       }
     }
 
     void loadSession();
-
-    return () =>
-      controller.abort();
+    return () => controller.abort();
   }, [isLogin]);
 
-  const adminName =
-    useMemo(() => {
-      const admin =
-        session?.admin;
+  const adminName = useMemo(() => {
+    const admin = session?.admin;
+    return admin?.displayName?.trim() || admin?.email || "Creative team";
+  }, [session]);
 
-      if (!admin) {
-        return "Private creative team";
-      }
-
-      return (
-        admin.displayName?.trim() ||
-        admin.email
-      );
-    }, [session]);
-
-  if (isLogin) {
-    return <>{children}</>;
-  }
-
-  const sectionLabel =
-    getSectionLabel(pathname);
-
-  const roleLabel =
-    formatRole(
-      session?.admin?.role,
-    );
+  if (isLogin) return <>{children}</>;
 
   return (
     <div className={styles.shell}>
-      <div
-        aria-hidden="true"
-        className={
-          styles.iridescentLine
-        }
-      />
+      <div aria-hidden="true" className={styles.iridescentLine} />
 
-      <div
-        className={
-          styles.navDock
-        }
-      >
-        <header
-          className={
-            styles.navbar
-          }
-        >
+      <div className={styles.navDock}>
+        <header className={styles.navbar}>
           <Link
             aria-label="I AM NOBODY Image Studio home"
-            className={
-              styles.brand
-            }
+            className={styles.brand}
             href="/studio"
           >
-            <span
-              aria-hidden="true"
-              className={
-                styles.brandMark
-              }
-            >
-              <span />
-            </span>
-
-            <span
-              className={
-                styles.brandCopy
-              }
-            >
-              <strong>
-                I AM NOBODY
-              </strong>
-
-              <small>
-                Private image studio
-              </small>
+            <span className={styles.brandCopy}>
+              <strong>I AM NOBODY</strong>
+              <small>Private image studio</small>
             </span>
           </Link>
 
           <button
             aria-controls="studio-navigation"
-            aria-expanded={
-              menuOpen
-            }
+            aria-expanded={menuOpen}
             aria-label={
-              menuOpen
-                ? "Close studio navigation"
-                : "Open studio navigation"
+              menuOpen ? "Close studio navigation" : "Open studio navigation"
             }
-            className={
-              styles.menuButton
-            }
-            onClick={() =>
-              setMenuOpen(
-                (current) =>
-                  !current,
-              )
-            }
+            className={styles.menuButton}
+            onClick={() => setMenuOpen((current) => !current)}
             type="button"
           >
             <span />
@@ -390,90 +183,38 @@ export default function StudioChrome({
           <nav
             aria-label="Studio navigation"
             className={`${styles.navigation} ${
-              menuOpen
-                ? styles.navigationOpen
-                : ""
+              menuOpen ? styles.navigationOpen : ""
             }`}
             id="studio-navigation"
           >
-            {NAVIGATION.map(
-              (item) => {
-                const active =
-                  item.active(
-                    pathname,
-                  );
+            {NAVIGATION.map((item) => {
+              const active = item.active(pathname);
 
-                return (
-                  <Link
-                    aria-current={
-                      active
-                        ? "page"
-                        : undefined
-                    }
-                    className={`${styles.navLink} ${
-                      active
-                        ? styles.navLinkActive
-                        : ""
-                    }`}
-                    href={
-                      item.href
-                    }
-                    key={
-                      item.href
-                    }
-                    onClick={() =>
-                      setMenuOpen(
-                        false,
-                      )
-                    }
-                    target={
-                      item.external
-                        ? "_blank"
-                        : undefined
-                    }
-                  >
-                    <NavIcon
-                      name={
-                        item.icon
-                      }
-                    />
+              return (
+                <Link
+                  aria-current={active ? "page" : undefined}
+                  className={`${styles.navLink} ${
+                    active ? styles.navLinkActive : ""
+                  }`}
+                  href={item.href}
+                  key={item.href}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <NavIcon name={item.icon} />
 
-                    <span>
-                      <strong>
-                        {
-                          item.label
-                        }
-                      </strong>
-
-                      <small>
-                        {
-                          item.description
-                        }
-                      </small>
-                    </span>
-                  </Link>
-                );
-              },
-            )}
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
 
-          <div
-            className={
-              styles.accountArea
-            }
-          >
-            <div
-              className={
-                styles.accountCopy
-              }
-            >
-              <span>
-                {adminName}
-              </span>
-
-              <small>
-                {roleLabel}
-              </small>
+          <div className={styles.accountArea}>
+            <div className={styles.accountCopy}>
+              <span>{adminName}</span>
+              <small>{formatRole(session?.admin?.role)}</small>
             </div>
 
             <SignOutButton />
@@ -481,63 +222,26 @@ export default function StudioChrome({
         </header>
       </div>
 
-      <aside
-        aria-label="Private studio welcome"
-        className={
-          styles.welcomeBar
-        }
-      >
-        <div
-          aria-hidden="true"
-          className={
-            styles.welcomeSymbol
-          }
-        >
+      <aside aria-label="Studio welcome" className={styles.welcomeBar}>
+        <div aria-hidden="true" className={styles.welcomeSymbol}>
           <span />
         </div>
 
-        <div
-          className={
-            styles.welcomeCopy
-          }
-        >
-          <strong>
-            Welcome to the private
-            I AM NOBODY Image Studio.
-          </strong>
-
+        <div className={styles.welcomeCopy}>
+          <strong>Welcome to the private I AM NOBODY Image Studio.</strong>
           <p>
-            Create with discipline,
-            review with intention, and
-            release only what truly
-            belongs to the official
-            universe.
+            Create with discipline, review with intention, and publish only
+            what truly belongs to the I AM NOBODY universe.
           </p>
         </div>
 
-        <div
-          className={
-            styles.welcomeMeta
-          }
-        >
-          <span>
-            {sectionLabel}
-          </span>
-
-          <small>
-            Human approval always
-            required
-          </small>
+        <div className={styles.welcomeMeta}>
+          <span>{getSectionLabel(pathname)}</span>
+          <small>Every publication is a human decision</small>
         </div>
       </aside>
 
-      <div
-        className={
-          styles.content
-        }
-      >
-        {children}
-      </div>
+      <div className={styles.content}>{children}</div>
     </div>
   );
 }

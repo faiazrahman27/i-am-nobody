@@ -166,7 +166,7 @@ export async function POST(
       {
         ok: false,
         message:
-          "Reviewer accounts cannot spend generation credits.",
+          "Reviewer accounts can save decisions, while owners and editors can create another version.",
       },
       {
         status: 403,

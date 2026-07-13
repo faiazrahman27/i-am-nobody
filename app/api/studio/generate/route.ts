@@ -148,7 +148,7 @@ async function signedUrl(
   ) {
     throw new Error(
       error?.message ||
-        "Could not create a private preview URL.",
+        "The artwork preview could not be prepared.",
     );
   }
 
@@ -197,7 +197,7 @@ export async function POST(
         error:
           "REVIEWER_CANNOT_GENERATE",
         message:
-          "Reviewer accounts cannot create generation jobs.",
+          "Reviewer accounts cannot create new artworks.",
       },
       { status: 403 },
     );
@@ -233,7 +233,7 @@ export async function POST(
         error:
           "INVALID_ARCHETYPE",
         message:
-          "Choose a controlled I AM NOBODY archetype.",
+          "Choose an I AM NOBODY archetype.",
       },
       { status: 400 },
     );
@@ -356,7 +356,7 @@ export async function POST(
         error:
           "CANONICAL_REFERENCE_MISSING",
         message:
-          "Run Image Studio migrations 001 through 009 before generating artwork.",
+          "The original book-cover reference is unavailable. Please complete the studio setup.",
       },
       { status: 503 },
     );
@@ -382,7 +382,7 @@ export async function POST(
         error:
           "CANONICAL_REFERENCE_MISMATCH",
         message:
-          "The active database reference does not match the approved book cover.",
+          "The original book cover could not be verified. Restore the approved cover before creating artwork.",
       },
       { status: 503 },
     );
@@ -392,6 +392,11 @@ export async function POST(
     policy
       ?.automated_review_enabled !==
     false;
+
+  const automatedReviewThreshold =
+    typeof policy?.automated_review_threshold === "number"
+      ? policy.automated_review_threshold
+      : 75;
 
   const {
     data: job,
@@ -518,7 +523,7 @@ export async function POST(
           "JOB_CREATION_FAILED",
         message:
           jobError?.message ||
-          "Could not create the generation job.",
+          "The artwork could not be started.",
       },
       { status: 500 },
     );
@@ -782,6 +787,9 @@ export async function POST(
 
                       archetype:
                         archetypeDefinition,
+
+                      threshold:
+                        automatedReviewThreshold,
                     },
                   );
 
@@ -946,11 +954,13 @@ export async function POST(
                 finalStatus =
                   "auto_review_failed";
 
+                console.error(
+                  "[I AM NOBODY] Visual review failed.",
+                  reviewError,
+                );
+
                 reviewSummary =
-                  reviewError instanceof
-                  Error
-                    ? reviewError.message
-                    : "Automated review failed.";
+                  "Visual review could not be completed. The artwork is still available for manual review.";
 
                 await supabase
                   .from(
