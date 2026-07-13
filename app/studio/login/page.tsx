@@ -26,7 +26,7 @@ export default async function StudioLoginPage({
 
   return (
     <main className={styles.page}>
-      <section className={styles.coverPanel} aria-hidden="true">
+      <section aria-hidden="true" className={styles.coverPanel}>
         <Image
           alt=""
           className={styles.cover}
@@ -35,23 +35,25 @@ export default async function StudioLoginPage({
           sizes="(max-width: 880px) 100vw, 45vw"
           src="/book-cover.png"
         />
+
         <div className={styles.coverShade} />
       </section>
 
       <section className={styles.formPanel}>
         <div className={styles.formInner}>
-          <p className={styles.eyebrow}>PRIVATE IMAGE STUDIO</p>
+          <p className={styles.eyebrow}>IMAGE STUDIO</p>
+
           <h1>I AM NOBODY</h1>
+
           <p className={styles.intro}>
-            Controlled artwork generation, visual review, approval, and
-            publication for the official I AM NOBODY universe.
+            A private space for creating and selecting official I AM NOBODY
+            cover variations.
           </p>
 
           <LoginForm initialError={params.error ?? null} />
 
           <p className={styles.notice}>
-            Access is limited to invited members of the creative team. There is
-            no public registration.
+            Access is limited to invited members of the creative team.
           </p>
         </div>
       </section>

@@ -1,18 +1,14 @@
 "use client";
 
-import {
-  useMemo,
-  useState,
-} from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   NOBODY_ARCHETYPES,
   NOBODY_BRAND,
+  getArtworkStatusLabel,
 } from "@/lib/nobody";
-import type {
-  ArchetypeSlug,
-  ImageQuality,
-} from "@/lib/nobody";
+import type { ArchetypeSlug, ImageQuality } from "@/lib/nobody";
 import styles from "./image-generator.module.css";
 
 type GeneratedVariant = Readonly<{
@@ -39,93 +35,45 @@ type GenerateFailure = Readonly<{
   ok: false;
   error: string;
   message?: string;
-  issues?: ReadonlyArray<
-    Readonly<{
-      message: string;
-    }>
-  >;
+  issues?: ReadonlyArray<Readonly<{ message: string }>>;
 }>;
 
 export default function ImageGenerator({
   canGenerate,
+  generationEnabled,
 }: Readonly<{
   canGenerate: boolean;
+  generationEnabled: boolean;
 }>) {
   const router = useRouter();
 
-  const [
-    archetype,
-    setArchetype,
-  ] = useState<ArchetypeSlug>(
-    "nobody-classic",
+  const [archetype, setArchetype] = useState<ArchetypeSlug>("nobody-classic");
+  const [clothingNotes, setClothingNotes] = useState("");
+  const [creativeNote, setCreativeNote] = useState("");
+  const [prop, setProp] = useState("");
+  const [quality, setQuality] = useState<ImageQuality>("low");
+  const [numberOfVariations, setNumberOfVariations] = useState(1);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<GenerateSuccess | null>(null);
+
+  const selectedArchetype = useMemo(
+    () =>
+      NOBODY_ARCHETYPES.find((item) => item.slug === archetype) ??
+      NOBODY_ARCHETYPES[0],
+    [archetype],
   );
 
-  const [
-    clothingNotes,
-    setClothingNotes,
-  ] = useState("");
-
-  const [
-    variationDirection,
-    setVariationDirection,
-  ] = useState("");
-
-  const [prop, setProp] =
-    useState("");
-
-  const [
-    quality,
-    setQuality,
-  ] = useState<ImageQuality>("low");
-
-  const [
-    numberOfVariations,
-    setNumberOfVariations,
-  ] = useState(1);
-
-  const [
-    isGenerating,
-    setIsGenerating,
-  ] = useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  const [
-    result,
-    setResult,
-  ] = useState<GenerateSuccess | null>(
-    null,
-  );
-
-  const selectedArchetype =
-    useMemo(
-      () =>
-        NOBODY_ARCHETYPES.find(
-          (item) =>
-            item.slug === archetype,
-        )!,
-      [archetype],
-    );
-
-  const handleArchetypeChange = (
-    value: ArchetypeSlug,
-  ) => {
+  function handleArchetypeChange(value: ArchetypeSlug) {
     setArchetype(value);
     setProp("");
     setError("");
-  };
+  }
 
-  const handleSubmit = async (
-    event:
-      React.FormEvent<HTMLFormElement>,
-  ) => {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (
-      !canGenerate ||
-      isGenerating
-    ) {
+    if (!canGenerate || !generationEnabled || isGenerating) {
       return;
     }
 
@@ -134,50 +82,33 @@ export default function ImageGenerator({
     setResult(null);
 
     try {
-      const response = await fetch(
-        "/api/studio/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            archetype,
-            clothingNotes,
-            variationDirection,
-            prop: prop || null,
-            quality,
-            numberOfVariations,
-          }),
+      const response = await fetch("/api/studio/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          archetype,
+          clothingNotes,
+          variationDirection: creativeNote,
+          prop: prop || null,
+          quality,
+          numberOfVariations,
+        }),
+      });
 
-      const payload =
-        (await response.json()) as
-          | GenerateSuccess
-          | GenerateFailure;
+      const payload = (await response.json()) as GenerateSuccess | GenerateFailure;
 
-      if (
-        !response.ok ||
-        !payload.ok
-      ) {
+      if (!response.ok || !payload.ok) {
         const issueText =
-          !payload.ok &&
-          payload.issues?.length
-            ? payload.issues
-                .map(
-                  (issue) =>
-                    issue.message,
-                )
-                .join(" ")
+          !payload.ok && payload.issues?.length
+            ? payload.issues.map((issue) => issue.message).join(" ")
             : "";
 
         throw new Error(
-          (!payload.ok &&
-            payload.message) ||
+          (!payload.ok && payload.message) ||
             issueText ||
-            "Image generation failed.",
+            "The artwork could not be created.",
         );
       }
 
@@ -187,419 +118,205 @@ export default function ImageGenerator({
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : "Image generation failed.",
+          : "The artwork could not be created.",
       );
     } finally {
       setIsGenerating(false);
     }
-  };
+  }
+
+  const disabled = !canGenerate || !generationEnabled || isGenerating;
 
   return (
-    <section
-      className={styles.section}
-      aria-labelledby="generator-title"
-    >
-      <div
-        className={styles.headingRow}
-      >
+    <section aria-labelledby="generator-title" className={styles.section}>
+      <div className={styles.headingRow}>
         <div>
-          <p
-            className={styles.eyebrow}
-          >
-            Character-only generation
-          </p>
-
-          <h2 id="generator-title">
-            Create a Nobody variation
-          </h2>
+          <p className={styles.eyebrow}>New artwork</p>
+          <h2 id="generator-title">Choose the next mask</h2>
         </div>
 
-        <div
-          className={styles.scopeLock}
-        >
-          <span>Locked output</span>
-
-          <strong>
-            {
-              NOBODY_BRAND
-                .generationCanvas.size
-            }{" "}
-            PNG
-          </strong>
+        <div className={styles.scopeLock}>
+          <span>Cover format</span>
+          <strong>{NOBODY_BRAND.generationCanvas.size}</strong>
         </div>
       </div>
 
-      <div
-        className={styles.scopeNotice}
-      >
-        <strong>Fixed:</strong>{" "}
-        cover size, framing,
-        background, border, spine,
-        title, subtitle, author name,
-        and iridescent lines. Only
-        the anonymous character is
-        editable.
+      <div className={styles.scopeNotice}>
+        The original cover design and all text stay unchanged. Only the
+        anonymous character changes through clothing, role, and one restrained
+        detail when needed.
       </div>
 
-      <form
-        className={styles.form}
-        onSubmit={handleSubmit}
-      >
-        <div
-          className={styles.formGrid}
-        >
-          <label
-            className={styles.field}
-          >
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <div className={styles.formGrid}>
+          <label className={styles.field}>
             <span>Archetype</span>
 
             <select
-              value={archetype}
-              onChange={(event) =>
-                handleArchetypeChange(
-                  event.target
-                    .value as ArchetypeSlug,
-                )
-              }
               disabled={isGenerating}
+              onChange={(event) =>
+                handleArchetypeChange(event.target.value as ArchetypeSlug)
+              }
+              value={archetype}
             >
-              {NOBODY_ARCHETYPES.filter(
-                (item) => item.active,
-              ).map((item) => (
-                <option
-                  key={item.slug}
-                  value={item.slug}
-                >
+              {NOBODY_ARCHETYPES.filter((item) => item.active).map((item) => (
+                <option key={item.slug} value={item.slug}>
                   {item.title.en}
                 </option>
               ))}
             </select>
 
-            <small>
-              {
-                selectedArchetype
-                  .description.en
-              }
-            </small>
+            <small>{selectedArchetype.description.en}</small>
           </label>
 
-          <label
-            className={styles.field}
-          >
-            <span>Approved prop</span>
+          <label className={styles.field}>
+            <span>Optional object</span>
 
             <select
-              value={prop}
-              onChange={(event) =>
-                setProp(
-                  event.target.value,
-                )
-              }
               disabled={
-                isGenerating ||
-                selectedArchetype
-                  .permittedProps
-                  .length === 0
+                isGenerating || selectedArchetype.permittedProps.length === 0
               }
+              onChange={(event) => setProp(event.target.value)}
+              value={prop}
             >
-              <option value="">
-                No prop
-              </option>
+              <option value="">None</option>
 
-              {selectedArchetype
-                .permittedProps
-                .map((item) => (
-                  <option
-                    key={item}
-                    value={item}
-                  >
-                    {item}
-                  </option>
-                ))}
+              {selectedArchetype.permittedProps.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
             </select>
 
-            <small>
-              Maximum one symbolic
-              prop.
-            </small>
+            <small>At most one quiet, symbolic object.</small>
           </label>
 
-          <label
-            className={
-              styles.fieldWide
-            }
-          >
-            <span>
-              Clothing notes
-            </span>
+          <label className={styles.fieldWide}>
+            <span>Clothing notes</span>
 
             <textarea
+              disabled={isGenerating}
+              maxLength={279}
+              onChange={(event) => setClothingNotes(event.target.value)}
+              placeholder="Optional: describe a refined fabric, tailoring detail, or restrained colour direction."
+              rows={3}
               value={clothingNotes}
-              onChange={(event) =>
-                setClothingNotes(
-                  event.target.value,
-                )
-              }
-              maxLength={279}
-              rows={3}
-              placeholder="Optional restrained clothing detail. No logos, scenes, text, or costume direction."
-              disabled={isGenerating}
             />
 
-            <small>
-              {clothingNotes.length}
-              /279
-            </small>
+            <small>{clothingNotes.length}/279</small>
           </label>
 
-          <label
-            className={
-              styles.fieldWide
-            }
-          >
-            <span>
-              Variation direction
-            </span>
+          <label className={styles.fieldWide}>
+            <span>Creative note</span>
 
             <textarea
-              value={
-                variationDirection
-              }
-              onChange={(event) =>
-                setVariationDirection(
-                  event.target.value,
-                )
-              }
-              maxLength={279}
-              rows={3}
-              placeholder="Optional secondary variation, for example: slightly softer tailoring, restrained matte fabric, warmer human presence."
               disabled={isGenerating}
+              maxLength={279}
+              onChange={(event) => setCreativeNote(event.target.value)}
+              placeholder="Optional: add one subtle direction, such as softer tailoring or a warmer presence."
+              rows={3}
+              value={creativeNote}
             />
 
-            <small>
-              {
-                variationDirection
-                  .length
-              }
-              /279
-            </small>
+            <small>{creativeNote.length}/279</small>
           </label>
 
-          <label
-            className={styles.field}
-          >
-            <span>Quality</span>
+          <label className={styles.field}>
+            <span>Finish</span>
 
             <select
+              disabled={isGenerating}
+              onChange={(event) => setQuality(event.target.value as ImageQuality)}
               value={quality}
-              onChange={(event) =>
-                setQuality(
-                  event.target
-                    .value as ImageQuality,
-                )
-              }
-              disabled={isGenerating}
             >
-              <option value="low">
-                Low — draft review
-              </option>
-
-              <option value="medium">
-                Medium — stronger
-                detail
-              </option>
-
-              <option value="high">
-                High — final candidate
-              </option>
+              <option value="low">Draft</option>
+              <option value="medium">Standard</option>
+              <option value="high">Final</option>
             </select>
 
             <small>
-              Start with low. Use high
-              only for a final
-              candidate.
+              Use Draft while exploring. Use Final only for a selected idea.
             </small>
           </label>
 
-          <label
-            className={styles.field}
-          >
-            <span>Variations</span>
+          <label className={styles.field}>
+            <span>Number of options</span>
 
             <select
-              value={
-                numberOfVariations
-              }
-              onChange={(event) =>
-                setNumberOfVariations(
-                  Number(
-                    event.target.value,
-                  ),
-                )
-              }
               disabled={isGenerating}
+              onChange={(event) => setNumberOfVariations(Number(event.target.value))}
+              value={numberOfVariations}
             >
-              <option value={1}>
-                1 variation
-              </option>
-
-              <option value={2}>
-                2 variations
-              </option>
-
-              <option value={3}>
-                3 variations
-              </option>
-
-              <option value={4}>
-                4 variations
-              </option>
+              <option value={1}>1 option</option>
+              <option value={2}>2 options</option>
+              <option value={3}>3 options</option>
+              <option value={4}>4 options</option>
             </select>
 
-            <small>
-              Each variation is stored
-              privately for review.
-            </small>
+            <small>Every option is saved privately in Review.</small>
           </label>
         </div>
 
-        {error ? (
-          <p
-            className={styles.error}
-          >
-            {error}
+        {!generationEnabled ? (
+          <p className={styles.reviewerNotice}>
+            Artwork generation is paused for now. The studio and review library
+            can be completed first, then the image service can be connected.
           </p>
         ) : null}
 
         {!canGenerate ? (
-          <p
-            className={
-              styles.reviewerNotice
-            }
-          >
-            This account has reviewer
-            access. Owner or editor
-            access is required to
-            generate images.
+          <p className={styles.reviewerNotice}>
+            This account can review artworks but cannot create new ones.
           </p>
         ) : null}
 
-        <div
-          className={styles.actions}
-        >
-          <button
-            type="submit"
-            disabled={
-              !canGenerate ||
-              isGenerating
-            }
-          >
-            {isGenerating
-              ? "Generating and restoring the cover…"
-              : "Generate character variation"}
+        {error ? (
+          <p className={styles.error} role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <div className={styles.actions}>
+          <button disabled={disabled} type="submit">
+            {isGenerating ? "Creating artwork…" : "Create artwork"}
           </button>
 
           <p>
-            No public page is changed.
-            Results stay in the private
-            Supabase bucket with status{" "}
-            <code>
-              ready_for_review
-            </code>
-            .
+            Nothing is published automatically. Every image remains private
+            until it is reviewed and approved.
           </p>
         </div>
       </form>
 
       {result ? (
-        <div
-          className={styles.results}
-        >
-          <div
-            className={
-              styles.resultHeader
-            }
-          >
+        <div className={styles.results}>
+          <div className={styles.resultHeader}>
             <div>
-              <p
-                className={
-                  styles.eyebrow
-                }
-              >
-                Generation complete
-              </p>
-
-              <h3>
-                {
-                  result.variants
-                    .length
-                }{" "}
-                private candidate(s)
-              </h3>
+              <p className={styles.eyebrow}>Created</p>
+              <h3>{result.variants.length} new option(s)</h3>
             </div>
 
-            <span>
-              {result.model} ·{" "}
-              {result.quality} ·{" "}
-              {result.canonicalSize}
-            </span>
+            <Link href="/studio/artworks">Review all artworks</Link>
           </div>
 
-          <div
-            className={
-              styles.resultGrid
-            }
-          >
-            {result.variants.map(
-              (variant) => (
-                <article
-                  className={
-                    styles.resultCard
-                  }
-                  key={variant.id}
-                >
-                  <a
-                    href={
-                      variant.imageUrl
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {/*
-                      Signed Supabase URLs are temporary,
-                      so a native image is used intentionally.
-                    */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={
-                        variant.thumbnailUrl
-                      }
-                      alt={`${selectedArchetype.title.en} — ${variant.artworkCode}`}
-                    />
-                  </a>
+          <div className={styles.resultGrid}>
+            {result.variants.map((variant) => (
+              <article className={styles.resultCard} key={variant.id}>
+                <Link href={`/studio/artworks/${variant.id}`}>
+                  {/* Signed Storage URLs are temporary. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    alt={`${selectedArchetype.title.en} artwork`}
+                    src={variant.thumbnailUrl}
+                  />
+                </Link>
 
-                  <div>
-                    <strong>
-                      {
-                        variant.artworkCode
-                      }
-                    </strong>
-
-                    <span>
-                      {variant.status.replaceAll(
-                        "_",
-                        " ",
-                      )}
-                    </span>
-
-                    <small>
-                      {variant.width} ×{" "}
-                      {variant.height}
-                    </small>
-                  </div>
-                </article>
-              ),
-            )}
+                <div>
+                  <strong>{selectedArchetype.title.en}</strong>
+                  <span>{getArtworkStatusLabel(variant.status)}</span>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       ) : null}

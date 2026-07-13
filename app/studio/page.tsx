@@ -1,6 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { NOBODY_BRAND } from "@/lib/nobody";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireStudioAdmin } from "@/lib/supabase/studioAccess";
 import ImageGenerator from "./components/ImageGenerator";
 import SignOutButton from "./components/SignOutButton";
@@ -15,40 +16,22 @@ type CountResult = Readonly<{
 
 async function countRows(
   table: string,
+  statuses?: readonly string[],
 ): Promise<CountResult> {
-  const supabase =
-    await createServerSupabaseClient();
+  const supabase = createSupabaseAdminClient();
 
-  const { count, error } =
-    await supabase
-      .from(table)
-      .select("*", {
-        count: "exact",
-        head: true,
-      });
+  let query = supabase
+    .from(table)
+    .select("*", {
+      count: "exact",
+      head: true,
+    });
 
-  return {
-    count: count ?? 0,
-    error: error?.message ?? null,
-  };
-}
+  if (statuses?.length) {
+    query = query.in("status", statuses);
+  }
 
-async function countApprovedArtworks(): Promise<CountResult> {
-  const supabase =
-    await createServerSupabaseClient();
-
-  const { count, error } =
-    await supabase
-      .from("artwork_variants")
-      .select("*", {
-        count: "exact",
-        head: true,
-      })
-      .in("status", [
-        "approved_artwork",
-        "approved_for_template",
-        "published",
-      ]);
+  const { count, error } = await query;
 
   return {
     count: count ?? 0,
@@ -57,55 +40,48 @@ async function countApprovedArtworks(): Promise<CountResult> {
 }
 
 export default async function StudioHomePage() {
-  const admin =
-    await requireStudioAdmin();
+  const admin = await requireStudioAdmin();
+  const supabase = createSupabaseAdminClient();
 
-  const [
-    jobs,
-    variants,
-    approved,
-    gallery,
-  ] = await Promise.all([
-    countRows("generation_jobs"),
-    countRows("artwork_variants"),
-    countApprovedArtworks(),
-    countRows("gallery_entries"),
-  ]);
+  const [generations, toReview, approved, published, privateBucket] =
+    await Promise.all([
+      countRows("generation_jobs"),
+      countRows("artwork_variants", ["candidate", "ready_for_review"]),
+      countRows("artwork_variants", [
+        "approved_artwork",
+        "approved_for_template",
+        "published",
+      ]),
+      countRows("gallery_entries", ["published"]),
+      supabase.storage.getBucket("nobody-private"),
+    ]);
 
-  const databaseReady = [
-    jobs,
-    variants,
-    approved,
-    gallery,
-  ].every((result) => !result.error);
+  const databaseReady = [generations, toReview, approved, published].every(
+    (result) => !result.error,
+  );
+
+  const storageReady = Boolean(privateBucket.data) && !privateBucket.error;
+  const generationEnabled = Boolean(process.env.OPENAI_API_KEY?.trim());
 
   return (
     <main className={styles.page}>
-      <header
-        className={styles.header}
-      >
+      <header className={styles.header}>
         <div>
-          <p
-            className={styles.eyebrow}
-          >
-            PRIVATE IMAGE STUDIO
-          </p>
-
+          <p className={styles.eyebrow}>IMAGE STUDIO</p>
           <h1>I AM NOBODY</h1>
         </div>
 
-        <div
-          className={styles.account}
-        >
-          <div>
-            <span>
-              {admin.displayName ||
-                admin.email}
-            </span>
+        <div className={styles.account}>
+          <Link className={styles.signOut} href="/studio">
+            Create
+          </Link>
 
-            <small>
-              {admin.role}
-            </small>
+          <Link className={styles.signOut} href="/studio/artworks">
+            Review
+          </Link>
+
+          <div>
+            <span>{admin.displayName || admin.email}</span>
           </div>
 
           <SignOutButton />
@@ -113,304 +89,120 @@ export default async function StudioHomePage() {
       </header>
 
       <section className={styles.hero}>
-        <div
-          className={styles.heroCopy}
-        >
-          <p
-            className={styles.kicker}
-          >
-            Foundation status
-          </p>
+        <div className={styles.heroCopy}>
+          <p className={styles.kicker}>Official artwork variations</p>
 
-          <h2>
-            Same Nobody. Different
-            social mask.
-          </h2>
+          <h2>One identity. Many masks.</h2>
 
           <p>
-            The canonical cover is
-            locked and the
-            character-only image
-            pipeline is installed.
-            Every result returns to
-            the exact 906 × 1280
-            cover, restores the
-            original text, and
-            remains private until
-            human review.
+            Create new I AM NOBODY characters while preserving the original
+            cover, typography, composition, and visual language.
           </p>
 
-          <div
-            className={
-              styles.statusLine
-            }
-          >
+          <div className={styles.statusLine}>
             <span
-              className={
-                databaseReady
-                  ? styles.readyDot
-                  : styles.errorDot
-              }
               aria-hidden="true"
+              className={
+                databaseReady && storageReady ? styles.readyDot : styles.errorDot
+              }
             />
 
             <strong>
-              {databaseReady
-                ? "Database and row-level security are reachable"
-                : "Database migration or environment configuration is incomplete"}
+              {databaseReady && storageReady
+                ? generationEnabled
+                  ? "Ready to create"
+                  : "The studio is ready. Image generation will be connected later."
+                : "One setup step is still missing."}
             </strong>
           </div>
         </div>
 
-        <div
-          className={
-            styles.coverCard
-          }
-        >
+        <div className={styles.coverCard}>
           <Image
-            alt="Canonical I AM NOBODY book cover"
+            alt="Original I AM NOBODY book cover"
             className={styles.cover}
-            height={
-              NOBODY_BRAND
-                .canonicalReference
-                .height
-            }
+            height={NOBODY_BRAND.canonicalReference.height}
             priority
-            src={
-              NOBODY_BRAND
-                .canonicalReference
-                .publicPath
-            }
-            width={
-              NOBODY_BRAND
-                .canonicalReference
-                .width
-            }
+            src={NOBODY_BRAND.canonicalReference.publicPath}
+            width={NOBODY_BRAND.canonicalReference.width}
           />
 
-          <div
-            className={
-              styles.coverMeta
-            }
-          >
-            <span>
-              Canonical reference
-            </span>
-
-            <strong>
-              {
-                NOBODY_BRAND
-                  .canonicalReference
-                  .id
-              }
-            </strong>
-
-            <small>
-              {
-                NOBODY_BRAND
-                  .canonicalReference
-                  .width
-              }{" "}
-              ×{" "}
-              {
-                NOBODY_BRAND
-                  .canonicalReference
-                  .height
-              }
-            </small>
+          <div className={styles.coverMeta}>
+            <span>Original cover</span>
+            <strong>906 × 1280</strong>
           </div>
         </div>
       </section>
 
-      <section
-        className={styles.metrics}
-        aria-label="Studio metrics"
-      >
+      <section aria-label="Studio overview" className={styles.metrics}>
         <article>
-          <span>
-            Generation jobs
-          </span>
-
-          <strong>
-            {jobs.count}
-          </strong>
+          <span>Generations</span>
+          <strong>{generations.count}</strong>
         </article>
 
         <article>
-          <span>
-            Artwork variants
-          </span>
-
-          <strong>
-            {variants.count}
-          </strong>
+          <span>To review</span>
+          <strong>{toReview.count}</strong>
         </article>
 
         <article>
-          <span>
-            Approved artworks
-          </span>
-
-          <strong>
-            {approved.count}
-          </strong>
+          <span>Approved</span>
+          <strong>{approved.count}</strong>
         </article>
 
         <article>
-          <span>
-            Gallery entries
-          </span>
-
-          <strong>
-            {gallery.count}
-          </strong>
+          <span>Published</span>
+          <strong>{published.count}</strong>
         </article>
       </section>
 
-      {databaseReady ? (
-        <ImageGenerator
-          canGenerate={
-            admin.role !== "reviewer"
-          }
-        />
-      ) : null}
-
-      {!databaseReady ? (
-        <section
-          className={styles.warning}
-        >
-          <h3>Setup required</h3>
+      {!storageReady ? (
+        <section className={styles.warning}>
+          <h3>Artwork storage is not ready</h3>
 
           <p>
-            Run the Supabase
-            migrations, create the
-            private admin user,
-            insert that user into{" "}
-            <code>
-              studio_admins
-            </code>
-            , and add the Supabase
-            and OpenAI environment
-            variables locally and
-            in Vercel.
+            Run migration 005 once in Supabase. It creates the private space
+            where generated covers are saved and displayed inside this studio.
           </p>
         </section>
       ) : null}
 
-      <section
-        className={styles.modules}
-      >
-        <article
-          className={
-            styles.moduleCard
-          }
-        >
+      {databaseReady && storageReady ? (
+        <ImageGenerator
+          canGenerate={admin.role !== "reviewer"}
+          generationEnabled={generationEnabled}
+        />
+      ) : null}
+
+      <section className={styles.modules}>
+        <article className={styles.moduleCard}>
           <span>01</span>
-
-          <h3>Brand control</h3>
-
-          <p>
-            Canonical cover checksum,
-            ratio, composition, mask
-            rules, archetypes, and
-            rejection criteria.
-          </p>
-
-          <strong
-            className={
-              styles.complete
-            }
-          >
-            Installed
-          </strong>
+          <h3>Create</h3>
+          <p>Choose an archetype, clothing direction, and one subtle detail.</p>
+          <strong className={styles.complete}>Available</strong>
         </article>
 
-        <article
-          className={
-            styles.moduleCard
-          }
-        >
+        <article className={styles.moduleCard}>
           <span>02</span>
-
-          <h3>
-            Secure foundation
-          </h3>
-
-          <p>
-            Private authentication,
-            admin roles, database
-            tables, storage buckets,
-            and row-level security.
-          </p>
-
-          <strong
-            className={
-              databaseReady
-                ? styles.complete
-                : styles.pending
-            }
-          >
-            {databaseReady
-              ? "Installed"
-              : "Awaiting setup"}
-          </strong>
+          <h3>Review</h3>
+          <p>View every saved image at full size and compare the variations.</p>
+          <strong className={styles.complete}>Available</strong>
         </article>
 
-        <article
-          className={
-            styles.moduleCard
-          }
-        >
+        <article className={styles.moduleCard}>
           <span>03</span>
-
-          <h3>
-            Prompt and generation
-          </h3>
-
-          <p>
-            Controlled job creation,
-            reference-image masked
-            editing, exact cover
-            reconstruction, cost
-            controls, and private
-            output storage.
-          </p>
-
-          <strong
-            className={
-              styles.complete
-            }
-          >
-            Installed
-          </strong>
+          <h3>Choose</h3>
+          <p>Approve an artwork or leave clear notes for another version.</p>
+          <strong className={styles.complete}>Available</strong>
         </article>
 
-        <article
-          className={
-            styles.moduleCard
-          }
-        >
+        <article className={styles.moduleCard}>
           <span>04</span>
-
-          <h3>
-            Review and publication
-          </h3>
-
-          <p>
-            Automated visual checks,
-            human approval,
-            deterministic templates,
-            and public gallery
-            publishing.
-          </p>
-
-          <strong
-            className={
-              styles.pending
-            }
-          >
-            Planned
-          </strong>
+          <h3>Publish</h3>
+          <p>Only selected artworks will move to the public gallery later.</p>
+          <Link className={styles.pending} href="/studio/artworks">
+            Open review
+          </Link>
         </article>
       </section>
     </main>

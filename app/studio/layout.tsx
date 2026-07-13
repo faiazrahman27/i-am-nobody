@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Private Image Studio",
+  title: "I AM NOBODY Image Studio",
 
-  description:
-    "Private artwork generation and review studio for the I AM NOBODY visual universe.",
+  description: "Private artwork creation and review for I AM NOBODY.",
 
   robots: {
     index: false,
