@@ -21,7 +21,31 @@ type TextRegion = Readonly<{
   y2: number;
   low: number;
   high: number;
+  gamma: number;
+  color: readonly [
+    number,
+    number,
+    number,
+  ];
 }>;
+
+const CANONICAL_WIDTH =
+  NOBODY_BRAND.canonicalReference.width;
+
+const CANONICAL_HEIGHT =
+  NOBODY_BRAND.canonicalReference.height;
+
+const WHITE_TEXT = [
+  244,
+  241,
+  235,
+] as const;
+
+const GOLD_TEXT = [
+  224,
+  199,
+  158,
+] as const;
 
 const TEXT_REGIONS:
   readonly TextRegion[] = [
@@ -30,24 +54,30 @@ const TEXT_REGIONS:
       y1: 584,
       x2: 406,
       y2: 640,
-      low: 175,
-      high: 230,
+      low: 165,
+      high: 232,
+      gamma: 0.55,
+      color: WHITE_TEXT,
     },
     {
       x1: 444,
       y1: 584,
       x2: 487,
       y2: 640,
-      low: 185,
-      high: 230,
+      low: 175,
+      high: 232,
+      gamma: 0.55,
+      color: WHITE_TEXT,
     },
     {
       x1: 494,
       y1: 584,
       x2: 542,
       y2: 640,
-      low: 180,
-      high: 230,
+      low: 170,
+      high: 232,
+      gamma: 0.55,
+      color: WHITE_TEXT,
     },
     {
       x1: 375,
@@ -55,7 +85,9 @@ const TEXT_REGIONS:
       x2: 550,
       y2: 802,
       low: 150,
-      high: 235,
+      high: 230,
+      gamma: 0.5,
+      color: WHITE_TEXT,
     },
     {
       x1: 290,
@@ -63,39 +95,72 @@ const TEXT_REGIONS:
       x2: 645,
       y2: 963,
       low: 150,
-      high: 235,
+      high: 230,
+      gamma: 0.5,
+      color: WHITE_TEXT,
     },
     {
       x1: 340,
       y1: 995,
       x2: 575,
       y2: 1075,
-      low: 125,
-      high: 210,
+      low: 115,
+      high: 205,
+      gamma: 0.58,
+      color: GOLD_TEXT,
     },
     {
       x1: 255,
       y1: 1145,
       x2: 660,
       y2: 1200,
-      low: 125,
-      high: 210,
+      low: 115,
+      high: 205,
+      gamma: 0.58,
+      color: GOLD_TEXT,
     },
   ];
 
-const BOOK_INTERIOR = {
-  left: 69,
-  top: 28,
-  width: 810,
-  height: 1204,
+const FRAME_REGIONS = {
+  top: {
+    left: 0,
+    top: 0,
+    width:
+      CANONICAL_WIDTH,
+    height: 28,
+  },
+  bottom: {
+    left: 0,
+    top: 1232,
+    width:
+      CANONICAL_WIDTH,
+    height: 48,
+  },
+  left: {
+    left: 0,
+    top: 0,
+    width: 69,
+    height:
+      CANONICAL_HEIGHT,
+  },
+  right: {
+    left: 879,
+    top: 0,
+    width: 27,
+    height:
+      CANONICAL_HEIGHT,
+  },
 } as const;
 
 export type RenderedTemplate =
   Readonly<{
     buffer: Buffer;
-    templateType: TemplateType;
-    templateVersion: string;
-    locale: Locale | null;
+    templateType:
+      TemplateType;
+    templateVersion:
+      string;
+    locale:
+      Locale | null;
     width: number;
     height: number;
     mimeType:
@@ -108,7 +173,10 @@ export type RenderedTemplate =
       | "jpg";
     sha256: string;
     metadata: Readonly<
-      Record<string, unknown>
+      Record<
+        string,
+        unknown
+      >
     >;
   }>;
 
@@ -139,28 +207,67 @@ function getLuma(
 function digest(
   buffer: Buffer,
 ) {
-  return createHash("sha256")
+  return createHash(
+    "sha256",
+  )
     .update(buffer)
     .digest("hex");
+}
+
+function makeResult(
+  input: Omit<
+    RenderedTemplate,
+    | "sha256"
+    | "templateVersion"
+  >,
+): RenderedTemplate {
+  return {
+    ...input,
+    templateVersion:
+      NOBODY_TEMPLATE_VERSION,
+    sha256:
+      digest(
+        input.buffer,
+      ),
+  };
+}
+
+async function extractRegion(
+  source: Buffer,
+  region: Readonly<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }>,
+) {
+  return sharp(source)
+    .extract(region)
+    .png()
+    .toBuffer();
 }
 
 async function buildTypographyOverlay(
   originalCover: Buffer,
 ) {
-  const { width, height } =
-    NOBODY_BRAND.canonicalReference;
-
-  const { data, info } =
-    await sharp(originalCover)
-      .ensureAlpha()
-      .raw()
-      .toBuffer({
-        resolveWithObject: true,
-      });
+  const {
+    data,
+    info,
+  } = await sharp(
+    originalCover,
+  )
+    .ensureAlpha()
+    .raw()
+    .toBuffer({
+      resolveWithObject:
+        true,
+    });
 
   if (
-    info.width !== width ||
-    info.height !== height ||
+    info.width !==
+      CANONICAL_WIDTH ||
+    info.height !==
+      CANONICAL_HEIGHT ||
     info.channels !== 4
   ) {
     throw new Error(
@@ -170,7 +277,9 @@ async function buildTypographyOverlay(
 
   const overlay =
     Buffer.alloc(
-      width * height * 4,
+      CANONICAL_WIDTH *
+        CANONICAL_HEIGHT *
+        4,
     );
 
   for (
@@ -187,55 +296,74 @@ async function buildTypographyOverlay(
         x < region.x2;
         x += 1
       ) {
-        const pixelIndex =
-          y * width + x;
-
         const sourceIndex =
-          pixelIndex * 4;
+          (y *
+            CANONICAL_WIDTH +
+            x) *
+          4;
 
         const red =
-          data[sourceIndex] ?? 0;
+          data[
+            sourceIndex
+          ] ?? 0;
 
         const green =
-          data[sourceIndex + 1] ??
-          0;
+          data[
+            sourceIndex + 1
+          ] ?? 0;
 
         const blue =
-          data[sourceIndex + 2] ??
-          0;
+          data[
+            sourceIndex + 2
+          ] ?? 0;
 
-        const luma = getLuma(
-          red,
-          green,
-          blue,
-        );
+        const luminance =
+          getLuma(
+            red,
+            green,
+            blue,
+          );
 
-        const alpha = clampByte(
-          ((luma - region.low) /
-            (region.high -
-              region.low)) *
-            255,
-        );
+        const normalized =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              (luminance -
+                region.low) /
+                (region.high -
+                  region.low),
+            ),
+          );
+
+        const alpha =
+          clampByte(
+            Math.pow(
+              normalized,
+              region.gamma,
+            ) * 255,
+          );
 
         if (
           alpha <=
-          overlay[
+          (overlay[
             sourceIndex + 3
-          ]
+          ] ?? 0)
         ) {
           continue;
         }
 
-        overlay[sourceIndex] =
-          red;
+        overlay[
+          sourceIndex
+        ] = region.color[0];
 
         overlay[
           sourceIndex + 1
-        ] = green;
+        ] = region.color[1];
 
         overlay[
           sourceIndex + 2
-        ] = blue;
+        ] = region.color[2];
 
         overlay[
           sourceIndex + 3
@@ -254,22 +382,26 @@ async function buildTypographyOverlay(
       x < 520;
       x += 1
     ) {
-      const pixelIndex =
-        y * width + x;
-
       const sourceIndex =
-        pixelIndex * 4;
+        (y *
+          CANONICAL_WIDTH +
+          x) *
+        4;
 
       const red =
-        data[sourceIndex] ?? 0;
+        data[
+          sourceIndex
+        ] ?? 0;
 
       const green =
-        data[sourceIndex + 1] ??
-        0;
+        data[
+          sourceIndex + 1
+        ] ?? 0;
 
       const blue =
-        data[sourceIndex + 2] ??
-        0;
+        data[
+          sourceIndex + 2
+        ] ?? 0;
 
       const maximum =
         Math.max(
@@ -288,24 +420,21 @@ async function buildTypographyOverlay(
       const saturation =
         maximum === 0
           ? 0
-          : (maximum - minimum) /
+          : (maximum -
+              minimum) /
             maximum;
 
       if (
-        saturation <= 0.18 ||
+        saturation <=
+          0.2 ||
         maximum <= 55
       ) {
         continue;
       }
 
-      const alpha = clampByte(
-        ((saturation - 0.18) /
-          0.4) *
-          255,
-      );
-
-      overlay[sourceIndex] =
-        red;
+      overlay[
+        sourceIndex
+      ] = red;
 
       overlay[
         sourceIndex + 1
@@ -317,17 +446,27 @@ async function buildTypographyOverlay(
 
       overlay[
         sourceIndex + 3
-      ] = alpha;
+      ] = clampByte(
+        ((saturation -
+          0.2) /
+          0.35) *
+          255,
+      );
     }
   }
 
-  return sharp(overlay, {
-    raw: {
-      width,
-      height,
-      channels: 4,
+  return sharp(
+    overlay,
+    {
+      raw: {
+        width:
+          CANONICAL_WIDTH,
+        height:
+          CANONICAL_HEIGHT,
+        channels: 4,
+      },
     },
-  })
+  )
     .png()
     .toBuffer();
 }
@@ -335,108 +474,85 @@ async function buildTypographyOverlay(
 async function buildBookCover(
   artwork: Buffer,
 ) {
-  const { originalCover } =
+  const {
+    originalCover,
+  } =
     await loadCanonicalReferenceAssets();
 
-  const typographyOverlay =
-    await buildTypographyOverlay(
-      originalCover,
-    );
-
-  const interiorArtwork =
-    await sharp(artwork)
+  const [
+    normalizedArtwork,
+    typographyOverlay,
+    topFrame,
+    bottomFrame,
+    leftFrame,
+    rightFrame,
+  ] = await Promise.all([
+    sharp(artwork)
       .resize(
-        BOOK_INTERIOR.width,
-        BOOK_INTERIOR.height,
+        CANONICAL_WIDTH,
+        CANONICAL_HEIGHT,
         {
-          fit: "cover",
-          position: "centre",
+          fit: "fill",
         },
       )
-      .png()
-      .toBuffer();
+      .removeAlpha()
+      .png({
+        compressionLevel: 9,
+        adaptiveFiltering:
+          true,
+      })
+      .toBuffer(),
 
-  const structuralLayers =
-    await Promise.all([
-      sharp(originalCover)
-        .extract({
-          left: 0,
-          top: 0,
-          width: 906,
-          height: 28,
-        })
-        .png()
-        .toBuffer(),
+    buildTypographyOverlay(
+      originalCover,
+    ),
 
-      sharp(originalCover)
-        .extract({
-          left: 0,
-          top: 1232,
-          width: 906,
-          height: 48,
-        })
-        .png()
-        .toBuffer(),
+    extractRegion(
+      originalCover,
+      FRAME_REGIONS.top,
+    ),
 
-      sharp(originalCover)
-        .extract({
-          left: 0,
-          top: 0,
-          width: 69,
-          height: 1280,
-        })
-        .png()
-        .toBuffer(),
+    extractRegion(
+      originalCover,
+      FRAME_REGIONS.bottom,
+    ),
 
-      sharp(originalCover)
-        .extract({
-          left: 879,
-          top: 0,
-          width: 27,
-          height: 1280,
-        })
-        .png()
-        .toBuffer(),
-    ]);
+    extractRegion(
+      originalCover,
+      FRAME_REGIONS.left,
+    ),
 
-  return sharp({
-    create: {
-      width: 906,
-      height: 1280,
-      channels: 3,
-      background: "#050505",
-    },
-  })
+    extractRegion(
+      originalCover,
+      FRAME_REGIONS.right,
+    ),
+  ]);
+
+  return sharp(
+    normalizedArtwork,
+  )
     .composite([
       {
         input:
-          interiorArtwork,
-        left:
-          BOOK_INTERIOR.left,
-        top:
-          BOOK_INTERIOR.top,
-      },
-      {
-        input:
-          structuralLayers[0],
+          topFrame,
         left: 0,
         top: 0,
       },
       {
         input:
-          structuralLayers[1],
+          bottomFrame,
         left: 0,
         top: 1232,
       },
       {
         input:
-          structuralLayers[2],
+          leftFrame,
         left: 0,
         top: 0,
       },
       {
         input:
-          structuralLayers[3],
+          rightFrame,
         left: 879,
         top: 0,
       },
@@ -449,7 +565,8 @@ async function buildBookCover(
     ])
     .png({
       compressionLevel: 9,
-      adaptiveFiltering: true,
+      adaptiveFiltering:
+        true,
     })
     .toBuffer();
 }
@@ -467,11 +584,15 @@ async function placeOnCanvas(
   },
 ) {
   const background =
-    await sharp(input.image)
+    await sharp(
+      input.image,
+    )
       .resize(
         input.width,
         input.height,
-        { fit: "cover" },
+        {
+          fit: "cover",
+        },
       )
       .blur(34)
       .modulate({
@@ -481,7 +602,9 @@ async function placeOnCanvas(
       .toBuffer();
 
   const foreground =
-    await sharp(input.image)
+    await sharp(
+      input.image,
+    )
       .resize(
         input.width -
           input.margin * 2,
@@ -500,16 +623,22 @@ async function placeOnCanvas(
       .toBuffer();
 
   const canvas =
-    sharp(background).composite([
+    sharp(
+      background,
+    ).composite([
       {
-        input: foreground,
-        left: input.margin,
-        top: input.margin,
+        input:
+          foreground,
+        left:
+          input.margin,
+        top:
+          input.margin,
       },
     ]);
 
   if (
-    input.format === "webp"
+    input.format ===
+    "webp"
   ) {
     return canvas
       .webp({
@@ -520,7 +649,8 @@ async function placeOnCanvas(
   }
 
   if (
-    input.format === "jpeg"
+    input.format ===
+    "jpeg"
   ) {
     return canvas
       .jpeg({
@@ -537,29 +667,13 @@ async function placeOnCanvas(
     .toBuffer();
 }
 
-function result(
-  input: Omit<
-    RenderedTemplate,
-    "sha256" |
-      "templateVersion"
-  >,
-) {
-  return {
-    ...input,
-    templateVersion:
-      NOBODY_TEMPLATE_VERSION,
-    sha256: digest(
-      input.buffer,
-    ),
-  } satisfies RenderedTemplate;
-}
-
 export async function renderNobodyTemplate(
   input: {
     artwork: Buffer;
     templateType:
       TemplateType;
-    locale?: Locale | null;
+    locale?:
+      Locale | null;
   },
 ): Promise<RenderedTemplate> {
   const locale =
@@ -570,28 +684,41 @@ export async function renderNobodyTemplate(
     "clean_artwork"
   ) {
     const buffer =
-      await sharp(input.artwork)
-        .resize(906, 1280, {
-          fit: "fill",
-        })
+      await sharp(
+        input.artwork,
+      )
+        .resize(
+          CANONICAL_WIDTH,
+          CANONICAL_HEIGHT,
+          {
+            fit: "fill",
+          },
+        )
         .removeAlpha()
         .png({
           compressionLevel: 9,
+          adaptiveFiltering:
+            true,
         })
         .toBuffer();
 
-    return result({
+    return makeResult({
       buffer,
       templateType:
         input.templateType,
       locale,
-      width: 906,
-      height: 1280,
-      mimeType: "image/png",
+      width:
+        CANONICAL_WIDTH,
+      height:
+        CANONICAL_HEIGHT,
+      mimeType:
+        "image/png",
       extension: "png",
       metadata: {
         controlledLayer:
           "none",
+        cropPolicy:
+          "no-destructive-crop",
       },
     });
   }
@@ -605,20 +732,25 @@ export async function renderNobodyTemplate(
     input.templateType ===
     "book_cover"
   ) {
-    return result({
+    return makeResult({
       buffer: bookCover,
       templateType:
         input.templateType,
       locale,
-      width: 906,
-      height: 1280,
-      mimeType: "image/png",
+      width:
+        CANONICAL_WIDTH,
+      height:
+        CANONICAL_HEIGHT,
+      mimeType:
+        "image/png",
       extension: "png",
       metadata: {
         controlledLayer:
           "canonical-cover-frame-and-typography",
         sourceCanvas:
           "906x1280",
+        cropPolicy:
+          "no-destructive-crop",
       },
     });
   }
@@ -636,19 +768,22 @@ export async function renderNobodyTemplate(
         format: "jpeg",
       });
 
-    return result({
+    return makeResult({
       buffer,
       templateType:
         input.templateType,
       locale,
       width: 1080,
       height: 1350,
-      mimeType: "image/jpeg",
+      mimeType:
+        "image/jpeg",
       extension: "jpg",
       metadata: {
         safeArea: "58px",
         source:
           "book_cover",
+        cropPolicy:
+          "contained-master-on-background",
       },
     });
   }
@@ -666,19 +801,22 @@ export async function renderNobodyTemplate(
         format: "jpeg",
       });
 
-    return result({
+    return makeResult({
       buffer,
       templateType:
         input.templateType,
       locale,
       width: 1080,
       height: 1080,
-      mimeType: "image/jpeg",
+      mimeType:
+        "image/jpeg",
       extension: "jpg",
       metadata: {
         safeArea: "70px",
         source:
           "book_cover",
+        cropPolicy:
+          "contained-master-on-background",
       },
     });
   }
@@ -696,19 +834,22 @@ export async function renderNobodyTemplate(
         format: "jpeg",
       });
 
-    return result({
+    return makeResult({
       buffer,
       templateType:
         input.templateType,
       locale,
       width: 1080,
       height: 1920,
-      mimeType: "image/jpeg",
+      mimeType:
+        "image/jpeg",
       extension: "jpg",
       metadata: {
         safeArea: "96px",
         source:
           "book_cover",
+        cropPolicy:
+          "contained-master-on-background",
       },
     });
   }
@@ -718,28 +859,37 @@ export async function renderNobodyTemplate(
     "gallery_thumbnail"
   ) {
     const buffer =
-      await sharp(input.artwork)
-        .resize(453, 640, {
-          fit: "fill",
-        })
+      await sharp(
+        input.artwork,
+      )
+        .resize(
+          453,
+          640,
+          {
+            fit: "fill",
+          },
+        )
         .webp({
           quality: 86,
           effort: 5,
         })
         .toBuffer();
 
-    return result({
+    return makeResult({
       buffer,
       templateType:
         input.templateType,
       locale,
       width: 453,
       height: 640,
-      mimeType: "image/webp",
+      mimeType:
+        "image/webp",
       extension: "webp",
       metadata: {
         source:
           "clean_artwork",
+        cropPolicy:
+          "no-destructive-crop",
       },
     });
   }
@@ -749,28 +899,39 @@ export async function renderNobodyTemplate(
     "poster"
   ) {
     const buffer =
-      await sharp(bookCover)
-        .resize(1359, 1920, {
-          fit: "fill",
-        })
+      await sharp(
+        bookCover,
+      )
+        .resize(
+          1359,
+          1920,
+          {
+            fit: "fill",
+          },
+        )
         .png({
           compressionLevel: 9,
+          adaptiveFiltering:
+            true,
         })
         .toBuffer();
 
-    return result({
+    return makeResult({
       buffer,
       templateType:
         input.templateType,
       locale,
       width: 1359,
       height: 1920,
-      mimeType: "image/png",
+      mimeType:
+        "image/png",
       extension: "png",
       metadata: {
         source:
           "book_cover",
         printDraft: true,
+        cropPolicy:
+          "no-destructive-crop",
       },
     });
   }

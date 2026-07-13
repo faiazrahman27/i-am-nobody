@@ -920,6 +920,10 @@ export default async function ArtworkReviewPage({
                 variant.human_notes ??
                 ""
               }
+              canRegenerate={
+                admin.role !==
+                "reviewer"
+              }  
             />
           ) : null}
 

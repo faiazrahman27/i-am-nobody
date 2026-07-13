@@ -76,8 +76,7 @@ function requireEnvironmentValue(
   return normalized;
 }
 
-function getOpenAIImageModel():
-  SupportedImageModel {
+function getOpenAIImageModel(): SupportedImageModel {
   const configured =
     process.env.OPENAI_IMAGE_MODEL?.trim() ||
     "gpt-image-2-2026-04-21";
@@ -101,8 +100,10 @@ function getCanonicalPath() {
   return path.join(
     process.cwd(),
     "public",
-    NOBODY_BRAND.canonicalReference
-      .publicPath.replace(/^\//, ""),
+    NOBODY_BRAND.canonicalReference.publicPath.replace(
+      /^\//,
+      "",
+    ),
   );
 }
 
@@ -171,9 +172,7 @@ async function buildCompositionReference(
     }),
   ]);
 
-  const deLettered = await sharp(
-    originalCover,
-  )
+  const deLettered = await sharp(originalCover)
     .composite([
       {
         input: blurredRegions[0],
@@ -199,7 +198,9 @@ async function buildCompositionReference(
     .resize(
       NOBODY_BRAND.modelCanvas.width,
       NOBODY_BRAND.modelCanvas.height,
-      { fit: "fill" },
+      {
+        fit: "fill",
+      },
     )
     .png()
     .toBuffer();
@@ -250,15 +251,13 @@ async function buildHelmetReference(
     .toBuffer();
 }
 
-export async function loadCanonicalReferenceAssets():
-  Promise<CanonicalReferenceAssets> {
+export async function loadCanonicalReferenceAssets(): Promise<CanonicalReferenceAssets> {
   const originalCover = await readFile(
     getCanonicalPath(),
   );
 
-  const actualSha256 = sha256(
-    originalCover,
-  );
+  const actualSha256 =
+    sha256(originalCover);
 
   if (
     actualSha256 !==
@@ -299,17 +298,15 @@ export async function loadCanonicalReferenceAssets():
   };
 }
 
-async function callOpenAIImageEdit(
-  input: {
-    model: SupportedImageModel;
-    modelSize: `${number}x${number}`;
-    prompt: string;
-    quality: ImageQuality;
-    variations: number;
-    compositionReference: Buffer;
-    helmetReference: Buffer;
-  },
-) {
+async function callOpenAIImageEdit(input: {
+  model: SupportedImageModel;
+  modelSize: `${number}x${number}`;
+  prompt: string;
+  quality: ImageQuality;
+  variations: number;
+  compositionReference: Buffer;
+  helmetReference: Buffer;
+}) {
   const apiKey =
     requireEnvironmentValue(
       "OPENAI_API_KEY",
@@ -330,6 +327,12 @@ async function callOpenAIImageEdit(
   form.set("background", "opaque");
   form.set("moderation", "auto");
 
+  /*
+   * The canonical cover and mask are brand-control references,
+   * not merely loose inspiration.
+   */
+  form.set("input_fidelity", "high");
+
   form.append(
     "image[]",
     new Blob(
@@ -338,7 +341,9 @@ async function callOpenAIImageEdit(
           input.compositionReference,
         ),
       ],
-      { type: "image/png" },
+      {
+        type: "image/png",
+      },
     ),
     "canonical-composition-reference.png",
   );
@@ -351,7 +356,9 @@ async function callOpenAIImageEdit(
           input.helmetReference,
         ),
       ],
-      { type: "image/png" },
+      {
+        type: "image/png",
+      },
     ),
     "canonical-helmet-reference.png",
   );
@@ -361,13 +368,15 @@ async function callOpenAIImageEdit(
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization:
+          `Bearer ${apiKey}`,
       },
       body: form,
       cache: "no-store",
-      signal: AbortSignal.timeout(
-        280_000,
-      ),
+      signal:
+        AbortSignal.timeout(
+          280_000,
+        ),
     },
   );
 
@@ -392,15 +401,19 @@ async function callOpenAIImageEdit(
   const images =
     payload.data
       ?.map(
-        (item) => item.b64_json,
+        (item) =>
+          item.b64_json,
       )
       .filter(
-        (value): value is string =>
+        (
+          value,
+        ): value is string =>
           Boolean(value),
       ) ?? [];
 
   if (
-    images.length !== input.variations
+    images.length !==
+    input.variations
   ) {
     throw new Error(
       `OpenAI returned ${images.length} image(s), expected ${input.variations}.`,
@@ -408,10 +421,15 @@ async function callOpenAIImageEdit(
   }
 
   return {
-    images: images.map((image) =>
-      Buffer.from(image, "base64"),
+    images: images.map(
+      (image) =>
+        Buffer.from(
+          image,
+          "base64",
+        ),
     ),
-    usage: payload.usage ?? null,
+    usage:
+      payload.usage ?? null,
     requestId:
       response.headers.get(
         "x-request-id",
@@ -466,30 +484,30 @@ async function finalizeCleanArtwork(
     rawModelImage,
     cleanArtworkImage,
     thumbnailImage,
-    sha256: sha256(
-      cleanArtworkImage,
-    ),
+    sha256:
+      sha256(
+        cleanArtworkImage,
+      ),
     technicalValidation: {
       width,
       height,
       format: "png",
-      hasAlpha: Boolean(
-        metadata.hasAlpha,
-      ),
+      hasAlpha:
+        Boolean(
+          metadata.hasAlpha,
+        ),
       canonicalRatio:
         width / height,
     },
   };
 }
 
-export async function generateNobodyArtworks(
-  input: {
-    prompt: string;
-    negativePrompt: string;
-    quality: ImageQuality;
-    variations: number;
-  },
-): Promise<ImageGenerationBatch> {
+export async function generateNobodyArtworks(input: {
+  prompt: string;
+  negativePrompt: string;
+  quality: ImageQuality;
+  variations: number;
+}): Promise<ImageGenerationBatch> {
   const model =
     getOpenAIImageModel();
 
@@ -517,21 +535,23 @@ export async function generateNobodyArtworks(
       modelSize,
       prompt: combinedPrompt,
       quality: input.quality,
-      variations: input.variations,
+      variations:
+        input.variations,
       compositionReference:
         assets.compositionReference,
       helmetReference:
         assets.helmetReference,
     });
 
-  const results = await Promise.all(
-    generated.images.map(
-      (rawModelImage) =>
-        finalizeCleanArtwork(
-          rawModelImage,
-        ),
-    ),
-  );
+  const results =
+    await Promise.all(
+      generated.images.map(
+        (rawModelImage) =>
+          finalizeCleanArtwork(
+            rawModelImage,
+          ),
+      ),
+    );
 
   return {
     model,
@@ -539,7 +559,8 @@ export async function generateNobodyArtworks(
     requestId:
       generated.requestId,
     results,
-    usage: generated.usage,
+    usage:
+      generated.usage,
     referenceSha256:
       assets.sha256,
   };

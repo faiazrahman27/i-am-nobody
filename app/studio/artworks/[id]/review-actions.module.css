@@ -1,0 +1,57 @@
+.regenerationBox {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+  border-top: 1px solid
+    rgba(255, 255, 255, 0.1);
+  padding-top: 22px;
+  font-family: var(--font-sans);
+}
+
+.regenerationBox h3 {
+  margin: 5px 0 0;
+  color: #fff;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.regenerationBox p {
+  margin-top: 8px;
+  color:
+    rgba(242, 238, 230, 0.62);
+  font-size: 0.74rem;
+  line-height: 1.65;
+}
+
+.regenerationBox label {
+  display: grid;
+  gap: 8px;
+}
+
+.regenerationBox label > span {
+  color:
+    rgba(242, 238, 230, 0.82);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.regenerationBox select {
+  min-height: 46px;
+  width: 100%;
+  border: 1px solid
+    rgba(255, 255, 255, 0.14);
+  border-radius: 0;
+  background: #080808;
+  color: #fff;
+  padding: 0 13px;
+}
+
+.regenerationBox small {
+  color:
+    rgba(157, 148, 136, 0.76);
+  font-size: 0.64rem;
+  line-height: 1.55;
+}

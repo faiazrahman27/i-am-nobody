@@ -13,12 +13,15 @@ import {
 
 export const dynamic =
   "force-dynamic";
-export const runtime = "nodejs";
 
-type ReviewRequest = Readonly<{
-  action?: unknown;
-  notes?: unknown;
-}>;
+export const runtime =
+  "nodejs";
+
+type ReviewRequest =
+  Readonly<{
+    action?: unknown;
+    notes?: unknown;
+  }>;
 
 const REVIEWABLE_STATUSES =
   new Set([
@@ -39,7 +42,8 @@ const REVIEWABLE_STATUSES =
 function normalizeNotes(
   value: unknown,
 ) {
-  return typeof value === "string"
+  return typeof value ===
+    "string"
     ? value
         .trim()
         .slice(0, 1200)
@@ -54,31 +58,41 @@ export async function PATCH(
     }>;
   }>,
 ) {
-  const [access, params] =
-    await Promise.all([
-      getStudioAccess(),
-      context.params,
-    ]);
+  const [
+    access,
+    params,
+  ] = await Promise.all([
+    getStudioAccess(),
+    context.params,
+  ]);
 
-  if (!access.authenticated) {
+  if (
+    !access.authenticated
+  ) {
     return NextResponse.json(
       {
         ok: false,
         message:
           "Please sign in again.",
       },
-      { status: 401 },
+      {
+        status: 401,
+      },
     );
   }
 
-  if (!access.authorized) {
+  if (
+    !access.authorized
+  ) {
     return NextResponse.json(
       {
         ok: false,
         message:
           "This account cannot access the studio.",
       },
-      { status: 403 },
+      {
+        status: 403,
+      },
     );
   }
 
@@ -95,7 +109,9 @@ export async function PATCH(
         message:
           "The review information is invalid.",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 
@@ -110,12 +126,16 @@ export async function PATCH(
         message:
           "Choose a valid review decision.",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 
   const notes =
-    normalizeNotes(body.notes);
+    normalizeNotes(
+      body.notes,
+    );
 
   const status =
     getStatusForReviewAction(
@@ -128,18 +148,27 @@ export async function PATCH(
     );
 
   const approved =
-    body.action === "approve";
+    body.action ===
+    "approve";
 
   const supabase =
     createSupabaseAdminClient();
 
   const {
     data: existing,
-    error: existingError,
+    error:
+      existingError,
   } = await supabase
-    .from("artwork_variants")
-    .select("id,status")
-    .eq("id", params.id)
+    .from(
+      "artwork_variants",
+    )
+    .select(
+      "id,status,immutable_at",
+    )
+    .eq(
+      "id",
+      params.id,
+    )
     .maybeSingle();
 
   if (
@@ -152,7 +181,9 @@ export async function PATCH(
         message:
           "The artwork could not be found.",
       },
-      { status: 404 },
+      {
+        status: 404,
+      },
     );
   }
 
@@ -167,36 +198,59 @@ export async function PATCH(
         message:
           "This artwork has already entered the template or publication workflow.",
       },
-      { status: 409 },
+      {
+        status: 409,
+      },
     );
   }
 
+  const updateValues: Record<
+    string,
+    unknown
+  > = {
+    status,
+    human_notes:
+      notes || null,
+    rejection_reason:
+      rejectionReason,
+    approved_by:
+      approved
+        ? access.admin
+            .userId
+        : null,
+    approved_at:
+      approved
+        ? new Date()
+            .toISOString()
+        : null,
+  };
+
+  /*
+   * Set immutable_at only on first approval.
+   * Never clear or replace an existing immutable timestamp.
+   */
+  if (
+    approved &&
+    !existing.immutable_at
+  ) {
+    updateValues.immutable_at =
+      new Date().toISOString();
+  }
+
   const {
-    error: updateError,
+    error:
+      updateError,
   } = await supabase
-    .from("artwork_variants")
-    .update({
-      status,
-      human_notes:
-        notes || null,
-      rejection_reason:
-        rejectionReason,
-      approved_by:
-        approved
-          ? access.admin.userId
-          : null,
-      approved_at:
-        approved
-          ? new Date()
-              .toISOString()
-          : null,
-      immutable_at:
-        approved
-          ? new Date()
-              .toISOString()
-          : null,
-    })
-    .eq("id", params.id);
+    .from(
+      "artwork_variants",
+    )
+    .update(
+      updateValues,
+    )
+    .eq(
+      "id",
+      params.id,
+    );
 
   if (updateError) {
     return NextResponse.json(
@@ -206,12 +260,16 @@ export async function PATCH(
           updateError.message ||
           "The review could not be saved.",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 
   await supabase
-    .from("studio_audit_log")
+    .from(
+      "studio_audit_log",
+    )
     .insert({
       actor_user_id:
         access.admin.userId,
@@ -224,15 +282,23 @@ export async function PATCH(
       entity_type:
         "artwork_variant",
 
-      entity_id: params.id,
+      entity_id:
+        params.id,
 
       details: {
         previous_status:
           existing.status,
+
         decision:
           body.action,
+
         notes:
           notes || null,
+
+        immutable_master_preserved:
+          Boolean(
+            existing.immutable_at,
+          ),
       },
     });
 

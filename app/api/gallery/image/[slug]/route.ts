@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
+import {
+  NextResponse,
+} from "next/server";
 import {
   createSupabaseAdminClient,
 } from "@/lib/supabase/admin";
 
 export const dynamic =
   "force-dynamic";
-export const runtime = "nodejs";
+
+export const runtime =
+  "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: Readonly<{
     params: Promise<{
       slug: string;
@@ -23,15 +27,27 @@ export async function GET(
 
   const {
     data: gallery,
-    error: galleryError,
+    error:
+      galleryError,
   } = await supabase
-    .from("gallery_entries")
+    .from(
+      "gallery_entries",
+    )
     .select(
       "id,primary_render_id,status,visibility,published_at",
     )
-    .eq("slug", slug)
-    .eq("status", "published")
-    .eq("visibility", "public")
+    .eq(
+      "slug",
+      slug,
+    )
+    .eq(
+      "status",
+      "published",
+    )
+    .eq(
+      "visibility",
+      "public",
+    )
     .not(
       "published_at",
       "is",
@@ -41,19 +57,33 @@ export async function GET(
 
   if (
     galleryError ||
-    !gallery?.primary_render_id
+    !gallery
+      ?.primary_render_id
   ) {
     return NextResponse.json(
-      { error: "NOT_FOUND" },
-      { status: 404 },
+      {
+        error:
+          "NOT_FOUND",
+      },
+      {
+        status: 404,
+
+        headers: {
+          "Cache-Control":
+            "no-store",
+        },
+      },
     );
   }
 
   const {
     data: render,
-    error: renderError,
+    error:
+      renderError,
   } = await supabase
-    .from("template_renders")
+    .from(
+      "template_renders",
+    )
     .select(
       "storage_bucket,storage_path,mime_type,status,sha256",
     )
@@ -61,10 +91,13 @@ export async function GET(
       "id",
       gallery.primary_render_id,
     )
-    .in("status", [
-      "ready",
-      "published",
-    ])
+    .in(
+      "status",
+      [
+        "ready",
+        "published",
+      ],
+    )
     .maybeSingle();
 
   if (
@@ -72,14 +105,51 @@ export async function GET(
     !render
   ) {
     return NextResponse.json(
-      { error: "NOT_FOUND" },
-      { status: 404 },
+      {
+        error:
+          "NOT_FOUND",
+      },
+      {
+        status: 404,
+
+        headers: {
+          "Cache-Control":
+            "no-store",
+        },
+      },
+    );
+  }
+
+  const etag =
+    render.sha256
+      ? `"${render.sha256}"`
+      : null;
+
+  if (
+    etag &&
+    request.headers.get(
+      "if-none-match",
+    ) === etag
+  ) {
+    return new NextResponse(
+      null,
+      {
+        status: 304,
+
+        headers: {
+          ETag: etag,
+
+          "Cache-Control":
+            "public, max-age=0, s-maxage=0, must-revalidate",
+        },
+      },
     );
   }
 
   const {
     data: file,
-    error: fileError,
+    error:
+      fileError,
   } = await supabase.storage
     .from(
       render.storage_bucket,
@@ -93,8 +163,18 @@ export async function GET(
     !file
   ) {
     return NextResponse.json(
-      { error: "NOT_FOUND" },
-      { status: 404 },
+      {
+        error:
+          "NOT_FOUND",
+      },
+      {
+        status: 404,
+
+        headers: {
+          "Cache-Control":
+            "no-store",
+        },
+      },
     );
   }
 
@@ -107,20 +187,25 @@ export async function GET(
     bytes,
     {
       status: 200,
+
       headers: {
         "Content-Type":
           render.mime_type,
 
+        "Content-Length":
+          String(
+            bytes.byteLength,
+          ),
+
         "Cache-Control":
-          "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+          "public, max-age=0, s-maxage=0, must-revalidate",
 
         "Content-Disposition":
           `inline; filename="${slug}"`,
 
         ETag:
-          render.sha256
-            ? `"${render.sha256}"`
-            : `W/"${bytes.byteLength}"`,
+          etag ??
+          `W/"${bytes.byteLength}"`,
 
         "X-Content-Type-Options":
           "nosniff",
