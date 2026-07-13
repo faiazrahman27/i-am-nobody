@@ -4,24 +4,38 @@ import {
   getNobodyArchetype,
   isNobodyArchetypeSlug,
 } from "@/lib/nobody";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { requireStudioAdmin } from "@/lib/supabase/studioAccess";
+import {
+  createSupabaseAdminClient,
+} from "@/lib/supabase/admin";
+import {
+  requireStudioAdmin,
+} from "@/lib/supabase/studioAccess";
 import SignOutButton from "../components/SignOutButton";
 import studioStyles from "../studio.module.css";
 import styles from "./artworks.module.css";
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 
-type ArtworkFilter = "all" | "review" | "approved" | "changes";
+type ArtworkFilter =
+  | "all"
+  | "review"
+  | "approved"
+  | "changes"
+  | "published";
 
 type VariantRow = Readonly<{
   id: string;
   job_id: string;
   status: string;
   storage_path: string;
-  thumbnail_storage_path: string | null;
+  thumbnail_storage_path:
+    string | null;
   width: number;
   height: number;
+  visual_score: number | null;
+  automated_review_status:
+    string;
   created_at: string;
 }>;
 
@@ -30,39 +44,76 @@ type JobRow = Readonly<{
   archetype_slug: string;
 }>;
 
-const FILTERS: ReadonlyArray<
-  Readonly<{
-    value: ArtworkFilter;
-    label: string;
-  }>
-> = [
-  { value: "all", label: "All" },
-  { value: "review", label: "To review" },
-  { value: "approved", label: "Approved" },
-  { value: "changes", label: "Needs changes" },
-];
+const FILTERS:
+  ReadonlyArray<
+    Readonly<{
+      value: ArtworkFilter;
+      label: string;
+    }>
+  > = [
+    {
+      value: "all",
+      label: "All",
+    },
+    {
+      value: "review",
+      label: "Human review",
+    },
+    {
+      value: "approved",
+      label: "Approved",
+    },
+    {
+      value: "changes",
+      label: "Needs changes",
+    },
+    {
+      value: "published",
+      label: "Published",
+    },
+  ];
 
-function normalizeFilter(value: string | undefined): ArtworkFilter {
-  if (value === "review" || value === "approved" || value === "changes") {
+function normalizeFilter(
+  value: string | undefined,
+): ArtworkFilter {
+  if (
+    value === "review" ||
+    value === "approved" ||
+    value === "changes" ||
+    value === "published"
+  ) {
     return value;
   }
 
   return "all";
 }
 
-function statusMatchesFilter(status: string, filter: ArtworkFilter) {
+function statusMatchesFilter(
+  status: string,
+  filter: ArtworkFilter,
+) {
   if (filter === "all") {
     return true;
   }
 
   if (filter === "review") {
-    return status === "candidate" || status === "ready_for_review";
+    return [
+      "candidate",
+      "reviewing",
+      "auto_review_failed",
+      "ready_for_review",
+    ].includes(status);
   }
 
   if (filter === "approved") {
-    return ["approved_artwork", "approved_for_template", "published"].includes(
-      status,
-    );
+    return [
+      "approved_artwork",
+      "approved_for_template",
+    ].includes(status);
+  }
+
+  if (filter === "published") {
+    return status === "published";
   }
 
   return [
@@ -76,24 +127,46 @@ function statusMatchesFilter(status: string, filter: ArtworkFilter) {
   ].includes(status);
 }
 
-function getStatusClass(status: string) {
-  if (["approved_artwork", "approved_for_template", "published"].includes(status)) {
+function getStatusClass(
+  status: string,
+) {
+  if (
+    [
+      "approved_artwork",
+      "approved_for_template",
+      "published",
+    ].includes(status)
+  ) {
     return styles.approved;
   }
 
-  if (status === "candidate" || status === "ready_for_review") {
+  if (
+    [
+      "candidate",
+      "reviewing",
+      "auto_review_failed",
+      "ready_for_review",
+    ].includes(status)
+  ) {
     return styles.review;
   }
 
   return styles.changes;
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
+function formatDate(
+  value: string,
+) {
+  return new Intl.DateTimeFormat(
+    "en",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    },
+  ).format(
+    new Date(value),
+  );
 }
 
 export default async function ArtworksPage({
@@ -103,87 +176,164 @@ export default async function ArtworksPage({
     filter?: string;
   }>;
 }>) {
-  const [admin, params] = await Promise.all([
-    requireStudioAdmin(),
-    searchParams,
-  ]);
+  const [admin, params] =
+    await Promise.all([
+      requireStudioAdmin(),
+      searchParams,
+    ]);
 
-  const activeFilter = normalizeFilter(params.filter);
-  const supabase = createSupabaseAdminClient();
+  const activeFilter =
+    normalizeFilter(
+      params.filter,
+    );
 
-  const { data: variantData, error: variantError } = await supabase
+  const supabase =
+    createSupabaseAdminClient();
+
+  const {
+    data: variantData,
+    error: variantError,
+  } = await supabase
     .from("artwork_variants")
     .select(
-      "id,job_id,status,storage_path,thumbnail_storage_path,width,height,created_at",
+      "id,job_id,status,storage_path,thumbnail_storage_path,width,height,visual_score,automated_review_status,created_at",
     )
     .order("created_at", {
       ascending: false,
     })
     .limit(100);
 
-  const variants = (variantData ?? []) as VariantRow[];
+  const variants =
+    (variantData ?? []) as
+      VariantRow[];
 
-  const jobIds = Array.from(new Set(variants.map((item) => item.job_id)));
+  const jobIds =
+    Array.from(
+      new Set(
+        variants.map(
+          (item) =>
+            item.job_id,
+        ),
+      ),
+    );
 
   let jobs: JobRow[] = [];
 
   if (jobIds.length > 0) {
-    const { data: jobData } = await supabase
-      .from("generation_jobs")
-      .select("id,archetype_slug")
-      .in("id", jobIds);
+    const { data: jobData } =
+      await supabase
+        .from(
+          "generation_jobs",
+        )
+        .select(
+          "id,archetype_slug",
+        )
+        .in("id", jobIds);
 
-    jobs = (jobData ?? []) as JobRow[];
+    jobs =
+      (jobData ?? []) as
+        JobRow[];
   }
 
-  const jobsById = new Map(jobs.map((item) => [item.id, item]));
+  const jobsById =
+    new Map(
+      jobs.map((item) => [
+        item.id,
+        item,
+      ]),
+    );
 
-  const filteredVariants = variants.filter((item) =>
-    statusMatchesFilter(item.status, activeFilter),
-  );
+  const filteredVariants =
+    variants.filter((item) =>
+      statusMatchesFilter(
+        item.status,
+        activeFilter,
+      ),
+    );
 
-  const cards = await Promise.all(
-    filteredVariants.map(async (variant) => {
-      const job = jobsById.get(variant.job_id);
+  const cards =
+    await Promise.all(
+      filteredVariants.map(
+        async (variant) => {
+          const job =
+            jobsById.get(
+              variant.job_id,
+            );
 
-      const title =
-        job && isNobodyArchetypeSlug(job.archetype_slug)
-          ? getNobodyArchetype(job.archetype_slug).title.en
-          : "Nobody";
+          const title =
+            job &&
+            isNobodyArchetypeSlug(
+              job.archetype_slug,
+            )
+              ? getNobodyArchetype(
+                  job.archetype_slug,
+                ).title.en
+              : "Nobody";
 
-      const previewPath = variant.thumbnail_storage_path || variant.storage_path;
+          const previewPath =
+            variant
+              .thumbnail_storage_path ||
+            variant.storage_path;
 
-      const { data: signed } = await supabase.storage
-        .from("nobody-private")
-        .createSignedUrl(previewPath, 60 * 15);
+          const {
+            data: signed,
+          } = await supabase.storage
+            .from(
+              "nobody-private",
+            )
+            .createSignedUrl(
+              previewPath,
+              60 * 15,
+            );
 
-      return {
-        ...variant,
-        title,
-        imageUrl: signed?.signedUrl ?? null,
-      };
-    }),
-  );
+          return {
+            ...variant,
+            title,
+            imageUrl:
+              signed?.signedUrl ??
+              null,
+          };
+        },
+      ),
+    );
 
   return (
     <main className={styles.page}>
       <header className={studioStyles.header}>
         <div>
-          <p className={studioStyles.eyebrow}>IMAGE STUDIO</p>
+          <p className={studioStyles.eyebrow}>
+            IMAGE STUDIO
+          </p>
           <h1>I AM NOBODY</h1>
         </div>
 
         <div className={studioStyles.account}>
-          <Link className={studioStyles.signOut} href="/studio">
+          <Link
+            className={studioStyles.signOut}
+            href="/studio"
+          >
             Create
           </Link>
 
-          <Link className={studioStyles.signOut} href="/studio/artworks">
+          <Link
+            className={studioStyles.signOut}
+            href="/studio/artworks"
+          >
             Review
           </Link>
 
+          <Link
+            className={studioStyles.signOut}
+            href="/gallery"
+          >
+            Gallery
+          </Link>
+
           <div>
-            <span>{admin.displayName || admin.email}</span>
+            <span>
+              {admin.displayName ||
+                admin.email}
+            </span>
           </div>
 
           <SignOutButton />
@@ -192,26 +342,50 @@ export default async function ArtworksPage({
 
       <section className={styles.intro}>
         <div>
-          <p className={styles.eyebrow}>Artwork selection</p>
+          <p className={styles.eyebrow}>
+            Artwork selection
+          </p>
+
           <h2>Review the masks</h2>
 
           <p>
-            Every generated cover stays private here until it is approved. Open
-            an artwork to view it at full size, add notes, approve it, or request
-            another version.
+            Clean masters remain private
+            here. Automated review is
+            guidance, not publication
+            authority: a person approves
+            the artwork, creates a
+            controlled template, then
+            separately publishes a gallery
+            draft.
           </p>
         </div>
 
-        <Link className={styles.primaryLink} href="/studio">
+        <Link
+          className={styles.primaryLink}
+          href="/studio"
+        >
           Create new artwork
         </Link>
       </section>
 
-      <nav aria-label="Artwork filters" className={styles.filters}>
+      <nav
+        aria-label="Artwork filters"
+        className={styles.filters}
+      >
         {FILTERS.map((filter) => (
           <Link
-            aria-current={activeFilter === filter.value ? "page" : undefined}
-            className={activeFilter === filter.value ? styles.activeFilter : undefined}
+            aria-current={
+              activeFilter ===
+              filter.value
+                ? "page"
+                : undefined
+            }
+            className={
+              activeFilter ===
+              filter.value
+                ? styles.activeFilter
+                : undefined
+            }
             href={
               filter.value === "all"
                 ? "/studio/artworks"
@@ -226,52 +400,99 @@ export default async function ArtworksPage({
 
       {variantError ? (
         <section className={styles.emptyState}>
-          <h2>The artwork library is not available yet.</h2>
+          <h2>
+            The artwork library is not
+            available.
+          </h2>
           <p>
-            The studio could not open the saved artworks. Check the private
-            artwork storage setup.
+            Run migrations 006–009 and
+            verify the private storage
+            bucket.
           </p>
         </section>
       ) : cards.length === 0 ? (
         <section className={styles.emptyState}>
-          <h2>No artworks here yet.</h2>
+          <h2>
+            No artworks in this view.
+          </h2>
           <p>
-            Generated images will appear here automatically after the image
-            service is connected and the first artwork is created.
+            Generated clean masters will
+            appear here after their
+            automated review.
           </p>
         </section>
       ) : (
-        <section aria-label="Saved artworks" className={styles.grid}>
+        <section
+          aria-label="Saved artworks"
+          className={styles.grid}
+        >
           {cards.map((card) => (
-            <article className={styles.card} key={card.id}>
-              <Link className={styles.imageFrame} href={`/studio/artworks/${card.id}`}>
+            <article
+              className={styles.card}
+              key={card.id}
+            >
+              <Link
+                className={styles.imageFrame}
+                href={`/studio/artworks/${card.id}`}
+              >
                 {card.imageUrl ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img alt={card.title} src={card.imageUrl} />
-                  </>
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    alt={card.title}
+                    src={card.imageUrl}
+                  />
                 ) : (
-                  <span>Preview unavailable</span>
+                  <span>
+                    Preview unavailable
+                  </span>
                 )}
               </Link>
 
               <div className={styles.cardBody}>
                 <div>
                   <h3>{card.title}</h3>
-                  <p>{formatDate(card.created_at)}</p>
+
+                  <p>
+                    {formatDate(
+                      card.created_at,
+                    )}
+                  </p>
+
+                  {card.visual_score !==
+                  null ? (
+                    <p>
+                      Automated score{" "}
+                      {
+                        card.visual_score
+                      }
+                      /100
+                    </p>
+                  ) : null}
                 </div>
 
-                <span className={getStatusClass(card.status)}>
-                  {getArtworkStatusLabel(card.status)}
+                <span
+                  className={getStatusClass(
+                    card.status,
+                  )}
+                >
+                  {getArtworkStatusLabel(
+                    card.status,
+                  )}
                 </span>
               </div>
 
               <div className={styles.cardFooter}>
                 <small>
-                  {card.width} × {card.height}
+                  {card.width} ×{" "}
+                  {card.height} · clean
+                  master
                 </small>
 
-                <Link href={`/studio/artworks/${card.id}`}>Review</Link>
+                <Link
+                  href={`/studio/artworks/${card.id}`}
+                >
+                  Open
+                </Link>
               </div>
             </article>
           ))}

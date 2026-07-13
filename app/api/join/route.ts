@@ -78,7 +78,6 @@ function dotStuff(message: string) {
 function readResponse(socket: net.Socket | tls.TLSSocket) {
   return new Promise<SmtpResponse>((resolve, reject) => {
     let buffer = "";
-    let timeout: NodeJS.Timeout;
 
     const cleanup = () => {
       clearTimeout(timeout);
@@ -102,7 +101,7 @@ function readResponse(socket: net.Socket | tls.TLSSocket) {
       }
     };
 
-    timeout = setTimeout(() => {
+    const timeout = setTimeout(() => {
       cleanup();
       reject(new Error("SMTP response timed out"));
     }, 15000);

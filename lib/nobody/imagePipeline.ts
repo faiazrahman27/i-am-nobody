@@ -7,19 +7,21 @@ import sharp from "sharp";
 import { NOBODY_BRAND } from "./brand";
 import type { ImageQuality } from "./types";
 
-const OPENAI_IMAGES_EDIT_URL = "https://api.openai.com/v1/images/edits";
+const OPENAI_IMAGES_EDIT_URL =
+  "https://api.openai.com/v1/images/edits";
 
 const SUPPORTED_IMAGE_MODELS = [
   "gpt-image-2",
   "gpt-image-2-2026-04-21",
 ] as const;
 
-type SupportedImageModel = (typeof SUPPORTED_IMAGE_MODELS)[number];
-
-type Point = Readonly<{ x: number; y: number }>;
+type SupportedImageModel =
+  (typeof SUPPORTED_IMAGE_MODELS)[number];
 
 type OpenAIImageResponse = Readonly<{
-  data?: ReadonlyArray<Readonly<{ b64_json?: string }>>;
+  data?: ReadonlyArray<
+    Readonly<{ b64_json?: string }>
+  >;
   usage?: unknown;
   error?: Readonly<{
     message?: string;
@@ -28,18 +30,35 @@ type OpenAIImageResponse = Readonly<{
   }>;
 }>;
 
-export type GeneratedCover = Readonly<{
+export type CanonicalReferenceAssets =
+  Readonly<{
+    originalCover: Buffer;
+    compositionReference: Buffer;
+    helmetReference: Buffer;
+    sha256: string;
+  }>;
+
+export type GeneratedArtwork = Readonly<{
   rawModelImage: Buffer;
-  finalCoverImage: Buffer;
+  cleanArtworkImage: Buffer;
   thumbnailImage: Buffer;
   sha256: string;
+  technicalValidation: Readonly<{
+    width: number;
+    height: number;
+    format: "png";
+    hasAlpha: boolean;
+    canonicalRatio: number;
+  }>;
 }>;
 
 export type ImageGenerationBatch = Readonly<{
   model: SupportedImageModel;
   modelSize: `${number}x${number}`;
-  results: readonly GeneratedCover[];
+  requestId: string | null;
+  results: readonly GeneratedArtwork[];
   usage: unknown;
+  referenceSha256: string;
 }>;
 
 function requireEnvironmentValue(
@@ -49,15 +68,19 @@ function requireEnvironmentValue(
   const normalized = value?.trim();
 
   if (!normalized) {
-    throw new Error(`Missing required environment variable: ${name}.`);
+    throw new Error(
+      `Missing required environment variable: ${name}.`,
+    );
   }
 
   return normalized;
 }
 
-function getOpenAIImageModel(): SupportedImageModel {
+function getOpenAIImageModel():
+  SupportedImageModel {
   const configured =
-    process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-2";
+    process.env.OPENAI_IMAGE_MODEL?.trim() ||
+    "gpt-image-2-2026-04-21";
 
   if (
     !SUPPORTED_IMAGE_MODELS.includes(
@@ -74,387 +97,224 @@ function getOpenAIImageModel(): SupportedImageModel {
   return configured as SupportedImageModel;
 }
 
-function pointInPolygon(point: Point, polygon: readonly Point[]) {
-  let inside = false;
-
-  for (
-    let current = 0, previous = polygon.length - 1;
-    current < polygon.length;
-    previous = current++
-  ) {
-    const currentPoint = polygon[current];
-    const previousPoint = polygon[previous];
-
-    const intersects =
-      currentPoint.y > point.y !== previousPoint.y > point.y &&
-      point.x <
-        ((previousPoint.x - currentPoint.x) *
-          (point.y - currentPoint.y)) /
-          (previousPoint.y - currentPoint.y || Number.EPSILON) +
-          currentPoint.x;
-
-    if (intersects) {
-      inside = !inside;
-    }
-  }
-
-  return inside;
+function getCanonicalPath() {
+  return path.join(
+    process.cwd(),
+    "public",
+    NOBODY_BRAND.canonicalReference
+      .publicPath.replace(/^\//, ""),
+  );
 }
 
-function pointInEllipse(
-  point: Point,
-  centerX: number,
-  centerY: number,
-  radiusX: number,
-  radiusY: number,
+function sha256(buffer: Buffer) {
+  return createHash("sha256")
+    .update(buffer)
+    .digest("hex");
+}
+
+async function blurRegion(
+  input: Buffer,
+  region: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    sigma: number;
+  },
 ) {
-  const normalizedX = (point.x - centerX) / radiusX;
-  const normalizedY = (point.y - centerY) / radiusY;
-
-  return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
-}
-
-async function buildCharacterMatte(width: number, height: number) {
-  const bodyPolygon: readonly Point[] = [
-    { x: 0.43, y: 0.285 },
-    { x: 0.365, y: 0.305 },
-    { x: 0.295, y: 0.34 },
-    { x: 0.235, y: 0.395 },
-    { x: 0.195, y: 0.52 },
-    { x: 0.165, y: 0.735 },
-    { x: 0.19, y: 0.79 },
-    { x: 0.245, y: 0.975 },
-    { x: 0.365, y: 0.975 },
-    { x: 0.39, y: 0.78 },
-    { x: 0.61, y: 0.78 },
-    { x: 0.635, y: 0.975 },
-    { x: 0.755, y: 0.975 },
-    { x: 0.81, y: 0.79 },
-    { x: 0.835, y: 0.735 },
-    { x: 0.805, y: 0.52 },
-    { x: 0.765, y: 0.395 },
-    { x: 0.705, y: 0.34 },
-    { x: 0.635, y: 0.305 },
-    { x: 0.57, y: 0.285 },
-  ];
-
-  const raw = Buffer.alloc(width * height);
-
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const point = {
-        x: x / width,
-        y: y / height,
-      };
-
-      const insideHelmet = pointInEllipse(
-        point,
-        0.5,
-        0.195,
-        0.155,
-        0.12,
-      );
-
-      const insideNeck =
-        point.x >= 0.43 &&
-        point.x <= 0.57 &&
-        point.y >= 0.265 &&
-        point.y <= 0.34;
-
-      const insideBody = pointInPolygon(point, bodyPolygon);
-
-      raw[y * width + x] =
-        insideHelmet || insideNeck || insideBody ? 255 : 0;
-    }
-  }
-
-  return sharp(raw, {
-    raw: {
-      width,
-      height,
-      channels: 1,
-    },
-  })
-    .blur(4.2)
-    .raw()
+  return sharp(input)
+    .extract({
+      left: region.left,
+      top: region.top,
+      width: region.width,
+      height: region.height,
+    })
+    .blur(region.sigma)
+    .png()
     .toBuffer();
 }
 
-function makeRgbaMask(
-  alpha: Buffer,
-  width: number,
-  height: number,
-  invertAlpha: boolean,
+async function buildCompositionReference(
+  originalCover: Buffer,
 ) {
-  const output = Buffer.alloc(width * height * 4, 255);
+  const { width, height } =
+    NOBODY_BRAND.canonicalReference;
 
-  for (let index = 0; index < width * height; index += 1) {
-    const sourceAlpha = alpha[index] ?? 0;
+  const blurredRegions = await Promise.all([
+    blurRegion(originalCover, {
+      left: 290,
+      top: 560,
+      width: 350,
+      height: 420,
+      sigma: 22,
+    }),
+    blurRegion(originalCover, {
+      left: 270,
+      top: 990,
+      width: 380,
+      height: 105,
+      sigma: 16,
+    }),
+    blurRegion(originalCover, {
+      left: 245,
+      top: 1135,
+      width: 430,
+      height: 75,
+      sigma: 14,
+    }),
+    blurRegion(originalCover, {
+      left: 24,
+      top: 380,
+      width: 44,
+      height: 560,
+      sigma: 12,
+    }),
+  ]);
 
-    output[index * 4 + 3] = invertAlpha
-      ? 255 - sourceAlpha
-      : sourceAlpha;
-  }
+  const deLettered = await sharp(
+    originalCover,
+  )
+    .composite([
+      {
+        input: blurredRegions[0],
+        left: 290,
+        top: 560,
+      },
+      {
+        input: blurredRegions[1],
+        left: 270,
+        top: 990,
+      },
+      {
+        input: blurredRegions[2],
+        left: 245,
+        top: 1135,
+      },
+      {
+        input: blurredRegions[3],
+        left: 24,
+        top: 380,
+      },
+    ])
+    .resize(
+      NOBODY_BRAND.modelCanvas.width,
+      NOBODY_BRAND.modelCanvas.height,
+      { fit: "fill" },
+    )
+    .png()
+    .toBuffer();
 
-  return output;
-}
-
-type TextRegion = Readonly<{
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  low: number;
-  high: number;
-}>;
-
-const TEXT_REGIONS: readonly TextRegion[] = [
-  {
-    x1: 384,
-    y1: 584,
-    x2: 406,
-    y2: 640,
-    low: 175,
-    high: 230,
-  },
-  {
-    x1: 444,
-    y1: 584,
-    x2: 487,
-    y2: 640,
-    low: 185,
-    high: 230,
-  },
-  {
-    x1: 494,
-    y1: 584,
-    x2: 542,
-    y2: 640,
-    low: 180,
-    high: 230,
-  },
-  {
-    x1: 375,
-    y1: 642,
-    x2: 550,
-    y2: 802,
-    low: 150,
-    high: 235,
-  },
-  {
-    x1: 290,
-    y1: 800,
-    x2: 645,
-    y2: 963,
-    low: 150,
-    high: 235,
-  },
-  {
-    x1: 340,
-    y1: 995,
-    x2: 575,
-    y2: 1075,
-    low: 125,
-    high: 210,
-  },
-  {
-    x1: 255,
-    y1: 1145,
-    x2: 660,
-    y2: 1200,
-    low: 125,
-    high: 210,
-  },
-];
-
-function clampByte(value: number) {
-  return Math.max(0, Math.min(255, Math.round(value)));
-}
-
-function getLuma(red: number, green: number, blue: number) {
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-}
-
-async function buildTypographyOverlay(originalCover: Buffer) {
-  const { width, height } = NOBODY_BRAND.canonicalReference;
-
-  const { data, info } = await sharp(originalCover)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+  const metadata =
+    await sharp(deLettered).metadata();
 
   if (
-    info.width !== width ||
-    info.height !== height ||
-    info.channels !== 4
+    metadata.width !==
+      NOBODY_BRAND.modelCanvas.width ||
+    metadata.height !==
+      NOBODY_BRAND.modelCanvas.height
   ) {
     throw new Error(
-      "The canonical cover dimensions changed unexpectedly.",
+      "Could not prepare the canonical composition reference.",
     );
   }
 
-  const overlay = Buffer.alloc(width * height * 4);
-
-  for (const region of TEXT_REGIONS) {
-    for (let y = region.y1; y < region.y2; y += 1) {
-      for (let x = region.x1; x < region.x2; x += 1) {
-        const pixelIndex = y * width + x;
-        const sourceIndex = pixelIndex * 4;
-
-        const red = data[sourceIndex] ?? 0;
-        const green = data[sourceIndex + 1] ?? 0;
-        const blue = data[sourceIndex + 2] ?? 0;
-        const luma = getLuma(red, green, blue);
-
-        const alpha = clampByte(
-          ((luma - region.low) /
-            (region.high - region.low)) *
-            255,
-        );
-
-        if (alpha <= overlay[sourceIndex + 3]) {
-          continue;
-        }
-
-        overlay[sourceIndex] = red;
-        overlay[sourceIndex + 1] = green;
-        overlay[sourceIndex + 2] = blue;
-        overlay[sourceIndex + 3] = alpha;
-      }
-    }
+  if (width !== 906 || height !== 1280) {
+    throw new Error(
+      "The canonical reference dimensions changed unexpectedly.",
+    );
   }
 
-  /*
-   * Restore the small coloured separator directly above the subtitle.
-   */
-  for (let y = 974; y < 990; y += 1) {
-    for (let x = 415; x < 520; x += 1) {
-      const pixelIndex = y * width + x;
-      const sourceIndex = pixelIndex * 4;
+  return deLettered;
+}
 
-      const red = data[sourceIndex] ?? 0;
-      const green = data[sourceIndex + 1] ?? 0;
-      const blue = data[sourceIndex + 2] ?? 0;
-
-      const maximum = Math.max(red, green, blue);
-      const minimum = Math.min(red, green, blue);
-
-      const saturation =
-        maximum === 0 ? 0 : (maximum - minimum) / maximum;
-
-      if (saturation <= 0.18 || maximum <= 55) {
-        continue;
-      }
-
-      const alpha = clampByte(
-        ((saturation - 0.18) / 0.4) * 255,
-      );
-
-      overlay[sourceIndex] = red;
-      overlay[sourceIndex + 1] = green;
-      overlay[sourceIndex + 2] = blue;
-      overlay[sourceIndex + 3] = alpha;
-    }
-  }
-
-  return sharp(overlay, {
-    raw: {
-      width,
-      height,
-      channels: 4,
-    },
-  })
+async function buildHelmetReference(
+  originalCover: Buffer,
+) {
+  return sharp(originalCover)
+    .extract({
+      left: 315,
+      top: 70,
+      width: 285,
+      height: 355,
+    })
+    .resize(768, 960, {
+      fit: "contain",
+      background: {
+        r: 117,
+        g: 98,
+        b: 77,
+        alpha: 1,
+      },
+    })
     .png()
     .toBuffer();
 }
 
-async function prepareCanonicalAssets(
-  modelSize: `${number}x${number}`,
-) {
-  const [modelWidth, modelHeight] = modelSize
-    .split("x")
-    .map((value) => Number.parseInt(value, 10));
-
-  const {
-    width,
-    height,
-    publicPath,
-  } = NOBODY_BRAND.canonicalReference;
-
-  const canonicalPath = path.join(
-    process.cwd(),
-    "public",
-    publicPath.slice(1),
+export async function loadCanonicalReferenceAssets():
+  Promise<CanonicalReferenceAssets> {
+  const originalCover = await readFile(
+    getCanonicalPath(),
   );
 
-  const originalCover = await readFile(canonicalPath);
-
-  const characterMatte = await buildCharacterMatte(
-    width,
-    height,
+  const actualSha256 = sha256(
+    originalCover,
   );
 
-  /*
-   * OpenAI masks use fully transparent pixels as the editable region.
-   * Therefore the character matte is inverted for the API mask.
-   */
-  const editMask = makeRgbaMask(
-    characterMatte,
-    width,
-    height,
-    true,
-  );
+  if (
+    actualSha256 !==
+    NOBODY_BRAND.canonicalReference.sha256
+  ) {
+    throw new Error(
+      "The canonical book cover failed its SHA-256 check. Restore the approved public/book-cover.png before generating artwork.",
+    );
+  }
 
-  /*
-   * No crop is used. The complete canonical cover is proportionally
-   * transformed to the closest API-compatible model canvas.
-   */
-  const modelCover = await sharp(originalCover)
-    .resize(modelWidth, modelHeight, {
-      fit: "fill",
-    })
-    .png()
-    .toBuffer();
+  const metadata =
+    await sharp(originalCover).metadata();
 
-  const modelEditMask = await sharp(editMask, {
-    raw: {
-      width,
-      height,
-      channels: 4,
-    },
-  })
-    .resize(modelWidth, modelHeight, {
-      fit: "fill",
-      kernel: sharp.kernel.nearest,
-    })
-    .png()
-    .toBuffer();
+  if (
+    metadata.width !==
+      NOBODY_BRAND.canonicalReference.width ||
+    metadata.height !==
+      NOBODY_BRAND.canonicalReference.height
+  ) {
+    throw new Error(
+      `The canonical book cover must be ${NOBODY_BRAND.canonicalReference.width}x${NOBODY_BRAND.canonicalReference.height}.`,
+    );
+  }
 
-  const typographyOverlay =
-    await buildTypographyOverlay(originalCover);
+  const [
+    compositionReference,
+    helmetReference,
+  ] = await Promise.all([
+    buildCompositionReference(originalCover),
+    buildHelmetReference(originalCover),
+  ]);
 
   return {
     originalCover,
-    characterMatte,
-    modelCover,
-    modelEditMask,
-    typographyOverlay,
+    compositionReference,
+    helmetReference,
+    sha256: actualSha256,
   };
 }
 
-async function callOpenAIImageEdit(input: {
-  model: SupportedImageModel;
-  modelSize: `${number}x${number}`;
-  prompt: string;
-  quality: ImageQuality;
-  variations: number;
-  modelCover: Buffer;
-  modelEditMask: Buffer;
-}) {
-  const apiKey = requireEnvironmentValue(
-    "OPENAI_API_KEY",
-    process.env.OPENAI_API_KEY,
-  );
+async function callOpenAIImageEdit(
+  input: {
+    model: SupportedImageModel;
+    modelSize: `${number}x${number}`;
+    prompt: string;
+    quality: ImageQuality;
+    variations: number;
+    compositionReference: Buffer;
+    helmetReference: Buffer;
+  },
+) {
+  const apiKey =
+    requireEnvironmentValue(
+      "OPENAI_API_KEY",
+      process.env.OPENAI_API_KEY,
+    );
 
   const form = new FormData();
 
@@ -462,54 +322,86 @@ async function callOpenAIImageEdit(input: {
   form.set("prompt", input.prompt);
   form.set("size", input.modelSize);
   form.set("quality", input.quality);
-  form.set("n", String(input.variations));
+  form.set(
+    "n",
+    String(input.variations),
+  );
   form.set("output_format", "png");
   form.set("background", "opaque");
+  form.set("moderation", "auto");
 
-  form.set(
-    "image",
-    new Blob([new Uint8Array(input.modelCover)], {
-      type: "image/png",
-    }),
-    "canonical-cover.png",
+  form.append(
+    "image[]",
+    new Blob(
+      [
+        new Uint8Array(
+          input.compositionReference,
+        ),
+      ],
+      { type: "image/png" },
+    ),
+    "canonical-composition-reference.png",
   );
 
-  form.set(
-    "mask",
-    new Blob([new Uint8Array(input.modelEditMask)], {
-      type: "image/png",
-    }),
-    "character-edit-mask.png",
+  form.append(
+    "image[]",
+    new Blob(
+      [
+        new Uint8Array(
+          input.helmetReference,
+        ),
+      ],
+      { type: "image/png" },
+    ),
+    "canonical-helmet-reference.png",
   );
 
-  const response = await fetch(OPENAI_IMAGES_EDIT_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
+  const response = await fetch(
+    OPENAI_IMAGES_EDIT_URL,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: form,
+      cache: "no-store",
+      signal: AbortSignal.timeout(
+        280_000,
+      ),
     },
-    body: form,
-    cache: "no-store",
-    signal: AbortSignal.timeout(280_000),
-  });
+  );
 
   const payload =
-    (await response.json()) as OpenAIImageResponse;
+    (await response.json()) as
+      OpenAIImageResponse;
 
   if (!response.ok) {
+    const code =
+      payload.error?.code
+        ? ` (${payload.error.code})`
+        : "";
+
     throw new Error(
-      payload.error?.message ||
-        `OpenAI image generation failed with status ${response.status}.`,
+      `${
+        payload.error?.message ||
+        `OpenAI image generation failed with status ${response.status}.`
+      }${code}`,
     );
   }
 
   const images =
     payload.data
-      ?.map((item) => item.b64_json)
+      ?.map(
+        (item) => item.b64_json,
+      )
       .filter(
-        (value): value is string => Boolean(value),
+        (value): value is string =>
+          Boolean(value),
       ) ?? [];
 
-  if (images.length !== input.variations) {
+  if (
+    images.length !== input.variations
+  ) {
     throw new Error(
       `OpenAI returned ${images.length} image(s), expected ${input.variations}.`,
     );
@@ -520,151 +412,135 @@ async function callOpenAIImageEdit(input: {
       Buffer.from(image, "base64"),
     ),
     usage: payload.usage ?? null,
+    requestId:
+      response.headers.get(
+        "x-request-id",
+      ),
   };
 }
 
-async function finalizeCover(input: {
-  rawModelImage: Buffer;
-  originalCover: Buffer;
-  characterMatte: Buffer;
-  typographyOverlay: Buffer;
-}) {
+async function finalizeCleanArtwork(
+  rawModelImage: Buffer,
+): Promise<GeneratedArtwork> {
   const { width, height } =
-    NOBODY_BRAND.canonicalReference;
+    NOBODY_BRAND.generationCanvas;
 
-  /*
-   * Return the model output to the exact 906x1280 canvas.
-   * fit: "fill" changes dimensions but never removes any image part.
-   */
-  const generatedAtCanonicalSize = await sharp(
-    input.rawModelImage,
-  )
-    .resize(width, height, {
-      fit: "fill",
-    })
-    .removeAlpha()
-    .png()
-    .toBuffer();
-
-  /*
-   * Attach the character-only alpha matte to the generated image.
-   */
-  const generatedWithCharacterAlpha = await sharp(
-    generatedAtCanonicalSize,
-  )
-    .removeAlpha()
-    .joinChannel(input.characterMatte, {
-      raw: {
-        width,
-        height,
-        channels: 1,
-      },
-    })
-    .png()
-    .toBuffer();
-
-  /*
-   * Begin from the untouched original cover.
-   *
-   * Layer 1: generated character only.
-   * Layer 2: original controlled title, subtitle, author and separator.
-   *
-   * Every non-character pixel therefore comes directly from the original
-   * canonical book cover.
-   */
-  const finalCoverImage = await sharp(
-    input.originalCover,
-  )
-    .composite([
-      {
-        input: generatedWithCharacterAlpha,
-        blend: "over",
-      },
-      {
-        input: input.typographyOverlay,
-        blend: "over",
-      },
-    ])
-    .png({
-      compressionLevel: 9,
-    })
-    .toBuffer();
+  const cleanArtworkImage =
+    await sharp(rawModelImage)
+      .resize(width, height, {
+        fit: "fill",
+      })
+      .removeAlpha()
+      .png({
+        compressionLevel: 9,
+        adaptiveFiltering: true,
+      })
+      .toBuffer();
 
   const metadata =
-    await sharp(finalCoverImage).metadata();
+    await sharp(
+      cleanArtworkImage,
+    ).metadata();
 
   if (
     metadata.width !== width ||
     metadata.height !== height
   ) {
     throw new Error(
-      `Final cover validation failed. Expected ${width}x${height}, received ${metadata.width}x${metadata.height}.`,
+      `Clean artwork validation failed. Expected ${width}x${height}, received ${metadata.width}x${metadata.height}.`,
     );
   }
 
-  const thumbnailImage = await sharp(
-    finalCoverImage,
-  )
-    .resize(453, 640, {
-      fit: "fill",
-    })
-    .webp({
-      quality: 84,
-    })
-    .toBuffer();
+  const thumbnailImage =
+    await sharp(cleanArtworkImage)
+      .resize(453, 640, {
+        fit: "fill",
+      })
+      .webp({
+        quality: 84,
+        effort: 5,
+      })
+      .toBuffer();
 
   return {
-    finalCoverImage,
+    rawModelImage,
+    cleanArtworkImage,
     thumbnailImage,
-    sha256: createHash("sha256")
-      .update(finalCoverImage)
-      .digest("hex"),
+    sha256: sha256(
+      cleanArtworkImage,
+    ),
+    technicalValidation: {
+      width,
+      height,
+      format: "png",
+      hasAlpha: Boolean(
+        metadata.hasAlpha,
+      ),
+      canonicalRatio:
+        width / height,
+    },
   };
 }
 
-export async function generateNobodyCovers(input: {
-  prompt: string;
-  quality: ImageQuality;
-  variations: number;
-}): Promise<ImageGenerationBatch> {
-  const model = getOpenAIImageModel();
-  const modelSize = NOBODY_BRAND.modelCanvas.size;
+export async function generateNobodyArtworks(
+  input: {
+    prompt: string;
+    negativePrompt: string;
+    quality: ImageQuality;
+    variations: number;
+  },
+): Promise<ImageGenerationBatch> {
+  const model =
+    getOpenAIImageModel();
+
+  const modelSize =
+    NOBODY_BRAND.modelCanvas.size;
 
   const assets =
-    await prepareCanonicalAssets(modelSize);
+    await loadCanonicalReferenceAssets();
 
-  const generated = await callOpenAIImageEdit({
-    model,
-    modelSize,
-    prompt: input.prompt,
-    quality: input.quality,
-    variations: input.variations,
-    modelCover: assets.modelCover,
-    modelEditMask: assets.modelEditMask,
-  });
+  const combinedPrompt = [
+    input.prompt,
+    "",
+    "REFERENCE USE:",
+    "Reference image 1 is the canonical composition guide derived from the original I AM NOBODY cover. Use it for body distance, vertical framing, centred stance, proportion, warmth, lighting restraint, and overall elegance only.",
+    "Reference image 2 is the canonical mask detail. Preserve its anonymous reflective identity, black structural edges, realistic head proportion, and restrained blue, green, violet, and golden reflections.",
+    "Create a new clean full-bleed artwork. Do not reproduce the original cover typography, spine, frame, border, coloured separator, author name, or any other graphic design element.",
+    "",
+    "STRICT EXCLUSIONS:",
+    input.negativePrompt,
+  ].join("\n");
+
+  const generated =
+    await callOpenAIImageEdit({
+      model,
+      modelSize,
+      prompt: combinedPrompt,
+      quality: input.quality,
+      variations: input.variations,
+      compositionReference:
+        assets.compositionReference,
+      helmetReference:
+        assets.helmetReference,
+    });
 
   const results = await Promise.all(
-    generated.images.map(async (rawModelImage) => {
-      const finalized = await finalizeCover({
-        rawModelImage,
-        originalCover: assets.originalCover,
-        characterMatte: assets.characterMatte,
-        typographyOverlay: assets.typographyOverlay,
-      });
-
-      return {
-        rawModelImage,
-        finalCoverImage: finalized.finalCoverImage,
-        thumbnailImage: finalized.thumbnailImage,
-        sha256: finalized.sha256,
-      };
-    }),
+    generated.images.map(
+      (rawModelImage) =>
+        finalizeCleanArtwork(
+          rawModelImage,
+        ),
+    ),
   );
 
   return {
     model,
     modelSize,
+    requestId:
+      generated.requestId,
     results,
     usage: generated.usage,
+    referenceSha256:
+      assets.sha256,
   };
 }

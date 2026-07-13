@@ -4,10 +4,15 @@ import {
   getStatusForReviewAction,
   isReviewAction,
 } from "@/lib/nobody";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getStudioAccess } from "@/lib/supabase/studioAccess";
+import {
+  createSupabaseAdminClient,
+} from "@/lib/supabase/admin";
+import {
+  getStudioAccess,
+} from "@/lib/supabase/studioAccess";
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 export const runtime = "nodejs";
 
 type ReviewRequest = Readonly<{
@@ -15,8 +20,30 @@ type ReviewRequest = Readonly<{
   notes?: unknown;
 }>;
 
-function normalizeNotes(value: unknown) {
-  return typeof value === "string" ? value.trim().slice(0, 1200) : "";
+const REVIEWABLE_STATUSES =
+  new Set([
+    "candidate",
+    "reviewing",
+    "auto_rejected",
+    "auto_review_failed",
+    "ready_for_review",
+    "needs_regeneration",
+    "wrong_mask",
+    "wrong_composition",
+    "too_busy",
+    "too_literal",
+    "too_generic",
+    "approved_artwork",
+  ]);
+
+function normalizeNotes(
+  value: unknown,
+) {
+  return typeof value === "string"
+    ? value
+        .trim()
+        .slice(0, 1200)
+    : "";
 }
 
 export async function PATCH(
@@ -27,17 +54,20 @@ export async function PATCH(
     }>;
   }>,
 ) {
-  const [access, params] = await Promise.all([getStudioAccess(), context.params]);
+  const [access, params] =
+    await Promise.all([
+      getStudioAccess(),
+      context.params,
+    ]);
 
   if (!access.authenticated) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Please sign in again.",
+        message:
+          "Please sign in again.",
       },
-      {
-        status: 401,
-      },
+      { status: 401 },
     );
   }
 
@@ -45,74 +75,126 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: "This account cannot access the studio.",
+        message:
+          "This account cannot access the studio.",
       },
-      {
-        status: 403,
-      },
+      { status: 403 },
     );
   }
 
   let body: ReviewRequest;
 
   try {
-    body = (await request.json()) as ReviewRequest;
+    body =
+      (await request.json()) as
+        ReviewRequest;
   } catch {
     return NextResponse.json(
       {
         ok: false,
-        message: "The review information is invalid.",
+        message:
+          "The review information is invalid.",
       },
-      {
-        status: 400,
-      },
+      { status: 400 },
     );
   }
 
-  if (!isReviewAction(body.action)) {
+  if (
+    !isReviewAction(
+      body.action,
+    )
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Choose a valid review decision.",
+        message:
+          "Choose a valid review decision.",
       },
-      {
-        status: 400,
-      },
+      { status: 400 },
     );
   }
 
-  const notes = normalizeNotes(body.notes);
-  const status = getStatusForReviewAction(body.action);
-  const rejectionReason = getReviewReason(body.action);
-  const approved = body.action === "approve";
-  const supabase = createSupabaseAdminClient();
+  const notes =
+    normalizeNotes(body.notes);
 
-  const { data: existing } = await supabase
+  const status =
+    getStatusForReviewAction(
+      body.action,
+    );
+
+  const rejectionReason =
+    getReviewReason(
+      body.action,
+    );
+
+  const approved =
+    body.action === "approve";
+
+  const supabase =
+    createSupabaseAdminClient();
+
+  const {
+    data: existing,
+    error: existingError,
+  } = await supabase
     .from("artwork_variants")
-    .select("id")
+    .select("id,status")
     .eq("id", params.id)
     .maybeSingle();
 
-  if (!existing) {
+  if (
+    existingError ||
+    !existing
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        message: "The artwork could not be found.",
+        message:
+          "The artwork could not be found.",
       },
-      {
-        status: 404,
-      },
+      { status: 404 },
     );
   }
 
-  const { error: updateError } = await supabase
+  if (
+    !REVIEWABLE_STATUSES.has(
+      existing.status,
+    )
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "This artwork has already entered the template or publication workflow.",
+      },
+      { status: 409 },
+    );
+  }
+
+  const {
+    error: updateError,
+  } = await supabase
     .from("artwork_variants")
     .update({
       status,
-      human_notes: notes || null,
-      rejection_reason: rejectionReason,
-      approved_by: approved ? access.admin.userId : null,
-      approved_at: approved ? new Date().toISOString() : null,
+      human_notes:
+        notes || null,
+      rejection_reason:
+        rejectionReason,
+      approved_by:
+        approved
+          ? access.admin.userId
+          : null,
+      approved_at:
+        approved
+          ? new Date()
+              .toISOString()
+          : null,
+      immutable_at:
+        approved
+          ? new Date()
+              .toISOString()
+          : null,
     })
     .eq("id", params.id);
 
@@ -120,24 +202,39 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: "The review could not be saved.",
+        message:
+          updateError.message ||
+          "The review could not be saved.",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 
-  await supabase.from("studio_audit_log").insert({
-    actor_user_id: access.admin.userId,
-    action: approved ? "artwork.approved" : "artwork.reviewed",
-    entity_type: "artwork_variant",
-    entity_id: params.id,
-    details: {
-      decision: body.action,
-      notes: notes || null,
-    },
-  });
+  await supabase
+    .from("studio_audit_log")
+    .insert({
+      actor_user_id:
+        access.admin.userId,
+
+      action:
+        approved
+          ? "artwork.approved"
+          : "artwork.reviewed",
+
+      entity_type:
+        "artwork_variant",
+
+      entity_id: params.id,
+
+      details: {
+        previous_status:
+          existing.status,
+        decision:
+          body.action,
+        notes:
+          notes || null,
+      },
+    });
 
   return NextResponse.json({
     ok: true,

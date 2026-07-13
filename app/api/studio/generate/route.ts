@@ -6,28 +6,65 @@ import {
   isNobodyArchetypeSlug,
   NOBODY_BRAND,
 } from "@/lib/nobody";
-import { generateNobodyCovers } from "@/lib/nobody/imagePipeline";
+import {
+  generateNobodyArtworks,
+  loadCanonicalReferenceAssets,
+} from "@/lib/nobody/imagePipeline";
+import {
+  reviewNobodyArtwork,
+} from "@/lib/nobody/visualReview";
 import type {
   ArchetypeSlug,
+  BackgroundVariantSlug,
   ImageQuality,
 } from "@/lib/nobody";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getStudioAccess } from "@/lib/supabase/studioAccess";
+import {
+  createSupabaseAdminClient,
+} from "@/lib/supabase/admin";
+import {
+  getStudioAccess,
+} from "@/lib/supabase/studioAccess";
 
-export const dynamic = "force-dynamic";
+export const dynamic =
+  "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 type GenerateRequest = Readonly<{
   archetype?: unknown;
   clothingNotes?: unknown;
+  moodNotes?: unknown;
+  backgroundVariant?: unknown;
   prop?: unknown;
   variationDirection?: unknown;
   quality?: unknown;
   numberOfVariations?: unknown;
 }>;
 
-function normalizeOptionalText(value: unknown) {
+type SavedVariant = Readonly<{
+  id: string;
+  artworkCode: string;
+  status: string;
+  imageUrl: string;
+  thumbnailUrl: string;
+  width: number;
+  height: number;
+  sha256: string;
+  visualScore: number | null;
+  reviewSummary: string | null;
+}>;
+
+const BACKGROUND_VARIANTS:
+  readonly BackgroundVariantSlug[] = [
+    "canonical-taupe",
+    "warm-beige",
+    "soft-umber",
+    "deep-warm-brown",
+  ];
+
+function normalizeOptionalText(
+  value: unknown,
+) {
   return typeof value === "string"
     ? value.trim()
     : "";
@@ -43,7 +80,20 @@ function isImageQuality(
   );
 }
 
-function getVariationCount(value: unknown) {
+function isBackgroundVariant(
+  value: unknown,
+): value is BackgroundVariantSlug {
+  return (
+    typeof value === "string" &&
+    BACKGROUND_VARIANTS.includes(
+      value as BackgroundVariantSlug,
+    )
+  );
+}
+
+function getVariationCount(
+  value: unknown,
+) {
   if (
     typeof value !== "number" ||
     !Number.isInteger(value)
@@ -51,7 +101,10 @@ function getVariationCount(value: unknown) {
     return 1;
   }
 
-  return Math.max(1, Math.min(4, value));
+  return Math.max(
+    1,
+    Math.min(4, value),
+  );
 }
 
 function makeArtworkCode(
@@ -73,18 +126,51 @@ function makeArtworkCode(
   ).padStart(2, "0")}`;
 }
 
-export async function POST(request: Request) {
-  const access = await getStudioAccess();
+async function signedUrl(
+  supabase:
+    ReturnType<
+      typeof createSupabaseAdminClient
+    >,
+  path: string,
+  expiresIn = 60 * 60,
+) {
+  const { data, error } =
+    await supabase.storage
+      .from("nobody-private")
+      .createSignedUrl(
+        path,
+        expiresIn,
+      );
+
+  if (
+    error ||
+    !data?.signedUrl
+  ) {
+    throw new Error(
+      error?.message ||
+        "Could not create a private preview URL.",
+    );
+  }
+
+  return data.signedUrl;
+}
+
+export async function POST(
+  request: Request,
+) {
+  const access =
+    await getStudioAccess();
 
   if (!access.authenticated) {
     return NextResponse.json(
       {
         ok: false,
-        error: "UNAUTHENTICATED",
+        error:
+          "UNAUTHENTICATED",
+        message:
+          "Please sign in again.",
       },
-      {
-        status: 401,
-      },
+      { status: 401 },
     );
   }
 
@@ -92,25 +178,28 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "NOT_AUTHORIZED",
+        error:
+          "NOT_AUTHORIZED",
+        message:
+          "This account cannot access the studio.",
       },
-      {
-        status: 403,
-      },
+      { status: 403 },
     );
   }
 
-  if (access.admin.role === "reviewer") {
+  if (
+    access.admin.role ===
+    "reviewer"
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        error: "REVIEWER_CANNOT_GENERATE",
+        error:
+          "REVIEWER_CANNOT_GENERATE",
         message:
           "Reviewer accounts cannot create generation jobs.",
       },
-      {
-        status: 403,
-      },
+      { status: 403 },
     );
   }
 
@@ -118,49 +207,80 @@ export async function POST(request: Request) {
 
   try {
     body =
-      (await request.json()) as GenerateRequest;
+      (await request.json()) as
+        GenerateRequest;
   } catch {
     return NextResponse.json(
       {
         ok: false,
-        error: "INVALID_JSON",
+        error:
+          "INVALID_JSON",
+        message:
+          "The request is invalid.",
       },
-      {
-        status: 400,
-      },
+      { status: 400 },
     );
   }
 
-  if (!isNobodyArchetypeSlug(body.archetype)) {
+  if (
+    !isNobodyArchetypeSlug(
+      body.archetype,
+    )
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        error: "INVALID_ARCHETYPE",
+        error:
+          "INVALID_ARCHETYPE",
         message:
           "Choose a controlled I AM NOBODY archetype.",
       },
-      {
-        status: 400,
-      },
+      { status: 400 },
     );
   }
 
   const archetype =
-    body.archetype as ArchetypeSlug;
+    body.archetype as
+      ArchetypeSlug;
 
-  const quality: ImageQuality =
-    isImageQuality(body.quality)
-      ? body.quality
-      : "low";
+  const archetypeDefinition =
+    getNobodyArchetype(
+      archetype,
+    );
+
+  const quality:
+    ImageQuality =
+      isImageQuality(body.quality)
+        ? body.quality
+        : "low";
 
   const numberOfVariations =
-    getVariationCount(body.numberOfVariations);
+    getVariationCount(
+      body.numberOfVariations,
+    );
+
+  const backgroundVariant:
+    BackgroundVariantSlug =
+      isBackgroundVariant(
+        body.backgroundVariant,
+      )
+        ? body.backgroundVariant
+        : "canonical-taupe";
 
   const clothingNotes =
-    normalizeOptionalText(body.clothingNotes);
+    normalizeOptionalText(
+      body.clothingNotes,
+    );
+
+  const moodNotes =
+    normalizeOptionalText(
+      body.moodNotes,
+    );
 
   const prop =
-    normalizeOptionalText(body.prop) || null;
+    normalizeOptionalText(
+      body.prop,
+    ) || null;
 
   const variationDirection =
     normalizeOptionalText(
@@ -171,9 +291,10 @@ export async function POST(request: Request) {
     buildNobodyArtworkPrompt({
       archetype,
       clothingNotes,
+      moodNotes,
       prop,
       variationDirection,
-      backgroundVariant: "canonical-taupe",
+      backgroundVariant,
       quality,
       outputFormat: "png",
     });
@@ -182,60 +303,95 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "PROMPT_VALIDATION_FAILED",
-        issues: promptResult.issues,
+        error:
+          "PROMPT_VALIDATION_FAILED",
+        issues:
+          promptResult.issues,
       },
-      {
-        status: 400,
-      },
+      { status: 400 },
     );
   }
-
-  const finalPrompt = [
-    promptResult.prompt,
-    "",
-    "STRICT EDIT INSTRUCTION:",
-    "Change only the anonymous character inside the supplied editable mask.",
-    "The background, frame, spine, border, bottom iridescent line, composition, body distance, posture, and all non-character pixels must remain the same as the canonical cover.",
-    "Inside the editable character region, remove any existing front-cover lettering and reconstruct clean clothing beneath it.",
-    "Do not generate replacement lettering.",
-    "The production pipeline restores the exact original controlled title, subtitle and author text after generation.",
-    "Do not move, resize, rotate, zoom, crop, or reframe the character.",
-    "The new character must occupy the same visual silhouette, body distance and central alignment as the original.",
-    "",
-    "STRICT EXCLUSIONS:",
-    promptResult.negativePrompt,
-  ].join("\n");
 
   const supabase =
     createSupabaseAdminClient();
 
-  const {
-    data: reference,
-    error: referenceError,
-  } = await supabase
-    .from("brand_references")
-    .select("id")
-    .eq(
-      "reference_code",
-      NOBODY_BRAND.canonicalReference.id,
-    )
-    .eq("is_active", true)
-    .single();
+  const [
+    {
+      data: reference,
+      error: referenceError,
+    },
+    { data: policy },
+  ] = await Promise.all([
+    supabase
+      .from("brand_references")
+      .select(
+        "id,version,sha256,width,height,public_path",
+      )
+      .eq(
+        "reference_code",
+        NOBODY_BRAND
+          .canonicalReference.id,
+      )
+      .eq("is_active", true)
+      .single(),
 
-  if (referenceError || !reference) {
+    supabase
+      .from(
+        "image_generation_policy",
+      )
+      .select(
+        "automated_review_enabled,automated_review_threshold",
+      )
+      .eq("singleton", true)
+      .maybeSingle(),
+  ]);
+
+  if (
+    referenceError ||
+    !reference
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        error: "CANONICAL_REFERENCE_MISSING",
+        error:
+          "CANONICAL_REFERENCE_MISSING",
         message:
-          "Run the Image Studio Supabase migrations before generating artwork.",
+          "Run Image Studio migrations 001 through 009 before generating artwork.",
       },
-      {
-        status: 503,
-      },
+      { status: 503 },
     );
   }
+
+  if (
+    reference.sha256 !==
+      NOBODY_BRAND
+        .canonicalReference
+        .sha256 ||
+    reference.width !==
+      NOBODY_BRAND
+        .canonicalReference
+        .width ||
+    reference.height !==
+      NOBODY_BRAND
+        .canonicalReference
+        .height
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "CANONICAL_REFERENCE_MISMATCH",
+        message:
+          "The active database reference does not match the approved book cover.",
+      },
+      { status: 503 },
+    );
+  }
+
+  const automatedReviewEnabled =
+    policy
+      ?.automated_review_enabled !==
+    false;
 
   const {
     data: job,
@@ -243,314 +399,719 @@ export async function POST(request: Request) {
   } = await supabase
     .from("generation_jobs")
     .insert({
-      archetype_slug: archetype,
-      reference_id: reference.id,
+      archetype_slug:
+        archetype,
+
+      reference_id:
+        reference.id,
+
       description:
-        getNobodyArchetype(archetype)
+        archetypeDefinition
           .description.en,
-      clothing_notes: clothingNotes || null,
-      mood_notes: null,
+
+      clothing_notes:
+        clothingNotes || null,
+
+      mood_notes:
+        moodNotes || null,
+
       background_variant:
-        "canonical-taupe",
+        backgroundVariant,
+
       prop,
+
       variation_direction:
-        variationDirection || null,
+        variationDirection ||
+        null,
+
       output_format: "png",
+
       output_width:
-        NOBODY_BRAND.generationCanvas.width,
+        NOBODY_BRAND
+          .generationCanvas
+          .width,
+
       output_height:
-        NOBODY_BRAND.generationCanvas.height,
+        NOBODY_BRAND
+          .generationCanvas
+          .height,
+
       quality,
+
       number_of_variations:
         numberOfVariations,
+
       status: "generating",
+
       brand_version:
         promptResult.brandVersion,
+
       prompt_version:
         promptResult.promptVersion,
-      compiled_prompt: finalPrompt,
+
+      compiled_prompt:
+        promptResult.prompt,
+
       negative_prompt:
-        promptResult.negativePrompt,
+        promptResult
+          .negativePrompt,
+
+      generation_mode:
+        "clean_artwork",
+
+      output_kind:
+        "clean_master",
+
+      reference_sha256:
+        NOBODY_BRAND
+          .canonicalReference
+          .sha256,
+
+      reference_version:
+        reference.version,
+
       max_retries: 1,
+
       requested_by:
         access.admin.userId,
-      started_at: new Date().toISOString(),
+
+      started_at:
+        new Date().toISOString(),
+
       metadata: {
         canonical_output:
-          NOBODY_BRAND.generationCanvas.size,
+          NOBODY_BRAND
+            .generationCanvas
+            .size,
+
         model_canvas:
-          NOBODY_BRAND.modelCanvas.size,
-        text_policy:
-          "original-controlled-text-restored-after-generation",
-        edit_scope: "character-only",
-        crop_policy: "no-destructive-crop",
+          NOBODY_BRAND
+            .modelCanvas.size,
+
+        reference_policy:
+          "server-attached-canonical-cover-and-mask-detail",
+
+        typography_policy:
+          "separate-template-layer",
+
+        storage_bucket:
+          "nobody-private",
+
+        crop_policy:
+          "no-destructive-crop",
+
+        automated_review_enabled:
+          automatedReviewEnabled,
       },
     })
     .select("id")
     .single();
 
-  if (jobError || !job) {
+  if (
+    jobError ||
+    !job
+  ) {
     return NextResponse.json(
       {
         ok: false,
-        error: "JOB_CREATION_FAILED",
+        error:
+          "JOB_CREATION_FAILED",
         message:
           jobError?.message ||
           "Could not create the generation job.",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 
   try {
     const generation =
-      await generateNobodyCovers({
-        prompt: finalPrompt,
+      await generateNobodyArtworks({
+        prompt:
+          promptResult.prompt,
+
+        negativePrompt:
+          promptResult
+            .negativePrompt,
+
         quality,
+
         variations:
           numberOfVariations,
       });
 
-    const createdVariants: Array<{
-      id: string;
-      artworkCode: string;
-      status: string;
-      imageUrl: string;
-      thumbnailUrl: string;
-      width: number;
-      height: number;
-      sha256: string;
-    }> = [];
+    const referenceAssets =
+      automatedReviewEnabled
+        ? await loadCanonicalReferenceAssets()
+        : null;
 
-    for (
-      const [
-        zeroBasedIndex,
-        result,
-      ] of generation.results.entries()
-    ) {
-      const variantIndex =
-        zeroBasedIndex + 1;
+    const createdVariants =
+      await Promise.all(
+        generation.results.map(
+          async (
+            result,
+            zeroBasedIndex,
+          ): Promise<SavedVariant> => {
+            const variantIndex =
+              zeroBasedIndex + 1;
 
-      const artworkCode =
-        makeArtworkCode(
-          promptResult.archetype.code,
-          variantIndex,
-        );
+            const artworkCode =
+              makeArtworkCode(
+                promptResult
+                  .archetype.code,
+                variantIndex,
+              );
 
-      const rootPath =
-        `jobs/${job.id}/${artworkCode}`;
+            const rawPath =
+              `jobs/${job.id}/${artworkCode}/raw-model.png`;
 
-      const rawPath =
-        `${rootPath}/raw-model.png`;
+            const artworkPath =
+              `artworks/${artworkCode}/clean-906x1280.png`;
 
-      const finalPath =
-        `${rootPath}/cover-906x1280.png`;
+            const thumbnailPath =
+              `artworks/${artworkCode}/thumbnail-453x640.webp`;
 
-      const thumbnailPath =
-        `${rootPath}/thumbnail-453x640.webp`;
+            const uploadResults =
+              await Promise.all([
+                supabase.storage
+                  .from(
+                    "nobody-private",
+                  )
+                  .upload(
+                    rawPath,
+                    result.rawModelImage,
+                    {
+                      contentType:
+                        "image/png",
+                      upsert: false,
+                    },
+                  ),
 
-      const uploadResults =
-        await Promise.all([
-          supabase.storage
-            .from("nobody-private")
-            .upload(
-              rawPath,
-              result.rawModelImage,
-              {
-                contentType: "image/png",
-                upsert: false,
-              },
-            ),
+                supabase.storage
+                  .from(
+                    "nobody-private",
+                  )
+                  .upload(
+                    artworkPath,
+                    result
+                      .cleanArtworkImage,
+                    {
+                      contentType:
+                        "image/png",
+                      upsert: false,
+                    },
+                  ),
 
-          supabase.storage
-            .from("nobody-private")
-            .upload(
-              finalPath,
-              result.finalCoverImage,
-              {
-                contentType: "image/png",
-                upsert: false,
-              },
-            ),
+                supabase.storage
+                  .from(
+                    "nobody-private",
+                  )
+                  .upload(
+                    thumbnailPath,
+                    result.thumbnailImage,
+                    {
+                      contentType:
+                        "image/webp",
+                      upsert: false,
+                    },
+                  ),
+              ]);
 
-          supabase.storage
-            .from("nobody-private")
-            .upload(
-              thumbnailPath,
-              result.thumbnailImage,
-              {
-                contentType: "image/webp",
-                upsert: false,
-              },
-            ),
-        ]);
+            const uploadError =
+              uploadResults.find(
+                (item) =>
+                  item.error,
+              )?.error;
 
-      const uploadError =
-        uploadResults.find(
-          (item) => item.error,
-        )?.error;
+            if (uploadError) {
+              throw new Error(
+                uploadError.message,
+              );
+            }
 
-      if (uploadError) {
-        throw new Error(
-          uploadError.message,
-        );
-      }
+            const initialStatus =
+              automatedReviewEnabled
+                ? "reviewing"
+                : "ready_for_review";
 
-      const {
-        data: variant,
-        error: variantError,
-      } = await supabase
-        .from("artwork_variants")
-        .insert({
-          artwork_code: artworkCode,
-          job_id: job.id,
-          variant_index: variantIndex,
-          storage_bucket:
-            "nobody-private",
-          storage_path: finalPath,
-          thumbnail_storage_path:
-            thumbnailPath,
-          mime_type: "image/png",
-          width:
-            NOBODY_BRAND
-              .generationCanvas.width,
-          height:
-            NOBODY_BRAND
-              .generationCanvas.height,
-          sha256: result.sha256,
-          image_model: generation.model,
-          image_model_snapshot:
-            generation.model,
-          prompt: finalPrompt,
-          negative_prompt:
-            promptResult.negativePrompt,
-          status: "ready_for_review",
-          metadata: {
-            raw_model_storage_path:
-              rawPath,
-            model_canvas:
-              generation.modelSize,
-            canonical_canvas:
-              NOBODY_BRAND
-                .generationCanvas.size,
-            original_text_restored:
-              true,
-            original_non_character_pixels_restored:
-              true,
-            crop_policy:
-              "no-destructive-crop",
+            const initialReviewStatus =
+              automatedReviewEnabled
+                ? "running"
+                : "skipped";
+
+            const {
+              data: variant,
+              error: variantError,
+            } = await supabase
+              .from(
+                "artwork_variants",
+              )
+              .insert({
+                artwork_code:
+                  artworkCode,
+
+                job_id: job.id,
+
+                variant_index:
+                  variantIndex,
+
+                storage_bucket:
+                  "nobody-private",
+
+                storage_path:
+                  artworkPath,
+
+                thumbnail_storage_path:
+                  thumbnailPath,
+
+                raw_storage_path:
+                  rawPath,
+
+                mime_type:
+                  "image/png",
+
+                width:
+                  NOBODY_BRAND
+                    .generationCanvas
+                    .width,
+
+                height:
+                  NOBODY_BRAND
+                    .generationCanvas
+                    .height,
+
+                sha256:
+                  result.sha256,
+
+                image_model:
+                  generation.model,
+
+                image_model_snapshot:
+                  generation.model,
+
+                provider_request_id:
+                  generation.requestId,
+
+                reference_sha256:
+                  generation
+                    .referenceSha256,
+
+                reference_version:
+                  reference.version,
+
+                technical_validation:
+                  result
+                    .technicalValidation,
+
+                prompt:
+                  promptResult.prompt,
+
+                negative_prompt:
+                  promptResult
+                    .negativePrompt,
+
+                status:
+                  initialStatus,
+
+                automated_review_status:
+                  initialReviewStatus,
+
+                metadata: {
+                  output_kind:
+                    "clean_master",
+
+                  model_canvas:
+                    generation
+                      .modelSize,
+
+                  canonical_canvas:
+                    NOBODY_BRAND
+                      .generationCanvas
+                      .size,
+
+                  typography_present_by_design:
+                    false,
+
+                  template_applied:
+                    false,
+
+                  crop_policy:
+                    "no-destructive-crop",
+                },
+              })
+              .select(
+                "id,artwork_code,status",
+              )
+              .single();
+
+            if (
+              variantError ||
+              !variant
+            ) {
+              throw new Error(
+                variantError
+                  ?.message ||
+                  "Could not save an artwork variant.",
+              );
+            }
+
+            let finalStatus =
+              initialStatus;
+
+            let visualScore:
+              number | null = null;
+
+            let reviewSummary:
+              string | null = null;
+
+            if (
+              automatedReviewEnabled &&
+              referenceAssets
+            ) {
+              try {
+                const automatedReview =
+                  await reviewNobodyArtwork(
+                    {
+                      canonicalCover:
+                        referenceAssets
+                          .originalCover,
+
+                      artwork:
+                        result
+                          .cleanArtworkImage,
+
+                      archetype:
+                        archetypeDefinition,
+                    },
+                  );
+
+                visualScore =
+                  automatedReview
+                    .result.score;
+
+                reviewSummary =
+                  automatedReview
+                    .result.summary;
+
+                finalStatus =
+                  automatedReview
+                    .result
+                    .approvedForHumanReview
+                    ? "ready_for_review"
+                    : "auto_rejected";
+
+                const {
+                  error:
+                    reviewInsertError,
+                } = await supabase
+                  .from(
+                    "quality_reviews",
+                  )
+                  .insert({
+                    artwork_variant_id:
+                      variant.id,
+
+                    reviewer_model:
+                      automatedReview
+                        .model,
+
+                    reviewer_model_snapshot:
+                      automatedReview
+                        .model,
+
+                    review_version:
+                      automatedReview
+                        .reviewVersion,
+
+                    score:
+                      automatedReview
+                        .result.score,
+
+                    approved_for_review:
+                      automatedReview
+                        .result
+                        .approvedForHumanReview,
+
+                    hard_blockers:
+                      automatedReview
+                        .result
+                        .hardBlockers,
+
+                    category_scores:
+                      automatedReview
+                        .result
+                        .categoryScores,
+
+                    checklist:
+                      automatedReview
+                        .result
+                        .checklist,
+
+                    issues:
+                      automatedReview
+                        .result
+                        .issues,
+
+                    recommendation:
+                      automatedReview
+                        .result
+                        .recommendation,
+
+                    summary:
+                      automatedReview
+                        .result
+                        .summary,
+
+                    provider_request_id:
+                      automatedReview
+                        .requestId,
+
+                    provider_response_id:
+                      automatedReview
+                        .responseId,
+
+                    usage:
+                      automatedReview
+                        .usage ?? {},
+
+                    raw_response:
+                      automatedReview
+                        .rawResponse,
+                  });
+
+                if (
+                  reviewInsertError
+                ) {
+                  throw new Error(
+                    reviewInsertError
+                      .message,
+                  );
+                }
+
+                const {
+                  error:
+                    reviewUpdateError,
+                } = await supabase
+                  .from(
+                    "artwork_variants",
+                  )
+                  .update({
+                    status:
+                      finalStatus,
+
+                    visual_score:
+                      automatedReview
+                        .result.score,
+
+                    automated_review_status:
+                      automatedReview
+                        .result
+                        .approvedForHumanReview
+                        ? "passed"
+                        : "failed",
+
+                    automated_review_model:
+                      automatedReview
+                        .model,
+
+                    automated_reviewed_at:
+                      new Date()
+                        .toISOString(),
+
+                    rejection_reason:
+                      automatedReview
+                        .result
+                        .approvedForHumanReview
+                        ? null
+                        : automatedReview
+                            .result
+                            .summary,
+                  })
+                  .eq(
+                    "id",
+                    variant.id,
+                  );
+
+                if (
+                  reviewUpdateError
+                ) {
+                  throw new Error(
+                    reviewUpdateError
+                      .message,
+                  );
+                }
+              } catch (
+                reviewError
+              ) {
+                finalStatus =
+                  "auto_review_failed";
+
+                reviewSummary =
+                  reviewError instanceof
+                  Error
+                    ? reviewError.message
+                    : "Automated review failed.";
+
+                await supabase
+                  .from(
+                    "artwork_variants",
+                  )
+                  .update({
+                    status:
+                      finalStatus,
+
+                    automated_review_status:
+                      "error",
+
+                    automated_reviewed_at:
+                      new Date()
+                        .toISOString(),
+
+                    rejection_reason:
+                      reviewSummary,
+                  })
+                  .eq(
+                    "id",
+                    variant.id,
+                  );
+              }
+            }
+
+            const [
+              imageUrl,
+              thumbnailUrl,
+            ] = await Promise.all([
+              signedUrl(
+                supabase,
+                artworkPath,
+              ),
+
+              signedUrl(
+                supabase,
+                thumbnailPath,
+              ),
+            ]);
+
+            return {
+              id: variant.id,
+              artworkCode,
+              status:
+                finalStatus,
+              imageUrl,
+              thumbnailUrl,
+              width:
+                NOBODY_BRAND
+                  .generationCanvas
+                  .width,
+              height:
+                NOBODY_BRAND
+                  .generationCanvas
+                  .height,
+              sha256:
+                result.sha256,
+              visualScore,
+              reviewSummary,
+            };
           },
-        })
-        .select(
-          "id,artwork_code,status",
-        )
-        .single();
+        ),
+      );
 
-      if (variantError || !variant) {
-        throw new Error(
-          variantError?.message ||
-            "Could not save an artwork variant.",
-        );
-      }
-
-      const [
-        signedImage,
-        signedThumbnail,
-      ] = await Promise.all([
-        supabase.storage
-          .from("nobody-private")
-          .createSignedUrl(
-            finalPath,
-            60 * 60,
-          ),
-
-        supabase.storage
-          .from("nobody-private")
-          .createSignedUrl(
-            thumbnailPath,
-            60 * 60,
-          ),
-      ]);
-
-      if (
-        signedImage.error ||
-        signedThumbnail.error
-      ) {
-        throw new Error(
-          signedImage.error?.message ||
-            signedThumbnail.error
-              ?.message ||
-            "Could not create preview URLs.",
-        );
-      }
-
-      createdVariants.push({
-        id: variant.id,
-        artworkCode:
-          variant.artwork_code,
-        status: variant.status,
-        imageUrl:
-          signedImage.data.signedUrl,
-        thumbnailUrl:
-          signedThumbnail.data
-            .signedUrl,
-        width:
-          NOBODY_BRAND
-            .generationCanvas.width,
-        height:
-          NOBODY_BRAND
-            .generationCanvas.height,
-        sha256: result.sha256,
-      });
-    }
+    const hasReviewErrors =
+      createdVariants.some(
+        (variant) =>
+          variant.status ===
+          "auto_review_failed",
+      );
 
     await Promise.all([
       supabase
         .from("generation_jobs")
         .update({
-          status: "generated",
+          status:
+            hasReviewErrors
+              ? "partially_failed"
+              : "completed",
+
           image_model:
             generation.model,
+
           image_model_snapshot:
             generation.model,
+
+          provider_request_id:
+            generation.requestId,
+
           completed_at:
             new Date().toISOString(),
+
           metadata: {
             canonical_output:
               NOBODY_BRAND
-                .generationCanvas.size,
+                .generationCanvas
+                .size,
+
             model_canvas:
               generation.modelSize,
-            text_policy:
-              "original-controlled-text-restored-after-generation",
-            edit_scope:
-              "character-only",
+
+            reference_policy:
+              "server-attached-canonical-cover-and-mask-detail",
+
+            reference_sha256:
+              generation
+                .referenceSha256,
+
+            typography_policy:
+              "separate-template-layer",
+
+            storage_bucket:
+              "nobody-private",
+
             crop_policy:
               "no-destructive-crop",
-            usage: generation.usage,
+
+            automated_review_enabled:
+              automatedReviewEnabled,
+
+            usage:
+              generation.usage,
           },
         })
         .eq("id", job.id),
 
       supabase
-        .from("studio_audit_log")
+        .from(
+          "studio_audit_log",
+        )
         .insert({
           actor_user_id:
             access.admin.userId,
+
           action:
             "generation.completed",
+
           entity_type:
             "generation_job",
+
           entity_id: job.id,
+
           details: {
             archetype,
+
             variations:
-              createdVariants.length,
+              createdVariants
+                .length,
+
             model:
               generation.model,
+
             quality,
+
+            reference_sha256:
+              generation
+                .referenceSha256,
+
+            automated_review_enabled:
+              automatedReviewEnabled,
           },
         }),
     ]);
@@ -560,10 +1121,20 @@ export async function POST(request: Request) {
       jobId: job.id,
       model: generation.model,
       quality,
+
       canonicalSize:
         NOBODY_BRAND
           .generationCanvas.size,
-      variants: createdVariants,
+
+      referenceId:
+        NOBODY_BRAND
+          .canonicalReference.id,
+
+      referenceSha256:
+        generation.referenceSha256,
+
+      variants:
+        createdVariants,
     });
   } catch (error) {
     const message =
@@ -578,14 +1149,17 @@ export async function POST(request: Request) {
           status: "failed",
           error_code:
             "GENERATION_FAILED",
-          error_message: message,
+          error_message:
+            message,
           completed_at:
             new Date().toISOString(),
         })
         .eq("id", job.id),
 
       supabase
-        .from("studio_audit_log")
+        .from(
+          "studio_audit_log",
+        )
         .insert({
           actor_user_id:
             access.admin.userId,
@@ -604,12 +1178,11 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "GENERATION_FAILED",
+        error:
+          "GENERATION_FAILED",
         message,
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }

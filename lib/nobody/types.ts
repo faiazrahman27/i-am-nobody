@@ -27,6 +27,16 @@ export type ImageQuality = "low" | "medium" | "high";
 
 export type ArtworkOutputFormat = "png" | "webp" | "jpeg";
 
+export type TemplateType =
+  | "clean_artwork"
+  | "book_cover"
+  | "social_4x5"
+  | "social_square"
+  | "story_9x16"
+  | "gallery_thumbnail"
+  | "poster"
+  | "collectible_card";
+
 export type NormalizedRectangle = Readonly<{
   x: number;
   y: number;
@@ -74,62 +84,43 @@ export type ArchetypeDefinition = Readonly<{
 export type BrandRuleSet = Readonly<{
   version: string;
   projectName: string;
-
   canonicalQuestion: Readonly<Record<Locale, string>>;
-
   canonicalReference: CanonicalReference;
-
   generationCanvas: GenerationCanvas;
-
   modelCanvas: GenerationCanvas;
-
   composition: Readonly<{
     figureVisibleFrom: string;
     posture: string;
     alignment: string;
-
     subjectBounds: NormalizedRectangle;
     helmetBounds: NormalizedRectangle;
-
     typographySafeZones: Readonly<{
       title: NormalizedRectangle;
       subtitle: NormalizedRectangle;
       author: NormalizedRectangle;
     }>;
   }>;
-
   mask: Readonly<{
     required: readonly string[];
     forbidden: readonly string[];
   }>;
-
   atmosphere: Readonly<{
     required: readonly string[];
     forbidden: readonly string[];
   }>;
-
   globalForbiddenElements: readonly string[];
-
   maximumProps: number;
-
   defaultBackgroundVariant: BackgroundVariantSlug;
 }>;
 
 export type PromptBuildInput = Readonly<{
   archetype: ArchetypeSlug;
-
   clothingNotes?: string;
-
   moodNotes?: string;
-
   backgroundVariant?: BackgroundVariantSlug;
-
   prop?: string | null;
-
   variationDirection?: string;
-
   quality?: ImageQuality;
-
   outputFormat?: ArtworkOutputFormat;
 }>;
 
@@ -141,15 +132,10 @@ export type PromptValidationIssue = Readonly<{
 
 export type PromptBuildSuccess = Readonly<{
   ok: true;
-
   brandVersion: string;
-
   promptVersion: string;
-
   referenceId: string;
-
   archetype: ArchetypeDefinition;
-
   generation: Readonly<{
     size: `${number}x${number}`;
     width: number;
@@ -158,11 +144,8 @@ export type PromptBuildSuccess = Readonly<{
     outputFormat: ArtworkOutputFormat;
     background: "opaque";
   }>;
-
   prompt: string;
-
   negativePrompt: string;
-
   qualityChecklist: readonly string[];
 }>;
 
@@ -174,3 +157,37 @@ export type PromptBuildFailure = Readonly<{
 export type PromptBuildResult =
   | PromptBuildSuccess
   | PromptBuildFailure;
+
+export type QualityCategoryScores = Readonly<{
+  universeConsistency: number;
+  composition: number;
+  mask: number;
+  anonymity: number;
+  background: number;
+  archetypeClarity: number;
+  restraint: number;
+  editorialQuality: number;
+  templateSpace: number;
+}>;
+
+export type QualityChecklistItem = Readonly<{
+  rule: string;
+  passed: boolean;
+  score: number;
+  note: string;
+}>;
+
+export type QualityReviewResult = Readonly<{
+  score: number;
+  approvedForHumanReview: boolean;
+  hardBlockers: readonly string[];
+  categoryScores: QualityCategoryScores;
+  checklist: readonly QualityChecklistItem[];
+  issues: readonly string[];
+  recommendation:
+    | "auto_reject"
+    | "regenerate"
+    | "send_to_human_review"
+    | "approve_with_notes";
+  summary: string;
+}>;
