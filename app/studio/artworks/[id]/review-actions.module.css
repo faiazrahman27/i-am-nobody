@@ -1,26 +1,47 @@
 .regenerationBox {
+  position: relative;
   display: grid;
   gap: 14px;
-  margin-top: 24px;
-  border-top: 1px solid
-    rgba(255, 255, 255, 0.1);
-  padding-top: 22px;
+  margin-top: 26px;
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(118, 84, 216, 0.055),
+      transparent 42%
+    ),
+    rgba(255, 255, 255, 0.012);
+  padding: 18px;
   font-family: var(--font-sans);
+}
+
+.regenerationBox::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--brand-violet),
+    transparent
+  );
 }
 
 .regenerationBox h3 {
   margin: 5px 0 0;
   color: #fff;
-  font-size: 1rem;
+  font-size: 1.05rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 .regenerationBox p {
   margin-top: 8px;
-  color:
-    rgba(242, 238, 230, 0.62);
-  font-size: 0.74rem;
+  color: rgba(242, 238, 230, 0.6);
+  font-size: 0.71rem;
   line-height: 1.65;
 }
 
@@ -30,28 +51,46 @@
 }
 
 .regenerationBox label > span {
-  color:
-    rgba(242, 238, 230, 0.82);
-  font-size: 0.64rem;
+  color: rgba(242, 238, 230, 0.8);
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .regenerationBox select {
-  min-height: 46px;
+  min-height: 47px;
   width: 100%;
   border: 1px solid
-    rgba(255, 255, 255, 0.14);
+    rgba(255, 255, 255, 0.13);
   border-radius: 0;
   background: #080808;
   color: #fff;
   padding: 0 13px;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.regenerationBox select:focus {
+  border-color:
+    rgba(118, 84, 216, 0.72);
+  background: #0b0b0b;
+  box-shadow:
+    0 0 0 4px
+    rgba(118, 84, 216, 0.08);
 }
 
 .regenerationBox small {
-  color:
-    rgba(157, 148, 136, 0.76);
-  font-size: 0.64rem;
+  color: rgba(157, 148, 136, 0.72);
+  font-size: 0.61rem;
   line-height: 1.55;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .regenerationBox select {
+    transition: none;
+  }
 }

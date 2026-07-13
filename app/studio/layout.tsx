@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import StudioChrome from "./components/StudioChrome";
 
 export const metadata: Metadata = {
   title: "I AM NOBODY Image Studio",
 
-  description: "Private artwork creation and review for I AM NOBODY.",
+  description:
+    "Private artwork creation and review for I AM NOBODY.",
 
   robots: {
     index: false,
@@ -23,5 +25,5 @@ export default function StudioLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return children;
+  return <StudioChrome>{children}</StudioChrome>;
 }

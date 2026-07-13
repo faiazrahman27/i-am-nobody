@@ -1,0 +1,680 @@
+.shell {
+  position: relative;
+  min-height: 100svh;
+  isolation: isolate;
+  background: var(--brand-black);
+}
+
+.iridescentLine {
+  position: fixed;
+  z-index: 100;
+  inset: 0 0 auto;
+  height: 3px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--brand-cyan),
+    var(--brand-green),
+    var(--brand-gold-light),
+    var(--brand-rose),
+    var(--brand-violet),
+    var(--brand-cyan)
+  );
+  background-size: 220% 100%;
+  animation: iridescentDrift 9s linear infinite;
+}
+
+.navDock {
+  position: sticky;
+  z-index: 80;
+  top: 0;
+  padding: 3px clamp(16px, 3vw, 42px) 0;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 5, 5, 0.98),
+    rgba(5, 5, 5, 0.82)
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.navbar {
+  position: relative;
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 0.8fr)
+    minmax(440px, 1.4fr)
+    minmax(230px, 0.8fr);
+  align-items: center;
+  gap: clamp(20px, 3vw, 44px);
+  width: min(100%, 1440px);
+  min-height: 86px;
+  margin: 0 auto;
+  border-bottom: 1px solid
+    rgba(255, 255, 255, 0.1);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  width: fit-content;
+  color: #fff;
+}
+
+.brandMark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 48px;
+  flex: 0 0 auto;
+  border: 1px solid
+    rgba(224, 191, 129, 0.58);
+  border-radius:
+    45% 45% 40% 40% /
+    38% 38% 58% 58%;
+  background:
+    radial-gradient(
+      circle at 34% 22%,
+      rgba(41, 199, 214, 0.55),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 72% 40%,
+      rgba(118, 84, 216, 0.52),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 46% 78%,
+      rgba(224, 191, 129, 0.44),
+      transparent 36%
+    ),
+    #121212;
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.6),
+    0 10px 26px rgba(0, 0, 0, 0.26);
+  overflow: hidden;
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 260ms ease,
+    box-shadow 260ms ease;
+}
+
+.brandMark::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid
+    rgba(255, 255, 255, 0.12);
+  border-radius: inherit;
+}
+
+.brandMark > span {
+  width: 74%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.78),
+    transparent
+  );
+  transform: rotate(-11deg);
+}
+
+.brand:hover .brandMark {
+  transform: translateY(-2px) rotate(1.5deg);
+  border-color: var(--brand-gold-light);
+  box-shadow:
+    inset 0 0 0 3px rgba(0, 0, 0, 0.6),
+    0 15px 38px rgba(118, 84, 216, 0.16);
+}
+
+.brandCopy {
+  display: grid;
+  gap: 4px;
+}
+
+.brandCopy strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  line-height: 1;
+}
+
+.brandCopy small {
+  color: rgba(224, 191, 129, 0.72);
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.navigation {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 0;
+}
+
+.navLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px clamp(10px, 1.4vw, 18px);
+  color: rgba(242, 238, 230, 0.58);
+  font-family: var(--font-sans);
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.navLink::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: -1px;
+  left: 14px;
+  height: 1px;
+  background: var(--brand-gold-light);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 220ms ease;
+}
+
+.navLink svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+.navLink > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.navLink strong {
+  color: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.navLink small {
+  color: rgba(157, 148, 136, 0.58);
+  font-size: 0.57rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.navLink:hover,
+.navLinkActive {
+  color: var(--brand-gold-light);
+  background: rgba(224, 191, 129, 0.045);
+}
+
+.navLink:hover {
+  transform: translateY(-1px);
+}
+
+.navLink:hover::after,
+.navLinkActive::after {
+  transform: scaleX(1);
+}
+
+.accountArea {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 13px;
+  min-width: 0;
+}
+
+.accountCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  text-align: right;
+  font-family: var(--font-sans);
+}
+
+.accountCopy span {
+  max-width: 180px;
+  overflow: hidden;
+  color: rgba(242, 238, 230, 0.84);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.accountCopy small {
+  color: rgba(157, 148, 136, 0.66);
+  font-size: 0.57rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.signOutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  flex: 0 0 auto;
+  border: 1px solid
+    rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(242, 238, 230, 0.68);
+  padding: 0 13px;
+  font-family: var(--font-sans);
+  font-size: 0.59rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.signOutButton svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.signOutButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color:
+    rgba(208, 138, 155, 0.65);
+  background: rgba(208, 138, 155, 0.08);
+  color: #e8b9c5;
+}
+
+.signOutButton:disabled {
+  cursor: wait;
+  opacity: 0.52;
+}
+
+.menuButton {
+  display: none;
+}
+
+.welcomeBar {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns:
+    auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  width: min(
+    calc(100% - clamp(32px, 6vw, 84px)),
+    1440px
+  );
+  margin: 18px auto 0;
+  border: 1px solid
+    rgba(224, 191, 129, 0.17);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(224, 191, 129, 0.065),
+      rgba(118, 84, 216, 0.03) 60%,
+      transparent
+    ),
+    rgba(12, 12, 12, 0.9);
+  box-shadow:
+    0 18px 54px rgba(0, 0, 0, 0.16);
+  padding: 14px 17px;
+  animation:
+    welcomeIn
+    520ms
+    cubic-bezier(0.2, 0.8, 0.2, 1)
+    both;
+}
+
+.welcomeSymbol {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid
+    rgba(224, 191, 129, 0.34);
+  border-radius: 50%;
+  background: rgba(224, 191, 129, 0.05);
+}
+
+.welcomeSymbol::before,
+.welcomeSymbol::after,
+.welcomeSymbol > span {
+  content: "";
+  position: absolute;
+  background: var(--brand-gold-light);
+}
+
+.welcomeSymbol::before {
+  width: 13px;
+  height: 1px;
+}
+
+.welcomeSymbol::after {
+  width: 1px;
+  height: 13px;
+}
+
+.welcomeSymbol > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #fff 0 18%,
+    var(--brand-gold-light) 20% 46%,
+    transparent 50%
+  );
+}
+
+.welcomeCopy {
+  display: grid;
+  gap: 4px;
+  font-family: var(--font-sans);
+}
+
+.welcomeCopy strong {
+  color: rgba(242, 238, 230, 0.94);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.welcomeCopy p {
+  color: rgba(157, 148, 136, 0.76);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.welcomeMeta {
+  display: grid;
+  gap: 4px;
+  min-width: 190px;
+  border-left: 1px solid
+    rgba(255, 255, 255, 0.1);
+  padding-left: 17px;
+  text-align: right;
+  font-family: var(--font-sans);
+}
+
+.welcomeMeta span {
+  color: var(--brand-gold-light);
+  font-size: 0.61rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.welcomeMeta small {
+  color: rgba(157, 148, 136, 0.62);
+  font-size: 0.58rem;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.content :global(main > header) {
+  display: none !important;
+}
+
+@keyframes iridescentDrift {
+  from {
+    background-position: 0% 50%;
+  }
+
+  to {
+    background-position: 220% 50%;
+  }
+}
+
+@keyframes welcomeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1180px) {
+  .navbar {
+    grid-template-columns:
+      minmax(200px, 0.8fr)
+      minmax(360px, 1.2fr)
+      auto;
+  }
+
+  .navLink small,
+  .accountCopy {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .navDock {
+    padding-inline: 16px;
+  }
+
+  .navbar {
+    grid-template-columns:
+      minmax(0, 1fr) auto auto;
+    min-height: 76px;
+  }
+
+  .menuButton {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    order: 2;
+    border: 1px solid
+      rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.025);
+    cursor: pointer;
+  }
+
+  .menuButton span {
+    display: block;
+    width: 16px;
+    height: 1px;
+    background: rgba(242, 238, 230, 0.8);
+    transition: transform 180ms ease;
+  }
+
+  .menuButton[aria-expanded="true"]
+    span:first-child {
+    transform: translateY(3px) rotate(45deg);
+  }
+
+  .menuButton[aria-expanded="true"]
+    span:last-child {
+    transform: translateY(-3px) rotate(-45deg);
+  }
+
+  .navigation {
+    position: absolute;
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    max-height: 0;
+    border-bottom: 1px solid transparent;
+    background: rgba(7, 7, 7, 0.98);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition:
+      max-height 240ms ease,
+      opacity 180ms ease,
+      transform 220ms ease,
+      border-color 180ms ease;
+  }
+
+  .navigationOpen {
+    max-height: 310px;
+    border-color:
+      rgba(255, 255, 255, 0.12);
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .navLink {
+    min-height: 74px;
+    border: 1px solid
+      rgba(255, 255, 255, 0.06);
+    padding: 15px 18px;
+  }
+
+  .navLink small {
+    display: block;
+  }
+
+  .accountArea {
+    order: 3;
+  }
+
+  .accountCopy {
+    display: none;
+  }
+
+  .welcomeBar {
+    width: calc(100% - 32px);
+    grid-template-columns:
+      auto minmax(0, 1fr);
+  }
+
+  .welcomeMeta {
+    grid-column: 2;
+    min-width: 0;
+    border-left: 0;
+    padding-left: 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .navbar {
+    gap: 9px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brandMark {
+    width: 31px;
+    height: 40px;
+  }
+
+  .brandCopy strong {
+    font-size: 1.18rem;
+    letter-spacing: 0.09em;
+  }
+
+  .brandCopy small {
+    display: none;
+  }
+
+  .signOutButton {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .signOutButton svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .navigationOpen {
+    max-height: 420px;
+  }
+
+  .welcomeBar {
+    align-items: start;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 13px;
+  }
+
+  .welcomeCopy strong {
+    font-size: 0.7rem;
+  }
+
+  .welcomeCopy p {
+    font-size: 0.64rem;
+  }
+
+  .welcomeMeta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iridescentLine,
+  .welcomeBar {
+    animation: none;
+  }
+
+  .brandMark,
+  .navLink,
+  .navLink::after,
+  .signOutButton,
+  .menuButton span,
+  .navigation {
+    transition: none;
+  }
+}

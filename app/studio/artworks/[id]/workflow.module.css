@@ -1,6 +1,7 @@
 .comparisonGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -9,23 +10,50 @@
 }
 
 .comparisonGrid figcaption {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid
+    rgba(255, 255, 255, 0.1);
   border-top: 0;
-  color: rgba(157, 148, 136, 0.82);
-  padding: 10px 12px;
+  background: rgba(8, 8, 8, 0.96);
+  color: rgba(157, 148, 136, 0.78);
+  padding: 11px 12px;
   font-family: var(--font-sans);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .qualityPanel,
 .productionPanel,
 .renderLibrary {
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  background: rgba(10, 10, 10, 0.92);
-  padding: clamp(24px, 4vw, 40px);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid
+    rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.022),
+      rgba(255, 255, 255, 0.005)
+    ),
+    rgba(8, 8, 8, 0.94);
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.qualityPanel::before,
+.productionPanel::before,
+.renderLibrary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 35%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--brand-gold-light),
+    transparent
+  );
 }
 
 .qualityPanel h2,
@@ -33,10 +61,11 @@
   margin: 0;
   color: #fff;
   font-family: var(--font-display);
-  font-size: clamp(2.7rem, 5vw, 4.8rem);
+  font-size:
+    clamp(3.2rem, 5.8vw, 5.4rem);
   font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 0.95;
+  letter-spacing: -0.005em;
+  line-height: 0.84;
   text-transform: uppercase;
 }
 
@@ -48,10 +77,12 @@
 }
 
 .qualityHeader > span {
+  flex: 0 0 auto;
+  border: 1px solid currentColor;
   border-radius: 999px;
   padding: 7px 10px;
   font-family: var(--font-sans);
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -59,34 +90,69 @@
 
 .mutedCopy {
   margin-top: 18px;
-  color: rgba(242, 238, 230, 0.64);
+  color: rgba(242, 238, 230, 0.62);
   font-family: var(--font-sans);
-  font-size: 0.82rem;
-  line-height: 1.7;
+  font-size: 0.78rem;
+  line-height: 1.72;
 }
 
 .scoreGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
   gap: 1px;
   margin-top: 26px;
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    rgba(255, 255, 255, 0.09);
 }
 
 .scoreGrid > div {
+  position: relative;
   display: grid;
-  gap: 8px;
-  min-height: 86px;
-  background: #0a0a0a;
+  gap: 9px;
+  min-height: 92px;
+  overflow: hidden;
+  background: #090909;
   padding: 14px;
   font-family: var(--font-sans);
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.scoreGrid > div::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -45px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(224, 191, 129, 0.1),
+    transparent 68%
+  );
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.scoreGrid > div:hover {
+  z-index: 1;
+  transform: translateY(-2px);
+  background: #0c0c0c;
+}
+
+.scoreGrid > div:hover::after {
+  opacity: 1;
 }
 
 .scoreGrid span {
-  color: rgba(157, 148, 136, 0.76);
-  font-size: 0.58rem;
+  color: rgba(157, 148, 136, 0.74);
+  font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.07em;
+  line-height: 1.45;
   text-transform: uppercase;
 }
 
@@ -94,59 +160,84 @@
   align-self: end;
   color: var(--brand-gold-light);
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 400;
+  line-height: 0.9;
 }
 
 .issueBox {
   margin-top: 22px;
+  border: 1px solid
+    rgba(208, 138, 155, 0.26);
   border-left: 2px solid #e4a9b7;
-  background: rgba(208, 138, 155, 0.08);
+  background:
+    rgba(208, 138, 155, 0.07);
   padding: 16px 18px;
-  font-family: var(--font-sans);
 }
 
 .issueBox h3 {
   color: #e4a9b7;
-  font-size: 0.68rem;
+  font-size: 0.63rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .issueBox ul {
   margin: 10px 0 0 18px;
-  color: rgba(242, 238, 230, 0.72);
-  font-size: 0.76rem;
+  color: rgba(242, 238, 230, 0.7);
+  font-size: 0.72rem;
   line-height: 1.65;
 }
 
 .checklist {
   margin-top: 22px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid
+    rgba(255, 255, 255, 0.09);
   padding-top: 18px;
   font-family: var(--font-sans);
 }
 
 .checklist summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   color: var(--brand-gold-light);
-  font-size: 0.68rem;
+  font-size: 0.63rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
+.checklist summary::after {
+  content: "+";
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.checklist[open] summary::after {
+  content: "−";
+}
+
 .checklist ol {
   display: grid;
-  gap: 12px;
-  margin: 18px 0 0 20px;
+  gap: 10px;
+  margin: 18px 0 0;
+  list-style: none;
 }
 
 .checklist li {
-  color: rgba(242, 238, 230, 0.72);
-  padding-left: 4px;
-  font-size: 0.72rem;
-  line-height: 1.55;
+  display: grid;
+  gap: 4px;
+  border: 1px solid
+    rgba(255, 255, 255, 0.07);
+  background:
+    rgba(255, 255, 255, 0.012);
+  color: rgba(242, 238, 230, 0.69);
+  padding: 12px;
+  font-size: 0.7rem;
+  line-height: 1.52;
 }
 
 .checklist li strong,
@@ -156,27 +247,31 @@
 }
 
 .checklist li strong {
-  color: rgba(242, 238, 230, 0.92);
-  margin-bottom: 4px;
+  color: rgba(242, 238, 230, 0.9);
+  margin-bottom: 2px;
+  font-size: 0.61rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .checklist li small {
-  color: rgba(157, 148, 136, 0.78);
-  margin-top: 4px;
+  color: rgba(157, 148, 136, 0.74);
+  margin-top: 3px;
 }
 
 .productionBlock {
   display: grid;
   gap: 12px;
   margin-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  border-top: 1px solid
+    rgba(255, 255, 255, 0.09);
   padding-top: 22px;
   font-family: var(--font-sans);
 }
 
 .productionBlock small {
-  color: rgba(157, 148, 136, 0.74);
-  font-size: 0.66rem;
+  color: rgba(157, 148, 136, 0.7);
+  font-size: 0.63rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
@@ -187,53 +282,108 @@
 }
 
 .productionField span {
-  color: rgba(242, 238, 230, 0.82);
-  font-size: 0.68rem;
+  color: rgba(242, 238, 230, 0.8);
+  font-size: 0.63rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .productionField select {
-  min-height: 48px;
+  min-height: 49px;
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid
+    rgba(255, 255, 255, 0.13);
   border-radius: 0;
   background: #080808;
   color: #fff;
   padding: 0 14px;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.productionField select:focus {
+  border-color:
+    rgba(224, 191, 129, 0.68);
+  background: #0b0b0b;
+  box-shadow:
+    0 0 0 4px
+    rgba(224, 191, 129, 0.06);
 }
 
 .productionButton,
 .productionButtonSecondary,
 .productionButtonDanger {
-  min-height: 48px;
+  min-height: 49px;
   border-radius: 0;
   padding: 0 18px;
   font-family: var(--font-sans);
-  font-size: 0.66rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .productionButton {
-  border: 1px solid var(--brand-gold-light);
+  border: 1px solid
+    var(--brand-gold-light);
   background: var(--brand-gold-light);
-  color: #080808;
+  color: #070707;
+  box-shadow:
+    0 14px 38px
+    rgba(224, 191, 129, 0.09);
 }
 
 .productionButtonSecondary {
-  border: 1px solid rgba(224, 191, 129, 0.5);
-  background: transparent;
+  border: 1px solid
+    rgba(224, 191, 129, 0.45);
+  background:
+    rgba(224, 191, 129, 0.02);
   color: var(--brand-gold-light);
 }
 
 .productionButtonDanger {
-  border: 1px solid rgba(228, 169, 183, 0.5);
-  background: transparent;
+  border: 1px solid
+    rgba(228, 169, 183, 0.44);
+  background:
+    rgba(208, 138, 155, 0.02);
   color: #e4a9b7;
+}
+
+.productionButton:hover:not(:disabled),
+.productionButtonSecondary:hover:not(:disabled),
+.productionButtonDanger:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.productionButton:hover:not(:disabled) {
+  background: #f1d49d;
+  box-shadow:
+    0 20px 52px
+    rgba(224, 191, 129, 0.16);
+}
+
+.productionButtonSecondary:hover:not(:disabled) {
+  border-color:
+    var(--brand-gold-light);
+  background:
+    rgba(224, 191, 129, 0.07);
+}
+
+.productionButtonDanger:hover:not(:disabled) {
+  border-color: #e4a9b7;
+  background:
+    rgba(208, 138, 155, 0.07);
 }
 
 .productionButton:disabled,
@@ -241,7 +391,7 @@
 .productionButtonDanger:disabled,
 .productionField select:disabled {
   cursor: not-allowed;
-  opacity: 0.48;
+  opacity: 0.45;
 }
 
 .renderLibrary {
@@ -250,14 +400,28 @@
 
 .renderGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
 .renderGrid article {
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid
+    rgba(255, 255, 255, 0.09);
   background: #080808;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.renderGrid article:hover {
+  transform: translateY(-4px);
+  border-color:
+    rgba(224, 191, 129, 0.3);
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.24);
 }
 
 .renderGrid img {
@@ -271,20 +435,20 @@
 .renderGrid article > div {
   display: grid;
   gap: 5px;
-  padding: 11px;
+  padding: 12px;
   font-family: var(--font-sans);
 }
 
 .renderGrid strong {
   color: rgba(242, 238, 230, 0.9);
-  font-size: 0.66rem;
+  font-size: 0.63rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .renderGrid small {
-  color: rgba(157, 148, 136, 0.76);
-  font-size: 0.6rem;
+  color: rgba(157, 148, 136, 0.72);
+  font-size: 0.57rem;
 }
 
 @media (max-width: 680px) {
@@ -296,5 +460,16 @@
 
   .qualityHeader {
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scoreGrid > div,
+  .productionField select,
+  .productionButton,
+  .productionButtonSecondary,
+  .productionButtonDanger,
+  .renderGrid article {
+    transition: none;
   }
 }
