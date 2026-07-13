@@ -155,6 +155,39 @@ async function signedUrl(
   return data.signedUrl;
 }
 
+async function removePrivateObjects(
+  supabase:
+    ReturnType<
+      typeof createSupabaseAdminClient
+    >,
+  paths: readonly string[],
+) {
+  const uniquePaths = Array.from(
+    new Set(
+      paths.filter(
+        (path): path is string =>
+          Boolean(path),
+      ),
+    ),
+  );
+
+  if (uniquePaths.length === 0) {
+    return;
+  }
+
+  const { error } =
+    await supabase.storage
+      .from("nobody-private")
+      .remove(uniquePaths);
+
+  if (error) {
+    console.error(
+      "[I AM NOBODY] Could not clean up incomplete storage objects.",
+      error,
+    );
+  }
+}
+
 export async function POST(
   request: Request,
 ) {
@@ -629,6 +662,15 @@ export async function POST(
               )?.error;
 
             if (uploadError) {
+              await removePrivateObjects(
+                supabase,
+                [
+                  rawPath,
+                  artworkPath,
+                  thumbnailPath,
+                ],
+              );
+
               throw new Error(
                 uploadError.message,
               );
@@ -753,6 +795,15 @@ export async function POST(
               variantError ||
               !variant
             ) {
+              await removePrivateObjects(
+                supabase,
+                [
+                  rawPath,
+                  artworkPath,
+                  thumbnailPath,
+                ],
+              );
+
               throw new Error(
                 variantError
                   ?.message ||

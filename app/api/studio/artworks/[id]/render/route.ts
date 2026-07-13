@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
   renderNobodyTemplate,
@@ -231,12 +232,32 @@ export async function POST(
   }
 
   try {
+    const artworkBuffer = Buffer.from(
+      await storedArtwork.arrayBuffer(),
+    );
+
+    const actualArtworkSha256 =
+      createHash("sha256")
+        .update(artworkBuffer)
+        .digest("hex");
+
+    if (
+      actualArtworkSha256 !==
+      artwork.sha256
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "The approved artwork failed its integrity check. Restore the original approved file before creating formats.",
+        },
+        { status: 409 },
+      );
+    }
+
     const rendered =
       await renderNobodyTemplate({
-        artwork: Buffer.from(
-          await storedArtwork
-            .arrayBuffer(),
-        ),
+        artwork: artworkBuffer,
         templateType:
           body.templateType,
         locale,

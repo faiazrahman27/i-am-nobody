@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   NextResponse,
 } from "next/server";
@@ -182,6 +183,32 @@ export async function GET(
     new Uint8Array(
       await file.arrayBuffer(),
     );
+
+  if (render.sha256) {
+    const actualSha256 =
+      createHash("sha256")
+        .update(bytes)
+        .digest("hex");
+
+    if (
+      actualSha256 !==
+      render.sha256
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "NOT_FOUND",
+        },
+        {
+          status: 404,
+          headers: {
+            "Cache-Control":
+              "no-store",
+          },
+        },
+      );
+    }
+  }
 
   return new NextResponse(
     bytes,
