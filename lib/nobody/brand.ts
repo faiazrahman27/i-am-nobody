@@ -4,9 +4,9 @@ import type {
   BrandRuleSet,
 } from "./types";
 
-export const NOBODY_BRAND_VERSION = "1.0.0";
+export const NOBODY_BRAND_VERSION = "1.1.0";
 
-export const NOBODY_PROMPT_VERSION = "1.0.0";
+export const NOBODY_PROMPT_VERSION = "1.1.0";
 
 export const NOBODY_BACKGROUND_VARIANTS: Readonly<
   Record<BackgroundVariantSlug, BackgroundVariant>
@@ -63,14 +63,27 @@ export const NOBODY_BRAND: BrandRuleSet = {
   },
 
   /*
-   * This canvas preserves the visual proportion of the original cover while
-   * keeping both dimensions divisible by 16 for GPT Image 2 generation.
+   * Every approved cover is written back to this exact canonical canvas.
+   * The pipeline never centre-crops the generated character.
    */
   generationCanvas: {
-    width: 1360,
-    height: 1920,
-    size: "1360x1920",
-    aspectRatio: 1360 / 1920,
+    width: 906,
+    height: 1280,
+    size: "906x1280",
+    aspectRatio: 906 / 1280,
+  },
+
+  /*
+   * GPT Image 2 requires dimensions divisible by 16. 896x1264 is the
+   * closest supported canvas to the canonical 453:640 proportion. The
+   * server resamples it back to 906x1280 without cropping and restores all
+   * non-character pixels and controlled typography from the original cover.
+   */
+  modelCanvas: {
+    width: 896,
+    height: 1264,
+    size: "896x1264",
+    aspectRatio: 896 / 1264,
   },
 
   composition: {

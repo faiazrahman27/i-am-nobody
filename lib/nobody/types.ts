@@ -81,6 +81,8 @@ export type BrandRuleSet = Readonly<{
 
   generationCanvas: GenerationCanvas;
 
+  modelCanvas: GenerationCanvas;
+
   composition: Readonly<{
     figureVisibleFrom: string;
     posture: string;
