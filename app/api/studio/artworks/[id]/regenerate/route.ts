@@ -1,113 +1,119 @@
 import { NextResponse } from "next/server";
-import {
-  getReviewReason,
-  isReviewAction,
-} from "@/lib/nobody";
+import { getReviewReason, isReviewAction, NOBODY_BRAND } from "@/lib/nobody";
 import type {
+  DailyCreativeBrief,
   ImageQuality,
+  NobodyThreshold,
   ReviewAction,
 } from "@/lib/nobody";
-import {
-  createSupabaseAdminClient,
-} from "@/lib/supabase/admin";
-import {
-  getStudioAccess,
-} from "@/lib/supabase/studioAccess";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getStudioAccess } from "@/lib/supabase/studioAccess";
 
-export const dynamic =
-  "force-dynamic";
+export const dynamic = "force-dynamic";
 
-export const runtime =
-  "nodejs";
+export const runtime = "nodejs";
 
-export const maxDuration =
-  300;
+export const maxDuration = 300;
 
-type RegenerateRequest =
-  Readonly<{
-    reason?: unknown;
-    notes?: unknown;
-    quality?: unknown;
-  }>;
+type RegenerateRequest = Readonly<{
+  reason?: unknown;
+  notes?: unknown;
+  quality?: unknown;
+}>;
 
-type GenerateResponse =
-  Readonly<{
-    ok?: boolean;
-    message?: string;
-    jobId?: string;
-    variants?: ReadonlyArray<
-      Readonly<{
-        id: string;
-      }>
-    >;
-  }>;
+type GenerateResponse = Readonly<{
+  ok?: boolean;
+  message?: string;
+  jobId?: string;
+  variants?: ReadonlyArray<
+    Readonly<{
+      id: string;
+    }>
+  >;
+}>;
 
-const REGENERATION_REASONS =
-  new Set<ReviewAction>([
-    "needs_regeneration",
-    "wrong_mask",
-    "wrong_composition",
-    "too_busy",
-    "too_literal",
-    "too_generic",
-  ]);
+const REGENERATION_REASONS = new Set<ReviewAction>([
+  "needs_regeneration",
+  "wrong_mask",
+  "wrong_composition",
+  "too_busy",
+  "too_literal",
+  "too_generic",
+]);
 
-function normalizeNotes(
-  value: unknown,
-) {
-  return typeof value ===
-    "string"
-    ? value
-        .trim()
-        .slice(0, 1200)
-    : "";
+const THRESHOLDS: readonly NobodyThreshold[] = [
+  "Nobody",
+  "Somebody",
+  "Anybody",
+  "Infinite",
+];
+
+function readCreativeBrief(value: unknown): DailyCreativeBrief | undefined {
+  if (!value || typeof value !== "object") return undefined;
+
+  const row = value as Record<string, unknown>;
+  const text = (key: string, maxLength: number) =>
+    typeof row[key] === "string"
+      ? (row[key] as string).replace(/\s+/g, " ").trim().slice(0, maxLength)
+      : "";
+
+  if (!THRESHOLDS.includes(row.threshold as NobodyThreshold)) {
+    return undefined;
+  }
+
+  const brief: DailyCreativeBrief = {
+    roleTitle: text("roleTitle", 80),
+    roleFamily: text("roleFamily", 60),
+    lifeContext: text("lifeContext", 220),
+    threshold: row.threshold as NobodyThreshold,
+    bookTheme: text("bookTheme", 180),
+    conceptQuestion: text("conceptQuestion", 220),
+    visualStory: text("visualStory", 320),
+    clothingDirection: text("clothingDirection", 420),
+    moodDirection: text("moodDirection", 240),
+    bodyDirection: text("bodyDirection", 220),
+    objectDirection: text("objectDirection", 140) || "none",
+    creativeDirection: text("creativeDirection", 420),
+  };
+
+  return brief.roleTitle && brief.clothingDirection && brief.creativeDirection
+    ? brief
+    : undefined;
+}
+
+function normalizeNotes(value: unknown) {
+  return typeof value === "string" ? value.trim().slice(0, 1200) : "";
 }
 
 function normalizeQuality(
   value: unknown,
   fallback: ImageQuality,
 ): ImageQuality {
-  return (
-    value === "low" ||
-    value === "medium" ||
-    value === "high"
-  )
+  return value === "low" || value === "medium" || value === "high"
     ? value
     : fallback;
 }
 
-function buildVariationDirection(
-  input: {
-    previousDirection:
-      string | null;
-    reason:
-      ReviewAction;
-    notes: string;
-  },
-) {
+function buildVariationDirection(input: {
+  previousDirection: string | null;
+  reason: ReviewAction;
+  notes: string;
+}) {
   const reasonText =
-    getReviewReason(
-      input.reason,
-    ) ??
-    "Another controlled version is required";
+    getReviewReason(input.reason) ?? "Another controlled version is required";
 
   return [
     input.previousDirection,
 
     `Correction requested: ${reasonText}.`,
 
-    input.notes
-      ? `Human review note: ${input.notes}.`
-      : "",
+    input.notes ? `Human review note: ${input.notes}.` : "",
 
-    "Preserve the canonical Nobody identity, front-facing composition, body distance, warm restrained background, and text-free clean-artwork output.",
+    "Preserve the canonical Nobody identity, front-facing composition, body distance, fixed studio background, and text-free clean-artwork output.",
   ]
     .filter(Boolean)
     .join(" ")
-    .replace(
-      /\s+/g,
-      " ",
-    )
+    .replace(/\s+/g, " ")
     .trim()
     .slice(0, 279);
 }
@@ -120,22 +126,16 @@ export async function POST(
     }>;
   }>,
 ) {
-  const [
-    access,
-    params,
-  ] = await Promise.all([
+  const [access, params] = await Promise.all([
     getStudioAccess(),
     context.params,
   ]);
 
-  if (
-    !access.authenticated
-  ) {
+  if (!access.authenticated) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Please sign in again.",
+        message: "Please sign in again.",
       },
       {
         status: 401,
@@ -143,14 +143,11 @@ export async function POST(
     );
   }
 
-  if (
-    !access.authorized
-  ) {
+  if (!access.authorized) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "This account cannot access the studio.",
+        message: "This account cannot access the studio.",
       },
       {
         status: 403,
@@ -158,10 +155,7 @@ export async function POST(
     );
   }
 
-  if (
-    access.admin.role ===
-    "reviewer"
-  ) {
+  if (access.admin.role === "reviewer") {
     return NextResponse.json(
       {
         ok: false,
@@ -174,19 +168,15 @@ export async function POST(
     );
   }
 
-  let body:
-    RegenerateRequest;
+  let body: RegenerateRequest;
 
   try {
-    body =
-      (await request.json()) as
-        RegenerateRequest;
+    body = (await request.json()) as RegenerateRequest;
   } catch {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "The regeneration request is invalid.",
+        message: "The regeneration request is invalid.",
       },
       {
         status: 400,
@@ -194,19 +184,11 @@ export async function POST(
     );
   }
 
-  if (
-    !isReviewAction(
-      body.reason,
-    ) ||
-    !REGENERATION_REASONS.has(
-      body.reason,
-    )
-  ) {
+  if (!isReviewAction(body.reason) || !REGENERATION_REASONS.has(body.reason)) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Choose a valid regeneration reason.",
+        message: "Choose a valid regeneration reason.",
       },
       {
         status: 400,
@@ -214,43 +196,23 @@ export async function POST(
     );
   }
 
-  const reason =
-    body.reason;
+  const reason = body.reason;
 
-  const notes =
-    normalizeNotes(
-      body.notes,
-    );
+  const notes = normalizeNotes(body.notes);
 
-  const supabase =
-    createSupabaseAdminClient();
+  const supabase = createSupabaseAdminClient();
 
-  const {
-    data: variant,
-    error:
-      variantError,
-  } = await supabase
-    .from(
-      "artwork_variants",
-    )
-    .select(
-      "id,job_id,status,generation_attempt",
-    )
-    .eq(
-      "id",
-      params.id,
-    )
+  const { data: variant, error: variantError } = await supabase
+    .from("artwork_variants")
+    .select("id,job_id,status,generation_attempt")
+    .eq("id", params.id)
     .maybeSingle();
 
-  if (
-    variantError ||
-    !variant
-  ) {
+  if (variantError || !variant) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "The artwork could not be found.",
+        message: "The artwork could not be found.",
       },
       {
         status: 404,
@@ -258,32 +220,19 @@ export async function POST(
     );
   }
 
-  const {
-    data: job,
-    error:
-      jobError,
-  } = await supabase
-    .from(
-      "generation_jobs",
-    )
+  const { data: job, error: jobError } = await supabase
+    .from("generation_jobs")
     .select(
-      "archetype_slug,clothing_notes,mood_notes,background_variant,prop,variation_direction,quality",
+      "archetype_slug,clothing_notes,mood_notes,background_variant,prop,variation_direction,quality,metadata",
     )
-    .eq(
-      "id",
-      variant.job_id,
-    )
+    .eq("id", variant.job_id)
     .maybeSingle();
 
-  if (
-    jobError ||
-    !job
-  ) {
+  if (jobError || !job) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "The source generation job is unavailable.",
+        message: "The source generation job is unavailable.",
       },
       {
         status: 409,
@@ -291,90 +240,78 @@ export async function POST(
     );
   }
 
-  const quality =
-    normalizeQuality(
-      body.quality,
-      job.quality as ImageQuality,
-    );
+  const quality = normalizeQuality(body.quality, job.quality as ImageQuality);
 
-  const variationDirection =
-    buildVariationDirection({
-      previousDirection:
-        job.variation_direction,
+  const sourceMetadata =
+    job.metadata && typeof job.metadata === "object"
+      ? (job.metadata as Record<string, unknown>)
+      : {};
 
-      reason,
+  const sourceBrief = readCreativeBrief(sourceMetadata.creative_brief);
 
-      notes,
-    });
+  const variationDirection = buildVariationDirection({
+    previousDirection:
+      sourceBrief?.creativeDirection ?? job.variation_direction,
 
-  const origin =
-    new URL(
-      request.url,
-    ).origin;
+    reason,
 
-  const cookie =
-    request.headers.get(
-      "cookie",
-    ) ?? "";
+    notes,
+  });
 
-  const generationResponse =
-    await fetch(
-      `${origin}/api/studio/generate`,
-      {
-        method: "POST",
+  const correctedBrief: DailyCreativeBrief | undefined = sourceBrief
+    ? {
+        ...sourceBrief,
+        creativeDirection: variationDirection.slice(0, 420),
+      }
+    : undefined;
 
-        headers: {
-          "Content-Type":
-            "application/json",
+  const origin = new URL(request.url).origin;
 
-          cookie,
-        },
+  const cookie = request.headers.get("cookie") ?? "";
 
-        body:
-          JSON.stringify({
-            archetype:
-              job.archetype_slug,
+  const generationResponse = await fetch(`${origin}/api/studio/generate`, {
+    method: "POST",
 
-            clothingNotes:
-              job.clothing_notes ??
-              "",
+    headers: {
+      "Content-Type": "application/json",
 
-            moodNotes:
-              job.mood_notes ??
-              "",
+      cookie,
+    },
 
-            backgroundVariant:
-              job.background_variant,
+    body: JSON.stringify({
+      archetype: job.archetype_slug,
 
-            prop:
-              job.prop,
+      clothingNotes: job.clothing_notes ?? "",
 
-            variationDirection,
+      moodNotes: job.mood_notes ?? "",
 
-            quality,
+      backgroundVariant: NOBODY_BRAND.defaultBackgroundVariant,
 
-            numberOfVariations:
-              1,
-          }),
+      prop: job.prop,
 
-        cache: "no-store",
+      variationDirection,
 
-        signal:
-          AbortSignal.timeout(
-            295_000,
-          ),
-      },
-    );
+      quality,
+
+      numberOfVariations: 1,
+
+      generationSource: "regeneration",
+
+      creativeBrief: correctedBrief,
+    }),
+
+    cache: "no-store",
+
+    signal: AbortSignal.timeout(295_000),
+  });
 
   const generationPayload =
-    (await generationResponse.json()) as
-      GenerateResponse;
+    (await generationResponse.json()) as GenerateResponse;
 
   if (
     !generationResponse.ok ||
     !generationPayload.ok ||
-    !generationPayload
-      .variants?.length
+    !generationPayload.variants?.length
   ) {
     return NextResponse.json(
       {
@@ -384,84 +321,48 @@ export async function POST(
           "The replacement artwork could not be generated.",
       },
       {
-        status:
-          generationResponse.status ||
-          500,
+        status: generationResponse.status || 500,
       },
     );
   }
 
-  const newVariantIds =
-    generationPayload.variants.map(
-      (item) => item.id,
-    );
+  const newVariantIds = generationPayload.variants.map((item) => item.id);
 
-  const nextAttempt =
-    Math.max(
-      1,
-      variant.generation_attempt ??
-        1,
-    ) + 1;
+  const nextAttempt = Math.max(1, variant.generation_attempt ?? 1) + 1;
 
-  const [
-    parentUpdate,
-    childUpdate,
-  ] = await Promise.all([
+  const [parentUpdate, childUpdate] = await Promise.all([
     supabase
-      .from(
-        "artwork_variants",
-      )
+      .from("artwork_variants")
       .update({
         status: reason,
 
-        human_notes:
-          notes || null,
+        human_notes: notes || null,
 
-        rejection_reason:
-          getReviewReason(
-            reason,
-          ),
+        rejection_reason: getReviewReason(reason),
 
-        approved_by:
-          null,
+        approved_by: null,
 
-        approved_at:
-          null,
+        approved_at: null,
       })
-      .eq(
-        "id",
-        variant.id,
-      ),
+      .eq("id", variant.id),
 
     supabase
-      .from(
-        "artwork_variants",
-      )
+      .from("artwork_variants")
       .update({
-        parent_variant_id:
-          variant.id,
+        parent_variant_id: variant.id,
 
-        generation_attempt:
-          nextAttempt,
+        generation_attempt: nextAttempt,
       })
-      .in(
-        "id",
-        newVariantIds,
-      ),
+      .in("id", newVariantIds),
   ]);
 
-  if (
-    parentUpdate.error ||
-    childUpdate.error
-  ) {
+  if (parentUpdate.error || childUpdate.error) {
     return NextResponse.json(
       {
         ok: false,
         message:
-          parentUpdate.error
-            ?.message ||
-          childUpdate.error
-            ?.message ||
+          parentUpdate.error?.message ||
+          childUpdate.error?.message ||
           "The regeneration lineage could not be saved.",
       },
       {
@@ -470,57 +371,39 @@ export async function POST(
     );
   }
 
-  await supabase
-    .from(
-      "studio_audit_log",
-    )
-    .insert({
-      actor_user_id:
-        access.admin.userId,
+  await supabase.from("studio_audit_log").insert({
+    actor_user_id: access.admin.userId,
 
-      action:
-        "artwork.regenerated",
+    action: "artwork.regenerated",
 
-      entity_type:
-        "artwork_variant",
+    entity_type: "artwork_variant",
 
-      entity_id:
-        variant.id,
+    entity_id: variant.id,
 
-      details: {
-        reason,
+    details: {
+      reason,
 
-        notes:
-          notes || null,
+      notes: notes || null,
 
-        source_job_id:
-          variant.job_id,
+      source_job_id: variant.job_id,
 
-        replacement_job_id:
-          generationPayload.jobId ??
-          null,
+      replacement_job_id: generationPayload.jobId ?? null,
 
-        replacement_variant_ids:
-          newVariantIds,
+      replacement_variant_ids: newVariantIds,
 
-        generation_attempt:
-          nextAttempt,
+      generation_attempt: nextAttempt,
 
-        quality,
-      },
-    });
+      quality,
+    },
+  });
 
   return NextResponse.json({
     ok: true,
 
-    sourceVariantId:
-      variant.id,
+    sourceVariantId: variant.id,
 
-    replacementJobId:
-      generationPayload.jobId ??
-      null,
+    replacementJobId: generationPayload.jobId ?? null,
 
-    replacementVariantIds:
-      newVariantIds,
+    replacementVariantIds: newVariantIds,
   });
 }

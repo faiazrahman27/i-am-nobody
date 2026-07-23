@@ -489,3 +489,97 @@
     transition: none;
   }
 }
+.certificatePanel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(224, 191, 129, 0.25);
+  background:
+    linear-gradient(135deg, rgba(224, 191, 129, 0.07), transparent 48%),
+    rgba(8, 8, 8, 0.96);
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.certificatePanel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--brand-cyan),
+    var(--brand-green),
+    var(--brand-gold-light),
+    var(--brand-rose),
+    var(--brand-violet)
+  );
+}
+
+.certificatePanel h2 {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 5.5vw, 5.2rem);
+  font-weight: 400;
+  line-height: 0.84;
+  text-transform: uppercase;
+}
+
+.certificateCode {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 18px 0;
+}
+
+.certificateCode span,
+.certificatePanel dt {
+  color: rgba(157, 148, 136, 0.75);
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.certificateCode strong {
+  color: var(--brand-gold-light);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  overflow-wrap: anywhere;
+}
+
+.certificatePanel dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 18px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.certificatePanel dl > div {
+  display: grid;
+  gap: 7px;
+  background: #090909;
+  padding: 13px;
+}
+
+.certificatePanel dd {
+  color: rgba(242, 238, 230, 0.84);
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.verifyLink {
+  display: inline-flex;
+  margin-top: 18px;
+  color: var(--brand-gold-light);
+  font-family: var(--font-sans);
+  font-size: 0.61rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}

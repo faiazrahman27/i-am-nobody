@@ -20,7 +20,7 @@ type NavigationItem = Readonly<{
   label: string;
   description: string;
   active: (pathname: string) => boolean;
-  icon: "create" | "archive" | "gallery" | "site";
+  icon: "create" | "automation" | "archive" | "gallery" | "site";
 }>;
 
 const NAVIGATION: readonly NavigationItem[] = [
@@ -30,6 +30,13 @@ const NAVIGATION: readonly NavigationItem[] = [
     description: "Create a new artwork",
     active: (pathname) => pathname === "/studio",
     icon: "create",
+  },
+  {
+    href: "/studio/automation",
+    label: "Daily studio",
+    description: "Ten artworks every morning",
+    active: (pathname) => pathname.startsWith("/studio/automation"),
+    icon: "automation",
   },
   {
     href: "/studio/artworks",
@@ -63,6 +70,15 @@ function NavIcon({ name }: Readonly<{ name: NavigationItem["icon"] }>) {
     );
   }
 
+  if (name === "automation") {
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" />
+        <path d="M12 7v5l3 2M8 3l-2 2M16 3l2 2" />
+      </svg>
+    );
+  }
+
   if (name === "archive") {
     return (
       <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -92,6 +108,10 @@ function NavIcon({ name }: Readonly<{ name: NavigationItem["icon"] }>) {
 }
 
 function getSectionLabel(pathname: string) {
+  if (pathname.startsWith("/studio/automation")) {
+    return "Daily automation";
+  }
+
   if (pathname.startsWith("/studio/artworks/")) {
     return "Artwork review";
   }
@@ -230,8 +250,7 @@ export default function StudioChrome({
         <div className={styles.welcomeCopy}>
           <strong>Welcome to the private I AM NOBODY Image Studio.</strong>
           <p>
-            Create with discipline, review with intention, and publish only
-            what truly belongs to the I AM NOBODY universe.
+            Every morning the studio prepares ten new artworks for your review. Nothing is approved or published without a human decision.
           </p>
         </div>
 

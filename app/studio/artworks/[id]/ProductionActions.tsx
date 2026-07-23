@@ -34,6 +34,10 @@ const TEMPLATE_OPTIONS: ReadonlyArray<
     label: "Gallery thumbnail — 453 × 640",
   },
   {
+    value: "collectible_card",
+    label: "Certificate card — 1359 × 1920",
+  },
+  {
     value: "clean_artwork",
     label: "Artwork PNG — 906 × 1280",
   },
@@ -148,7 +152,7 @@ export default function ProductionActions({
         }
       >
         <p className={styles.eyebrow}>
-          Final formats
+          Formats & publication
         </p>
 
         <h2>
@@ -160,7 +164,7 @@ export default function ProductionActions({
             workflowStyles.mutedCopy
           }
         >
-          Reviewer accounts can approve artworks, while owners and editors create final formats and manage publication.
+          Approval automatically prepares the certificate, book cover, gallery image, and certificate card. Owners and editors can create additional formats and manage publication.
         </p>
       </section>
     );

@@ -417,6 +417,8 @@ function toDataUrl(
 export async function reviewNobodyArtwork(
   input: {
     canonicalCover: Buffer;
+    canonicalHelmet: Buffer;
+    canonicalBackground: Buffer;
     artwork: Buffer;
     archetype: ArchetypeDefinition;
     threshold: number;
@@ -438,7 +440,9 @@ export async function reviewNobodyArtwork(
 
   const instructions = [
     "You are the strict visual quality controller for the official I AM NOBODY project.",
-    "Compare image 1, the canonical book cover, with image 2, the newly generated clean artwork.",
+    "Image 1 is the canonical book cover. Image 2 is the immutable transparent canonical helmet extracted from that cover. Image 3 is the exact fixed canonical studio background. Image 4 is the newly generated clean artwork after the fixed background and canonical helmet have been applied.",
+    "The background outside the figure in image 4 must match image 3 exactly. Reject any altered background colour, texture, vignette, scenery, environment, object, or added detail.",
+    "The helmet in image 4 must be the same helmet shown in image 2 at the fixed canonical position and scale. Reject any duplicate generated helmet edge, extra visor, exposed head, hair, skin, seam, or protruding alternative helmet around it.",
     `The intended archetype is ${input.archetype.title.en}.`,
     `The clothing direction is: ${input.archetype.clothingPrompt}.`,
     "Judge visual identity and production suitability, not whether the two images are pixel-identical.",
@@ -488,6 +492,22 @@ export async function reviewNobodyArtwork(
                 type: "input_image",
                 image_url: toDataUrl(
                   input.canonicalCover,
+                  "image/png",
+                ),
+                detail: "high",
+              },
+              {
+                type: "input_image",
+                image_url: toDataUrl(
+                  input.canonicalHelmet,
+                  "image/png",
+                ),
+                detail: "high",
+              },
+              {
+                type: "input_image",
+                image_url: toDataUrl(
+                  input.canonicalBackground,
                   "image/png",
                 ),
                 detail: "high",

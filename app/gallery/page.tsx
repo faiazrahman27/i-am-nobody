@@ -3,6 +3,7 @@ import {
   createSupabaseAdminClient,
 } from "@/lib/supabase/admin";
 import styles from "./gallery.module.css";
+import CertificateLookup from "./CertificateLookup";
 
 export const dynamic =
   "force-dynamic";
@@ -19,6 +20,8 @@ type GalleryEntry = Readonly<{
   archetype_slug: string;
   featured: boolean;
   published_at: string;
+  artwork_variant_id: string;
+  certificateCode?: string | null;
 }>;
 
 export default async function GalleryPage() {
@@ -28,7 +31,7 @@ export default async function GalleryPage() {
   const { data } = await supabase
     .from("gallery_entries")
     .select(
-      "id,slug,title_en,title_it,description_en,description_it,archetype_slug,featured,published_at",
+      "id,slug,title_en,title_it,description_en,description_it,archetype_slug,featured,published_at,artwork_variant_id",
     )
     .eq("status", "published")
     .eq("visibility", "public")
@@ -47,8 +50,37 @@ export default async function GalleryPage() {
       ascending: false,
     });
 
-  const entries =
+  const rawEntries =
     (data ?? []) as GalleryEntry[];
+
+  const artworkIds = rawEntries.map(
+    (entry) => entry.artwork_variant_id,
+  );
+
+  let certificateByArtwork = new Map<string, string>();
+
+  if (artworkIds.length > 0) {
+    const { data: certificates } = await supabase
+      .from("artwork_certificates")
+      .select("artwork_variant_id,certificate_code")
+      .eq("status", "valid")
+      .in("artwork_variant_id", artworkIds);
+
+    certificateByArtwork = new Map(
+      (certificates ?? []).map((certificate) => [
+        certificate.artwork_variant_id,
+        certificate.certificate_code,
+      ]),
+    );
+  }
+
+  const entries = rawEntries
+    .map((entry) => ({
+      ...entry,
+      certificateCode:
+        certificateByArtwork.get(entry.artwork_variant_id) ?? null,
+    }))
+    .filter((entry) => Boolean(entry.certificateCode));
 
   return (
     <main className={styles.page}>
@@ -75,6 +107,21 @@ export default async function GalleryPage() {
           anonymous presence. Clothing
           changes. The role changes.
           Nobody remains.
+        </div>
+      </section>
+
+      <section className={styles.verification} id="verify">
+        <div>
+          <p>Official verification</p>
+          <h2>Verify an artwork.</h2>
+        </div>
+        <div>
+          <p>
+            Every approved I AM NOBODY artwork receives a permanent certificate.
+            Enter its code to confirm the approved file, canonical origin, and
+            certificate status.
+          </p>
+          <CertificateLookup />
         </div>
       </section>
 
@@ -140,6 +187,16 @@ export default async function GalleryPage() {
                         entry.description_en
                       }
                     </p>
+                  ) : null}
+
+                  {entry.certificateCode ? (
+                    <Link
+                      className={styles.certificateLink}
+                      href={`/verify/${entry.certificateCode}`}
+                    >
+                      <span>Certificate</span>
+                      <strong>{entry.certificateCode}</strong>
+                    </Link>
                   ) : null}
                 </div>
               </article>

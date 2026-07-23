@@ -4,7 +4,12 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { NOBODY_BRAND } from "./brand";
+import {
+  NOBODY_BRAND,
+  NOBODY_CANONICAL_BACKGROUND,
+  NOBODY_CANONICAL_HELMET,
+  NOBODY_SUBJECT_MATTE,
+} from "./brand";
 import type { ImageQuality } from "./types";
 
 const OPENAI_IMAGES_EDIT_URL =
@@ -35,7 +40,15 @@ export type CanonicalReferenceAssets =
     originalCover: Buffer;
     compositionReference: Buffer;
     helmetReference: Buffer;
+    helmetOverlay: Buffer;
+    canonicalBackground: Buffer;
+    modelBackground: Buffer;
+    subjectMatte: Buffer;
+    modelEditMask: Buffer;
     sha256: string;
+    helmetSha256: string;
+    backgroundSha256: string;
+    subjectMatteSha256: string;
   }>;
 
 export type GeneratedArtwork = Readonly<{
@@ -55,6 +68,14 @@ export type GeneratedArtwork = Readonly<{
     hasAlpha: boolean;
     canonicalRatio: number;
     normalization: "centre-edge-trim";
+    canonicalHelmetApplied: true;
+    canonicalHelmetId: string;
+    canonicalHelmetSha256: string;
+    canonicalBackgroundApplied: true;
+    canonicalBackgroundId: string;
+    canonicalBackgroundSha256: string;
+    subjectMatteId: string;
+    subjectMatteSha256: string;
   }>;
 }>;
 
@@ -65,6 +86,9 @@ export type ImageGenerationBatch = Readonly<{
   results: readonly GeneratedArtwork[];
   usage: unknown;
   referenceSha256: string;
+  helmetSha256: string;
+  backgroundSha256: string;
+  subjectMatteSha256: string;
 }>;
 
 function requireEnvironmentValue(
@@ -111,6 +135,25 @@ function getCanonicalPath() {
       "",
     ),
   );
+}
+
+function getCanonicalHelmetPath() {
+  return path.join(
+    process.cwd(),
+    "public",
+    NOBODY_CANONICAL_HELMET.publicPath.replace(
+      /^\//,
+      "",
+    ),
+  );
+}
+
+function getCanonicalBackgroundPath() {
+  return path.join(process.cwd(), "public", NOBODY_CANONICAL_BACKGROUND.publicPath.replace(/^\//, ""));
+}
+
+function getSubjectMattePath() {
+  return path.join(process.cwd(), "public", NOBODY_SUBJECT_MATTE.publicPath.replace(/^\//, ""));
 }
 
 function sha256(buffer: Buffer) {
@@ -235,32 +278,267 @@ async function buildCompositionReference(
 }
 
 async function buildHelmetReference(
-  originalCover: Buffer,
+  helmetOverlay: Buffer,
 ) {
-  return sharp(originalCover)
-    .extract({
-      left: 315,
-      top: 70,
-      width: 285,
-      height: 355,
-    })
-    .resize(768, 960, {
+  const scaledHelmet = await sharp(helmetOverlay)
+    .resize(720, 897, {
       fit: "contain",
+    })
+    .png()
+    .toBuffer();
+
+  return sharp({
+    create: {
+      width: 768,
+      height: 960,
+      channels: 4,
       background: {
         r: 117,
         g: 98,
         b: 77,
         alpha: 1,
       },
-    })
+    },
+  })
+    .composite([
+      {
+        input: scaledHelmet,
+        left: 24,
+        top: 20,
+      },
+    ])
     .png()
     .toBuffer();
 }
 
-export async function loadCanonicalReferenceAssets(): Promise<CanonicalReferenceAssets> {
-  const originalCover = await readFile(
-    getCanonicalPath(),
+async function verifyCanonicalHelmetOverlay(
+  helmetOverlay: Buffer,
+) {
+  const helmetSha256 = sha256(helmetOverlay);
+
+  if (
+    helmetSha256 !==
+    NOBODY_CANONICAL_HELMET.sha256
+  ) {
+    throw new Error(
+      "The canonical helmet asset could not be verified. Restore public/nobody-canonical-helmet.png before creating artwork.",
+    );
+  }
+
+  const metadata =
+    await sharp(helmetOverlay).metadata();
+
+  if (
+    metadata.width !==
+      NOBODY_CANONICAL_HELMET.width ||
+    metadata.height !==
+      NOBODY_CANONICAL_HELMET.height ||
+    metadata.format !== "png" ||
+    !metadata.hasAlpha
+  ) {
+    throw new Error(
+      `The canonical helmet asset must be a transparent ${NOBODY_CANONICAL_HELMET.width}x${NOBODY_CANONICAL_HELMET.height} PNG.`,
+    );
+  }
+
+  return helmetSha256;
+}
+
+async function verifyCanonicalBackground(background: Buffer) {
+  const backgroundSha256 = sha256(background);
+  if (backgroundSha256 !== NOBODY_CANONICAL_BACKGROUND.sha256) {
+    throw new Error("The canonical background asset could not be verified. Restore public/nobody-canonical-background.png before creating artwork.");
+  }
+  const metadata = await sharp(background).metadata();
+  if (metadata.width !== NOBODY_CANONICAL_BACKGROUND.width || metadata.height !== NOBODY_CANONICAL_BACKGROUND.height || metadata.format !== "png") {
+    throw new Error(`The canonical background must be a ${NOBODY_CANONICAL_BACKGROUND.width}x${NOBODY_CANONICAL_BACKGROUND.height} PNG.`);
+  }
+  return backgroundSha256;
+}
+
+async function verifySubjectMatte(subjectMatte: Buffer) {
+  const subjectMatteSha256 = sha256(subjectMatte);
+  if (subjectMatteSha256 !== NOBODY_SUBJECT_MATTE.sha256) {
+    throw new Error("The canonical subject matte could not be verified. Restore public/nobody-subject-matte.png before creating artwork.");
+  }
+  const metadata = await sharp(subjectMatte).metadata();
+  if (metadata.width !== NOBODY_SUBJECT_MATTE.width || metadata.height !== NOBODY_SUBJECT_MATTE.height || metadata.format !== "png") {
+    throw new Error(`The canonical subject matte must be a ${NOBODY_SUBJECT_MATTE.width}x${NOBODY_SUBJECT_MATTE.height} PNG.`);
+  }
+  return subjectMatteSha256;
+}
+
+async function buildModelBackground(canonicalBackground: Buffer) {
+  return sharp(canonicalBackground).resize(NOBODY_BRAND.modelCanvas.width, NOBODY_BRAND.modelCanvas.height, { fit: "fill" }).removeAlpha().png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
+}
+
+async function buildModelEditMask(subjectMatte: Buffer) {
+  const { data, info } = await sharp(subjectMatte).resize(NOBODY_BRAND.modelCanvas.width, NOBODY_BRAND.modelCanvas.height, { fit: "fill" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+  const rgba = Buffer.alloc(info.width * info.height * 4);
+  for (let index = 0; index < data.length; index += 1) {
+    const outputIndex = index * 4;
+    rgba[outputIndex] = 0;
+    rgba[outputIndex + 1] = 0;
+    rgba[outputIndex + 2] = 0;
+    rgba[outputIndex + 3] = 255 - (data[index] ?? 0);
+  }
+  return sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } }).png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
+}
+
+async function applyCanonicalBackground(artwork: Buffer, canonicalBackground: Buffer, subjectMatte: Buffer) {
+  const [artworkRaw, matteRawObject] = await Promise.all([
+    sharp(artwork).removeAlpha().raw().toBuffer({ resolveWithObject: true }),
+    sharp(subjectMatte).extractChannel(0).raw().toBuffer({ resolveWithObject: true }),
+  ]);
+
+  if (
+    artworkRaw.info.width !== matteRawObject.info.width ||
+    artworkRaw.info.height !== matteRawObject.info.height ||
+    artworkRaw.info.channels !== 3 ||
+    matteRawObject.info.channels !== 1
+  ) {
+    throw new Error("The fixed subject matte does not match the artwork canvas.");
+  }
+
+  const rgba = Buffer.alloc(
+    artworkRaw.info.width * artworkRaw.info.height * 4,
   );
+
+  for (let pixel = 0; pixel < matteRawObject.data.length; pixel += 1) {
+    const sourceOffset = pixel * 3;
+    const outputOffset = pixel * 4;
+
+    rgba[outputOffset] = artworkRaw.data[sourceOffset] ?? 0;
+    rgba[outputOffset + 1] = artworkRaw.data[sourceOffset + 1] ?? 0;
+    rgba[outputOffset + 2] = artworkRaw.data[sourceOffset + 2] ?? 0;
+    rgba[outputOffset + 3] = matteRawObject.data[pixel] ?? 0;
+  }
+
+  const subjectWithAlpha = await sharp(rgba, {
+    raw: {
+      width: artworkRaw.info.width,
+      height: artworkRaw.info.height,
+      channels: 4,
+    },
+  })
+    .png()
+    .toBuffer();
+
+  const composed = await sharp(canonicalBackground)
+    .composite([{ input: subjectWithAlpha, blend: "over" }])
+    .removeAlpha()
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+
+  const [backgroundRaw, outputRaw] = await Promise.all([
+    sharp(canonicalBackground).removeAlpha().raw().toBuffer(),
+    sharp(composed).removeAlpha().raw().toBuffer(),
+  ]);
+
+  for (let pixel = 0; pixel < matteRawObject.data.length; pixel += 1) {
+    if ((matteRawObject.data[pixel] ?? 0) !== 0) continue;
+
+    const offset = pixel * 3;
+
+    if (
+      backgroundRaw[offset] !== outputRaw[offset] ||
+      backgroundRaw[offset + 1] !== outputRaw[offset + 1] ||
+      backgroundRaw[offset + 2] !== outputRaw[offset + 2]
+    ) {
+      throw new Error(
+        "The fixed canonical background could not be applied exactly to the artwork.",
+      );
+    }
+  }
+
+  return composed;
+}
+
+async function applyCanonicalHelmet(
+  artwork: Buffer,
+  helmetOverlay: Buffer,
+) {
+  const composed = await sharp(artwork)
+    .composite([
+      {
+        input: helmetOverlay,
+        left:
+          NOBODY_CANONICAL_HELMET.placement.left,
+        top:
+          NOBODY_CANONICAL_HELMET.placement.top,
+        blend: "over",
+      },
+    ])
+    .removeAlpha()
+    .png({
+      compressionLevel: 9,
+      adaptiveFiltering: true,
+    })
+    .toBuffer();
+
+  const [overlayRaw, outputRegionRaw] =
+    await Promise.all([
+      sharp(helmetOverlay)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({
+          resolveWithObject: true,
+        }),
+
+      sharp(composed)
+        .extract({
+          left:
+            NOBODY_CANONICAL_HELMET.placement.left,
+          top:
+            NOBODY_CANONICAL_HELMET.placement.top,
+          width:
+            NOBODY_CANONICAL_HELMET.width,
+          height:
+            NOBODY_CANONICAL_HELMET.height,
+        })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({
+          resolveWithObject: true,
+        }),
+    ]);
+
+  for (
+    let index = 0;
+    index < overlayRaw.data.length;
+    index += 4
+  ) {
+    const alpha =
+      overlayRaw.data[index + 3] ?? 0;
+
+    if (alpha !== 255) {
+      continue;
+    }
+
+    if (
+      overlayRaw.data[index] !==
+        outputRegionRaw.data[index] ||
+      overlayRaw.data[index + 1] !==
+        outputRegionRaw.data[index + 1] ||
+      overlayRaw.data[index + 2] !==
+        outputRegionRaw.data[index + 2]
+    ) {
+      throw new Error(
+        "The canonical helmet could not be applied exactly to the generated artwork.",
+      );
+    }
+  }
+
+  return composed;
+}
+
+export async function loadCanonicalReferenceAssets(): Promise<CanonicalReferenceAssets> {
+  const [originalCover, helmetOverlay, canonicalBackground, subjectMatte] = await Promise.all([
+    readFile(getCanonicalPath()),
+    readFile(getCanonicalHelmetPath()),
+    readFile(getCanonicalBackgroundPath()),
+    readFile(getSubjectMattePath()),
+  ]);
 
   const actualSha256 =
     sha256(originalCover);
@@ -288,19 +566,32 @@ export async function loadCanonicalReferenceAssets(): Promise<CanonicalReference
     );
   }
 
-  const [
-    compositionReference,
-    helmetReference,
-  ] = await Promise.all([
+  const [helmetSha256, backgroundSha256, subjectMatteSha256] = await Promise.all([
+    verifyCanonicalHelmetOverlay(helmetOverlay),
+    verifyCanonicalBackground(canonicalBackground),
+    verifySubjectMatte(subjectMatte),
+  ]);
+
+  const [compositionReference, helmetReference, modelBackground, modelEditMask] = await Promise.all([
     buildCompositionReference(originalCover),
-    buildHelmetReference(originalCover),
+    buildHelmetReference(helmetOverlay),
+    buildModelBackground(canonicalBackground),
+    buildModelEditMask(subjectMatte),
   ]);
 
   return {
     originalCover,
     compositionReference,
     helmetReference,
+    helmetOverlay,
+    canonicalBackground,
+    modelBackground,
+    subjectMatte,
+    modelEditMask,
     sha256: actualSha256,
+    helmetSha256,
+    backgroundSha256,
+    subjectMatteSha256,
   };
 }
 
@@ -310,6 +601,8 @@ async function callOpenAIImageEdit(input: {
   prompt: string;
   quality: ImageQuality;
   variations: number;
+  modelBackground: Buffer;
+  modelEditMask: Buffer;
   compositionReference: Buffer;
   helmetReference: Buffer;
 }) {
@@ -337,6 +630,18 @@ async function callOpenAIImageEdit(input: {
    * GPT Image 2 processes image references at high fidelity automatically.
    * Do not send input_fidelity for this model.
    */
+
+  form.append(
+    "image[]",
+    new Blob([new Uint8Array(input.modelBackground)], { type: "image/png" }),
+    "canonical-background-base.png",
+  );
+
+  form.append(
+    "mask",
+    new Blob([new Uint8Array(input.modelEditMask)], { type: "image/png" }),
+    "canonical-subject-edit-mask.png",
+  );
 
   form.append(
     "image[]",
@@ -444,6 +749,12 @@ async function callOpenAIImageEdit(input: {
 
 async function finalizeCleanArtwork(
   rawModelImage: Buffer,
+  helmetOverlay: Buffer,
+  helmetSha256: string,
+  canonicalBackground: Buffer,
+  backgroundSha256: string,
+  subjectMatte: Buffer,
+  subjectMatteSha256: string,
 ): Promise<GeneratedArtwork> {
   const { width, height } =
     NOBODY_BRAND.generationCanvas;
@@ -487,7 +798,7 @@ async function finalizeCleanArtwork(
     );
   }
 
-  const cleanArtworkImage =
+  const normalizedArtwork =
     await sharp(rawModelImage)
       .resize(width, height, {
         fit: "cover",
@@ -499,6 +810,17 @@ async function finalizeCleanArtwork(
         adaptiveFiltering: true,
       })
       .toBuffer();
+
+  const backgroundLockedArtwork = await applyCanonicalBackground(
+    normalizedArtwork,
+    canonicalBackground,
+    subjectMatte,
+  );
+
+  const cleanArtworkImage = await applyCanonicalHelmet(
+    backgroundLockedArtwork,
+    helmetOverlay,
+  );
 
   const metadata =
     await sharp(
@@ -552,6 +874,15 @@ async function finalizeCleanArtwork(
         width / height,
       normalization:
         "centre-edge-trim",
+      canonicalHelmetApplied: true,
+      canonicalHelmetId:
+        NOBODY_CANONICAL_HELMET.id,
+      canonicalHelmetSha256: helmetSha256,
+      canonicalBackgroundApplied: true,
+      canonicalBackgroundId: NOBODY_CANONICAL_BACKGROUND.id,
+      canonicalBackgroundSha256: backgroundSha256,
+      subjectMatteId: NOBODY_SUBJECT_MATTE.id,
+      subjectMatteSha256,
     },
   };
 }
@@ -575,8 +906,10 @@ export async function generateNobodyArtworks(input: {
     input.prompt,
     "",
     "REFERENCE USE:",
-    "Reference image 1 is the canonical composition guide derived from the original I AM NOBODY cover. Use it for body distance, vertical framing, centred stance, proportion, warmth, lighting restraint, and overall elegance only.",
-    "Reference image 2 is the canonical mask detail. Preserve its anonymous reflective identity, black structural edges, realistic head proportion, and restrained blue, green, violet, and golden reflections.",
+    "Reference image 1 is the exact canonical background base. Preserve it unchanged and create the figure only inside the editable subject area.",
+    "Reference image 2 is the canonical composition guide derived from the original I AM NOBODY cover. Use it for body distance, vertical framing, centred stance, proportion, lighting restraint, and overall elegance only.",
+    "Reference image 3 is the immutable canonical helmet blueprint. Match its exact position, scale, silhouette, neck connection, black structural edges, reflective visor, and restrained blue, green, violet, and golden reflections.",
+    "Do not invent, redesign, enlarge, shrink, rotate, or stylise the helmet. Do not create a second rim, visor, head shape, face, hair, skin, or helmet edge outside the canonical silhouette. The exact canonical helmet pixels are applied after generation, so the clothing neckline and shoulders must integrate naturally beneath that fixed helmet.",
     "Create a new clean full-bleed artwork. Do not reproduce the original cover typography, spine, frame, border, coloured separator, author name, or any other graphic design element.",
     "",
     "STRICT EXCLUSIONS:",
@@ -591,8 +924,9 @@ export async function generateNobodyArtworks(input: {
       quality: input.quality,
       variations:
         input.variations,
-      compositionReference:
-        assets.compositionReference,
+      modelBackground: assets.modelBackground,
+      modelEditMask: assets.modelEditMask,
+      compositionReference: assets.compositionReference,
       helmetReference:
         assets.helmetReference,
     });
@@ -603,6 +937,12 @@ export async function generateNobodyArtworks(input: {
         (rawModelImage) =>
           finalizeCleanArtwork(
             rawModelImage,
+            assets.helmetOverlay,
+            assets.helmetSha256,
+            assets.canonicalBackground,
+            assets.backgroundSha256,
+            assets.subjectMatte,
+            assets.subjectMatteSha256,
           ),
       ),
     );
@@ -617,5 +957,8 @@ export async function generateNobodyArtworks(input: {
       generated.usage,
     referenceSha256:
       assets.sha256,
+    helmetSha256: assets.helmetSha256,
+    backgroundSha256: assets.backgroundSha256,
+    subjectMatteSha256: assets.subjectMatteSha256,
   };
 }

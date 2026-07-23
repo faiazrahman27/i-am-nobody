@@ -1,15 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NOBODY_BRAND } from "@/lib/nobody";
-import {
-  loadCanonicalReferenceAssets,
-} from "@/lib/nobody/imagePipeline";
-import {
-  createSupabaseAdminClient,
-} from "@/lib/supabase/admin";
-import {
-  requireStudioAdmin,
-} from "@/lib/supabase/studioAccess";
+import { loadCanonicalReferenceAssets } from "@/lib/nobody/imagePipeline";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { requireStudioAdmin } from "@/lib/supabase/studioAccess";
 import ImageGenerator from "./components/ImageGenerator";
 import styles from "./studio.module.css";
 
@@ -24,8 +18,7 @@ async function countRows(
   table: string,
   statuses?: readonly string[],
 ): Promise<CountResult> {
-  const supabase =
-    createSupabaseAdminClient();
+  const supabase = createSupabaseAdminClient();
 
   let query = supabase.from(table).select("*", {
     count: "exact",
@@ -46,8 +39,7 @@ async function countRows(
 
 export default async function StudioHomePage() {
   const admin = await requireStudioAdmin();
-  const supabase =
-    createSupabaseAdminClient();
+  const supabase = createSupabaseAdminClient();
 
   const [
     generations,
@@ -58,12 +50,14 @@ export default async function StudioHomePage() {
     publicBucket,
     referenceRow,
     referenceIntegrity,
+    automationConfig,
   ] = await Promise.all([
     countRows("generation_jobs"),
 
     countRows("artwork_variants", [
       "candidate",
       "reviewing",
+      "auto_rejected",
       "auto_review_failed",
       "ready_for_review",
     ]),
@@ -74,125 +68,107 @@ export default async function StudioHomePage() {
       "published",
     ]),
 
-    countRows("gallery_entries", [
-      "published",
-    ]),
+    countRows("gallery_entries", ["published"]),
 
-    supabase.storage.getBucket(
-      "nobody-private",
-    ),
+    supabase.storage.getBucket("nobody-private"),
 
-    supabase.storage.getBucket(
-      "nobody-public",
-    ),
+    supabase.storage.getBucket("nobody-public"),
 
     supabase
       .from("brand_references")
-      .select(
-        "reference_code,version,sha256,width,height,is_active",
-      )
-      .eq(
-        "reference_code",
-        NOBODY_BRAND
-          .canonicalReference.id,
-      )
+      .select("reference_code,version,sha256,width,height,is_active")
+      .eq("reference_code", NOBODY_BRAND.canonicalReference.id)
       .maybeSingle(),
 
     loadCanonicalReferenceAssets()
       .then(() => true)
       .catch(() => false),
+
+    supabase
+      .from("daily_artwork_automation")
+      .select("is_enabled,daily_count,local_hour,timezone")
+      .eq("singleton", true)
+      .maybeSingle(),
   ]);
 
-  const databaseReady = [
-    generations,
-    toReview,
-    approved,
-    published,
-  ].every((result) => !result.error);
+  const databaseReady = [generations, toReview, approved, published].every(
+    (result) => !result.error,
+  );
 
-  const storageReady =
-    Boolean(privateBucket.data) &&
-    !privateBucket.error;
+  const storageReady = Boolean(privateBucket.data) && !privateBucket.error;
 
-  const obsoleteBucketRemoved =
-    !publicBucket.data;
+  const obsoleteBucketRemoved = !publicBucket.data;
 
   const referenceReady =
     referenceIntegrity &&
     referenceRow.data?.is_active === true &&
-    referenceRow.data?.sha256 ===
-      NOBODY_BRAND.canonicalReference.sha256 &&
+    referenceRow.data?.sha256 === NOBODY_BRAND.canonicalReference.sha256 &&
     referenceRow.data?.version === "2.0.0";
 
   const studioReady =
-    databaseReady &&
-    storageReady &&
-    obsoleteBucketRemoved &&
-    referenceReady;
+    databaseReady && storageReady && obsoleteBucketRemoved && referenceReady;
 
-  const generationEnabled = Boolean(
-    process.env.OPENAI_API_KEY?.trim(),
-  );
+  const generationEnabled = Boolean(process.env.OPENAI_API_KEY?.trim());
+
+  const automationReady =
+    Boolean(automationConfig.data) && !automationConfig.error;
 
   const systemMessage = !studioReady
     ? "Artwork creation is temporarily unavailable. Please check the studio configuration."
-    : generationEnabled
-      ? "Artwork creation and review are ready."
-      : "The studio is ready. Artwork creation is currently unavailable.";
+    : !automationReady
+      ? "The daily studio setup is not complete yet. Finish the Daily Studio setup before activating the morning collection."
+      : generationEnabled
+        ? "The daily studio and human review workflow are ready."
+        : "The daily studio is prepared and waiting to be activated.";
 
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}>
-            Private image studio
-          </p>
+          <p className={styles.kicker}>Private image studio</p>
 
           <h1>
-            Give form to the
-            <span>next mask.</span>
+            Ten new artworks.
+            <span>Every morning.</span>
           </h1>
 
           <p className={styles.heroLead}>
-            Create official I AM NOBODY artworks, compare them with the original cover, and prepare only the strongest images for publication.
+            Every morning, AI develops ten new I AM NOBODY concepts from the
+            book and recent Studio history, creates them inside the fixed visual
+            system, evaluates the results, and places them in your private review queue. You decide
+            what changes, what is approved, and what is published.
           </p>
 
           <blockquote className={styles.manifesto}>
-            “The role changes. The posture changes.
-            Nobody remains.”
+            “The role changes. The posture changes. Nobody remains.”
           </blockquote>
 
           <div className={styles.heroActions}>
-            <Link
-              className={styles.primaryAction}
-              href="#generator-title"
-            >
-              Create a new artwork
-              <span aria-hidden="true">↘</span>
+            <Link className={styles.primaryAction} href="/studio/automation">
+              Open the daily studio
+              <span aria-hidden="true">→</span>
             </Link>
 
             <Link
               className={styles.secondaryAction}
               href="/studio/artworks?filter=review"
             >
-              Review existing artworks
+              Review today’s artworks
               <span aria-hidden="true">→</span>
             </Link>
           </div>
 
           <div
             className={`${styles.systemStatus} ${
-              studioReady
-                ? styles.systemStatusReady
-                : styles.systemStatusError
+              studioReady ? styles.systemStatusReady : styles.systemStatusError
             }`}
           >
             <span aria-hidden="true" />
 
             <div>
               <strong>
-                {studioReady
-                  ? "Studio ready"
+                {studioReady && automationReady
+                  ? "Daily studio ready"
                   : "Setup incomplete"}
               </strong>
 
@@ -202,10 +178,7 @@ export default async function StudioHomePage() {
         </div>
 
         <aside className={styles.referenceCard}>
-          <div
-            aria-hidden="true"
-            className={styles.referenceGlow}
-          />
+          <div aria-hidden="true" className={styles.referenceGlow} />
 
           <div className={styles.referenceTopline}>
             <span>Original book cover</span>
@@ -216,19 +189,10 @@ export default async function StudioHomePage() {
             <Image
               alt="Original I AM NOBODY book cover"
               className={styles.cover}
-              height={
-                NOBODY_BRAND
-                  .canonicalReference.height
-              }
+              height={NOBODY_BRAND.canonicalReference.height}
               priority
-              src={
-                NOBODY_BRAND
-                  .canonicalReference.publicPath
-              }
-              width={
-                NOBODY_BRAND
-                  .canonicalReference.width
-              }
+              src={NOBODY_BRAND.canonicalReference.publicPath}
+              width={NOBODY_BRAND.canonicalReference.width}
             />
           </div>
 
@@ -236,9 +200,7 @@ export default async function StudioHomePage() {
             <div>
               <span>Primary reference</span>
 
-              <strong>
-                Original I AM NOBODY cover
-              </strong>
+              <strong>Original I AM NOBODY cover</strong>
             </div>
 
             <dl>
@@ -254,81 +216,56 @@ export default async function StudioHomePage() {
 
               <div>
                 <dt>Status</dt>
-                <dd>
-                  {referenceReady
-                    ? "Ready"
-                    : "Unavailable"}
-                </dd>
+                <dd>{referenceReady ? "Ready" : "Unavailable"}</dd>
               </div>
             </dl>
-
-
           </div>
         </aside>
       </section>
 
-      <section
-        aria-label="Studio overview"
-        className={styles.metrics}
-      >
+      <section aria-label="Studio overview" className={styles.metrics}>
         <article>
-          <span className={styles.metricIndex}>
-            01
-          </span>
+          <span className={styles.metricIndex}>01</span>
 
           <div>
             <small>Created sessions</small>
             <strong>{generations.count}</strong>
           </div>
 
-          <p>
-            Every artwork creation session in the studio.
-          </p>
+          <p>Every artwork creation session in the studio.</p>
         </article>
 
         <article>
-          <span className={styles.metricIndex}>
-            02
-          </span>
+          <span className={styles.metricIndex}>02</span>
 
           <div>
             <small>Awaiting human review</small>
             <strong>{toReview.count}</strong>
           </div>
 
-          <p>
-            Artworks waiting for your creative decision.
-          </p>
+          <p>Artworks waiting for your creative decision.</p>
         </article>
 
         <article>
-          <span className={styles.metricIndex}>
-            03
-          </span>
+          <span className={styles.metricIndex}>03</span>
 
           <div>
             <small>Approved artworks</small>
             <strong>{approved.count}</strong>
           </div>
 
-          <p>
-            Artworks approved for final formats and publication.
-          </p>
+          <p>Artworks approved for final formats and publication.</p>
         </article>
 
         <article>
-          <span className={styles.metricIndex}>
-            04
-          </span>
+          <span className={styles.metricIndex}>04</span>
 
           <div>
             <small>Released to gallery</small>
             <strong>{published.count}</strong>
           </div>
 
-          <p>
-            Artworks currently visible in the public gallery.
-          </p>
+          <p>Artworks currently visible in the public gallery.</p>
         </article>
       </section>
 
@@ -337,12 +274,11 @@ export default async function StudioHomePage() {
           <div aria-hidden="true">!</div>
 
           <div>
-            <h2>
-              The studio needs attention
-            </h2>
+            <h2>The studio needs attention</h2>
 
             <p>
-              Artwork creation is unavailable right now. Check the studio configuration and try again.
+              Artwork creation is unavailable right now. Check the studio
+              configuration and try again.
             </p>
           </div>
         </section>
@@ -358,70 +294,69 @@ export default async function StudioHomePage() {
       <section className={styles.processSection}>
         <div className={styles.processHeading}>
           <div>
-            <p className={styles.eyebrow}>
-              Artwork workflow
-            </p>
+            <p className={styles.eyebrow}>Artwork workflow</p>
 
-            <h2>From artwork to publication.</h2>
+            <h2>From morning generation to verification.</h2>
           </div>
 
           <p>
-            Create the artwork first, approve it, prepare the formats you need, and decide when it is ready for the public gallery.
+            The automated studio creates and evaluates the work. A person
+            approves, guides corrections, and decides what enters the official
+            gallery.
           </p>
         </div>
 
         <div className={styles.modules}>
           <article className={styles.moduleCard}>
             <span>01</span>
-            <h3>Create</h3>
+            <h3>Generate</h3>
 
             <p>
-              Create a text-free artwork guided by the original cover and the I AM NOBODY visual identity.
+              AI creates ten new roles and life situations from the book every
+              morning, then produces them within the established visual system.
             </p>
 
-            <strong className={styles.complete}>
-              Original cover applied
-            </strong>
+            <strong className={styles.complete}>Daily at 10:00 Rome</strong>
           </article>
 
           <article className={styles.moduleCard}>
             <span>02</span>
-            <h3>Validate</h3>
+            <h3>Evaluate</h3>
 
             <p>
-              Review composition, anonymity, mask proportion, restraint, and editorial quality before approval.
+              Each image is checked for composition, anonymity, consistency,
+              restraint, and editorial quality before it reaches you.
             </p>
 
             <strong className={styles.complete}>
-              Visual review
+              AI review completed first
             </strong>
           </article>
 
           <article className={styles.moduleCard}>
             <span>03</span>
-            <h3>Compose</h3>
+            <h3>Approve</h3>
 
             <p>
-              Create the book cover, social, story, poster, and gallery versions after the artwork is approved.
+              You approve the artwork or request a corrected version with your
+              own direction. Approval creates its certificate and required
+              formats.
             </p>
 
-            <strong className={styles.complete}>
-              Formats ready
-            </strong>
+            <strong className={styles.complete}>Human decision required</strong>
           </article>
 
           <article className={styles.moduleCard}>
             <span>04</span>
-            <h3>Release</h3>
+            <h3>Publish</h3>
 
             <p>
-              Prepare the gallery entry, inspect the finished artwork, and publish or remove it whenever needed.
+              The certified artwork is prepared as a private gallery entry.
+              Publication remains manual, and visitors can verify its
+              certificate.
             </p>
 
-            <Link
-              className={styles.pending}
-              href="/studio/artworks"
-            >
+            <Link className={styles.pending} href="/studio/artworks">
               Open the artwork archive
               <span aria-hidden="true">→</span>
             </Link>

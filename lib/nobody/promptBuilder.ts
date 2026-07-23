@@ -18,9 +18,11 @@ import type {
   PromptBuildInput,
   PromptBuildResult,
   PromptValidationIssue,
+  ArchetypeDefinition,
 } from "./types";
 
 const MAX_CUSTOM_NOTE_LENGTH = 280;
+const MAX_INTERNAL_DIRECTION_LENGTH = 700;
 
 const forbiddenInputPatterns: readonly Readonly<{
   code: string;
@@ -155,9 +157,59 @@ export function buildNobodyArtworkPrompt(
     return failure(issues);
   }
 
-  const archetype = getNobodyArchetype(
+  const baseArchetype = getNobodyArchetype(
     input.archetype,
   );
+
+  const creativeBrief = input.creativeBrief;
+
+  const internalObject = creativeBrief?.objectDirection
+    ?.replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 140);
+
+  const archetype: ArchetypeDefinition = creativeBrief
+    ? {
+        ...baseArchetype,
+        code: "AID",
+        title: {
+          en: creativeBrief.roleTitle
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 80),
+          it: creativeBrief.roleTitle
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 80),
+        },
+        description: {
+          en: [creativeBrief.lifeContext, creativeBrief.bookTheme]
+            .filter(Boolean)
+            .join(" — ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 440),
+          it: [creativeBrief.lifeContext, creativeBrief.bookTheme]
+            .filter(Boolean)
+            .join(" — ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .slice(0, 440),
+        },
+        clothingPrompt: creativeBrief.clothingDirection
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 440),
+        permittedProps:
+          internalObject && internalObject.toLowerCase() !== "none"
+            ? [internalObject]
+            : [],
+        defaultProp:
+          internalObject && internalObject.toLowerCase() !== "none"
+            ? internalObject
+            : null,
+      }
+    : baseArchetype;
 
   if (!archetype.active) {
     issues.push({
@@ -168,42 +220,74 @@ export function buildNobodyArtworkPrompt(
     });
   }
 
-  const clothingNotes = normalizeOptionalText(
-    input.clothingNotes,
-  );
+  const clothingNotes = creativeBrief
+    ? ""
+    : normalizeOptionalText(input.clothingNotes);
 
-  const moodNotes = normalizeOptionalText(
-    input.moodNotes,
-  );
+  const moodNotes = creativeBrief
+    ? creativeBrief.moodDirection
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, MAX_INTERNAL_DIRECTION_LENGTH)
+    : normalizeOptionalText(input.moodNotes);
 
-  const variationDirection = normalizeOptionalText(
-    input.variationDirection,
-  );
+  const variationDirection = creativeBrief
+    ? [
+        `Threshold: ${creativeBrief.threshold}.`,
+        `Book theme: ${creativeBrief.bookTheme}.`,
+        `Human context: ${creativeBrief.lifeContext}.`,
+        `Question: ${creativeBrief.conceptQuestion}.`,
+        `Visual story: ${creativeBrief.visualStory}.`,
+        `Body nuance: ${creativeBrief.bodyDirection}.`,
+        creativeBrief.creativeDirection,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, MAX_INTERNAL_DIRECTION_LENGTH)
+    : normalizeOptionalText(input.variationDirection);
 
-  issues.push(
-    ...validateCustomText(
-      "clothingNotes",
-      clothingNotes,
-    ),
-  );
+  if (!creativeBrief) {
+    issues.push(
+      ...validateCustomText(
+        "clothingNotes",
+        clothingNotes,
+      ),
+    );
 
-  issues.push(
-    ...validateCustomText(
-      "moodNotes",
-      moodNotes,
-    ),
-  );
+    issues.push(
+      ...validateCustomText(
+        "moodNotes",
+        moodNotes,
+      ),
+    );
 
-  issues.push(
-    ...validateCustomText(
-      "variationDirection",
-      variationDirection,
-    ),
-  );
+    issues.push(
+      ...validateCustomText(
+        "variationDirection",
+        variationDirection,
+      ),
+    );
+  } else {
+    if (!archetype.title.en || archetype.title.en.length < 3) {
+      issues.push({
+        field: "creativeBrief",
+        code: "invalid_role_title",
+        message: "The AI creative brief needs a clear role title.",
+      });
+    }
 
-  const backgroundSlug =
-    input.backgroundVariant ??
-    NOBODY_BRAND.defaultBackgroundVariant;
+    if (!archetype.clothingPrompt || archetype.clothingPrompt.length < 20) {
+      issues.push({
+        field: "creativeBrief",
+        code: "invalid_clothing_direction",
+        message: "The AI creative brief needs a complete clothing direction.",
+      });
+    }
+  }
+
+  const backgroundSlug = NOBODY_BRAND.defaultBackgroundVariant;
 
   const background =
     NOBODY_BACKGROUND_VARIANTS[backgroundSlug];
@@ -213,13 +297,13 @@ export function buildNobodyArtworkPrompt(
       field: "backgroundVariant",
       code: "invalid_background",
       message:
-        "Choose one of the controlled warm neutral background variants.",
+        "The studio background is fixed by the production system.",
     });
   }
 
-  const requestedProp = normalizeOptionalText(
-    input.prop ?? undefined,
-  );
+  const requestedProp = creativeBrief
+    ? archetype.defaultProp ?? ""
+    : normalizeOptionalText(input.prop ?? undefined);
 
   if (requestedProp) {
     if (archetype.permittedProps.length === 0) {
@@ -298,7 +382,7 @@ export function buildNobodyArtworkPrompt(
           `${variationDirection}.`,
           "Change only restrained secondary details;",
           "preserve the same Nobody identity, composition,",
-          "mask logic, body distance, and visual grammar.",
+          "fixed canonical helmet position, body distance, and visual grammar.",
         ].join(" ")
       : "";
 
@@ -348,6 +432,16 @@ export function buildNobodyArtworkPrompt(
 
     "",
 
+    creativeBrief
+      ? [
+          `DAILY CONCEPT — ${creativeBrief.threshold.toUpperCase()}:`,
+          creativeBrief.conceptQuestion,
+          creativeBrief.visualStory,
+          `Human context: ${creativeBrief.lifeContext}.`,
+          `The role family is ${creativeBrief.roleFamily}.`,
+        ].join(" ")
+      : "",
+
     [
       `ARCHETYPE — ${archetype.title.en.toUpperCase()}:`,
       `Dress the figure in ${archetype.clothingPrompt}.`,
@@ -364,15 +458,14 @@ export function buildNobodyArtworkPrompt(
     "",
 
     [
-      "MASK:",
-      "The head is fully covered by the canonical Nobody mask.",
+      "IMMUTABLE CANONICAL HELMET:",
+      "Every archetype uses the same helmet from the original book cover.",
+      "Only the clothing and social role may change; the helmet identity never changes.",
+      "Match the original helmet's exact position, scale, upright angle, silhouette, visor proportions, black side structures, chin structure, and neck connection.",
       `It ${joinNaturalLanguage(NOBODY_BRAND.mask.required)}.`,
       "No human face or recognisable facial feature is visible.",
-      "The visor reflection is elegant and controlled,",
-      "not a source of neon light.",
-      "The helmet must feel like the same iconic Nobody",
-      "presence seen on the original cover,",
-      "not a new character design.",
+      "Do not create a second helmet outline, extra rim, alternative visor, exposed head, hair, skin, or facial feature around the canonical helmet.",
+      "The production pipeline applies the verified canonical helmet pixels after generation, so the generated shoulders, collar, and neckline must connect naturally beneath that fixed helmet.",
     ].join(" "),
 
     "",
@@ -433,7 +526,8 @@ export function buildNobodyArtworkPrompt(
 
     [
       "Do not show any visible eye, mouth, nose, beard,",
-      "skin through the visor, or recognisable face.",
+      "skin through the visor, recognisable face, hair, exposed head,",
+      "second helmet edge, extra visor, duplicate chin guard, or alternative helmet silhouette.",
     ].join(" "),
 
     [

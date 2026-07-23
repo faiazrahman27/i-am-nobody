@@ -9,15 +9,17 @@ export const NOBODY_QUALITY_CHECKLIST = [
 
   "The body distance and visual presence are consistent with the canonical cover.",
 
-  "The helmet is proportional to a real human head and naturally connected to the body.",
+  "The exact canonical helmet from the original book cover is present at the fixed approved position and scale.",
 
-  "The visor is reflective and iridescent with restrained blue, green, violet, and golden tones.",
+  "The canonical helmet is naturally connected to the generated collar, neck, and shoulders without a visible seam, duplicate edge, second visor, exposed head, or protruding alternative helmet.",
+
+  "The visor is the same reflective iridescent visor from the canonical cover, with its restrained blue, green, violet, and golden tones unchanged.",
 
   "No eyes, mouth, face, beard, or recognisable facial feature is visible.",
 
   "The mask does not resemble a biker, astronaut, robot, monster, superhero, or Daft Punk helmet.",
 
-  "The background is warm, sober, textured, editorial, and visually quiet.",
+  "The exact fixed canonical background is present, with no altered colour, texture, environment, scenery, or added background element.",
 
   "The outfit communicates the archetype without becoming a costume or caricature.",
 
@@ -45,7 +47,11 @@ export const NOBODY_HARD_REJECTION_RULES = [
 
   "action pose or exaggerated gesture",
 
-  "helmet missing, malformed, detached, aggressive, or badly proportioned",
+  "canonical helmet missing, moved, resized, redesigned, rotated, detached, or visually altered",
+
+  "duplicate helmet outline, second visor, exposed head, hair, skin, or generated helmet protruding around the canonical helmet",
+
+  "canonical helmet does not connect naturally to the clothing neckline and shoulders",
 
   "crop materially closer or farther than the canonical cover",
 

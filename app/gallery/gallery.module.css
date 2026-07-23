@@ -248,3 +248,128 @@
     transition: none;
   }
 }
+.verification {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(320px, 1fr);
+  gap: clamp(30px, 7vw, 96px);
+  max-width: 1380px;
+  margin: 0 auto clamp(70px, 10vw, 130px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: clamp(34px, 6vw, 70px) 0;
+}
+
+.verification > div:first-child > p {
+  color: #e0bf81;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.verification h2 {
+  margin-top: 10px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(3.8rem, 7vw, 7rem);
+  font-weight: 400;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+.verification > div:last-child > p {
+  color: rgba(242, 238, 230, 0.62);
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.75;
+}
+
+.verifyForm {
+  display: grid;
+  gap: 9px;
+  margin-top: 24px;
+  font-family: var(--font-sans);
+}
+
+.verifyForm > label {
+  color: rgba(224, 191, 129, 0.78);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.verifyForm > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.verifyForm input {
+  min-width: 0;
+  min-height: 52px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-right: 0;
+  border-radius: 0;
+  background: #0a0a0a;
+  color: #fff;
+  padding: 0 15px;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.verifyForm input:focus {
+  border-color: rgba(224, 191, 129, 0.72);
+}
+
+.verifyForm button {
+  min-height: 52px;
+  border: 1px solid #e0bf81;
+  border-radius: 0;
+  background: #e0bf81;
+  color: #070707;
+  padding: 0 18px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.certificateLink {
+  grid-column: 2;
+  display: grid;
+  gap: 4px;
+  margin-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  padding-top: 12px;
+}
+
+.certificateLink span {
+  color: rgba(157, 148, 136, 0.72);
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.certificateLink strong {
+  color: #e0bf81;
+  font-size: 0.62rem;
+  letter-spacing: 0.07em;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .verification {
+    grid-template-columns: 1fr;
+  }
+
+  .verifyForm > div {
+    grid-template-columns: 1fr;
+  }
+
+  .verifyForm input {
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 0;
+  }
+}

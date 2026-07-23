@@ -25,6 +25,27 @@ export type BackgroundVariantSlug =
 
 export type ImageQuality = "low" | "medium" | "high";
 
+export type NobodyThreshold =
+  | "Nobody"
+  | "Somebody"
+  | "Anybody"
+  | "Infinite";
+
+export type DailyCreativeBrief = Readonly<{
+  roleTitle: string;
+  roleFamily: string;
+  lifeContext: string;
+  threshold: NobodyThreshold;
+  bookTheme: string;
+  conceptQuestion: string;
+  visualStory: string;
+  clothingDirection: string;
+  moodDirection: string;
+  bodyDirection: string;
+  objectDirection: string;
+  creativeDirection: string;
+}>;
+
 export type ArtworkOutputFormat = "png" | "webp" | "jpeg";
 
 export type TemplateType =
@@ -122,6 +143,7 @@ export type PromptBuildInput = Readonly<{
   variationDirection?: string;
   quality?: ImageQuality;
   outputFormat?: ArtworkOutputFormat;
+  creativeBrief?: DailyCreativeBrief;
 }>;
 
 export type PromptValidationIssue = Readonly<{

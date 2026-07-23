@@ -1,5 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm ci --no-audit --no-fund",
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "crons": [
+    {
+      "path": "/api/automation/daily-artworks",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/automation/daily-artworks",
+      "schedule": "0 9 * * *"
+    }
+  ]
 }

@@ -5,9 +5,54 @@ import type {
 } from "./types";
 
 export const NOBODY_BRAND_VERSION = "2.0.0";
-export const NOBODY_PROMPT_VERSION = "2.0.0";
-export const NOBODY_REVIEW_VERSION = "1.0.0";
+export const NOBODY_PROMPT_VERSION = "2.2.0";
+export const NOBODY_REVIEW_VERSION = "1.1.0";
 export const NOBODY_TEMPLATE_VERSION = "1.0.0";
+
+
+export const NOBODY_CANONICAL_BACKGROUND = {
+  id: "IAMN-BACKGROUND-CANONICAL-001",
+  label: "Canonical I AM NOBODY studio background",
+  publicPath: "/nobody-canonical-background.png",
+  sha256:
+    "16097bdce616139f2d6029c452f114f7637365ba620500c2c8a271e0afa4fbfc",
+  width: 906,
+  height: 1280,
+  role: "immutable-background-plate",
+} as const;
+
+export const NOBODY_SUBJECT_MATTE = {
+  id: "IAMN-SUBJECT-MATTE-001",
+  label: "Canonical I AM NOBODY subject matte",
+  publicPath: "/nobody-subject-matte.png",
+  sha256:
+    "d37521d6f4c8d7c3b57317fa019d7d3cc91418a0d50b2499bf70afd4581692a0",
+  width: 906,
+  height: 1280,
+  role: "immutable-subject-matte",
+} as const;
+
+export const NOBODY_CANONICAL_HELMET = {
+  id: "IAMN-HELMET-CANONICAL-001",
+  label: "Canonical I AM NOBODY helmet",
+  publicPath: "/nobody-canonical-helmet.png",
+  sha256:
+    "1ce0437c8697e17d0cd454576a5ae08085eb39b2b9634d6670ceb240fc0a6318",
+  width: 285,
+  height: 355,
+  placement: {
+    left: 315,
+    top: 70,
+  },
+  source: {
+    coverId: "IAMN-COVER-CANONICAL-001",
+    left: 315,
+    top: 70,
+    width: 285,
+    height: 355,
+  },
+  role: "immutable-helmet-overlay",
+} as const;
 
 export const NOBODY_BACKGROUND_VARIANTS: Readonly<
   Record<BackgroundVariantSlug, BackgroundVariant>

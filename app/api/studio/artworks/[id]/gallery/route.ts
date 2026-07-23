@@ -1,23 +1,12 @@
 import { NextResponse } from "next/server";
-import {
-  getNobodyArchetype,
-  isNobodyArchetypeSlug,
-} from "@/lib/nobody";
-import {
-  createSupabaseAdminClient,
-} from "@/lib/supabase/admin";
-import {
-  getStudioAccess,
-} from "@/lib/supabase/studioAccess";
+import { getNobodyArchetype, isNobodyArchetypeSlug } from "@/lib/nobody";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getStudioAccess } from "@/lib/supabase/studioAccess";
 
-export const dynamic =
-  "force-dynamic";
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-type GalleryAction =
-  | "create_draft"
-  | "publish"
-  | "unpublish";
+type GalleryAction = "create_draft" | "publish" | "unpublish";
 
 type GalleryRequest = Readonly<{
   action?: unknown;
@@ -26,25 +15,16 @@ type GalleryRequest = Readonly<{
   displayOrder?: unknown;
 }>;
 
-function isGalleryAction(
-  value: unknown,
-): value is GalleryAction {
+function isGalleryAction(value: unknown): value is GalleryAction {
   return (
-    value === "create_draft" ||
-    value === "publish" ||
-    value === "unpublish"
+    value === "create_draft" || value === "publish" || value === "unpublish"
   );
 }
 
-function makeSlug(
-  artworkCode: string,
-) {
+function makeSlug(artworkCode: string) {
   return artworkCode
     .toLowerCase()
-    .replace(
-      /[^a-z0-9]+/g,
-      "-",
-    )
+    .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 }
 
@@ -56,18 +36,16 @@ export async function POST(
     }>;
   }>,
 ) {
-  const [access, params] =
-    await Promise.all([
-      getStudioAccess(),
-      context.params,
-    ]);
+  const [access, params] = await Promise.all([
+    getStudioAccess(),
+    context.params,
+  ]);
 
   if (!access.authenticated) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Please sign in again.",
+        message: "Please sign in again.",
       },
       { status: 401 },
     );
@@ -77,22 +55,17 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "This account cannot access the studio.",
+        message: "This account cannot access the studio.",
       },
       { status: 403 },
     );
   }
 
-  if (
-    access.admin.role ===
-    "reviewer"
-  ) {
+  if (access.admin.role === "reviewer") {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Reviewer accounts cannot publish gallery entries.",
+        message: "Reviewer accounts cannot publish gallery entries.",
       },
       { status: 403 },
     );
@@ -101,135 +74,98 @@ export async function POST(
   let body: GalleryRequest;
 
   try {
-    body =
-      (await request.json()) as
-        GalleryRequest;
+    body = (await request.json()) as GalleryRequest;
   } catch {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "The gallery request is invalid.",
+        message: "The gallery request is invalid.",
       },
       { status: 400 },
     );
   }
 
-  if (
-    !isGalleryAction(
-      body.action,
-    )
-  ) {
+  if (!isGalleryAction(body.action)) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Choose a valid gallery action.",
+        message: "Choose a valid gallery action.",
       },
       { status: 400 },
     );
   }
 
-  const supabase =
-    createSupabaseAdminClient();
+  const supabase = createSupabaseAdminClient();
 
-  const {
-    data: artwork,
-    error: artworkError,
-  } = await supabase
+  const { data: artwork, error: artworkError } = await supabase
     .from("artwork_variants")
-    .select(
-      "id,artwork_code,status,job_id",
-    )
+    .select("id,artwork_code,status,job_id")
     .eq("id", params.id)
     .maybeSingle();
 
-  if (
-    artworkError ||
-    !artwork
-  ) {
+  if (artworkError || !artwork) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "The artwork could not be found.",
+        message: "The artwork could not be found.",
       },
       { status: 404 },
     );
   }
 
-  const { data: job } =
-    await supabase
-      .from("generation_jobs")
-      .select("archetype_slug")
-      .eq("id", artwork.job_id)
-      .maybeSingle();
+  const { data: job } = await supabase
+    .from("generation_jobs")
+    .select("archetype_slug,metadata")
+    .eq("id", artwork.job_id)
+    .maybeSingle();
 
-  if (
-    !job ||
-    !isNobodyArchetypeSlug(
-      job.archetype_slug,
-    )
-  ) {
+  if (!job || !isNobodyArchetypeSlug(job.archetype_slug)) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "The artwork archetype is unavailable.",
+        message: "The artwork archetype is unavailable.",
       },
       { status: 409 },
     );
   }
 
-  const archetype =
-    getNobodyArchetype(
-      job.archetype_slug,
-    );
+  const archetype = getNobodyArchetype(job.archetype_slug);
 
-  if (
-    body.action ===
-    "create_draft"
-  ) {
-    if (
-      ![
-        "approved_for_template",
-        "published",
-      ].includes(
-        artwork.status,
-      )
-    ) {
+  const jobMetadata =
+    job.metadata && typeof job.metadata === "object"
+      ? (job.metadata as Record<string, unknown>)
+      : {};
+
+  const metadataText = (key: string) =>
+    typeof jobMetadata[key] === "string"
+      ? (jobMetadata[key] as string).trim()
+      : "";
+
+  const roleTitle = metadataText("role_title") || archetype.title.en;
+  const roleDescription =
+    metadataText("life_context") || archetype.description.en;
+
+  if (body.action === "create_draft") {
+    if (!["approved_for_template", "published"].includes(artwork.status)) {
       return NextResponse.json(
         {
           ok: false,
           message:
-            "Create at least one approved template before a gallery draft.",
+            "Create the book-cover format before preparing the gallery entry.",
         },
         { status: 409 },
       );
     }
 
     let primaryRenderId =
-      typeof body.primaryRenderId ===
-      "string"
-        ? body.primaryRenderId
-        : "";
+      typeof body.primaryRenderId === "string" ? body.primaryRenderId : "";
 
     if (!primaryRenderId) {
-      const {
-        data: defaultRender,
-      } = await supabase
-        .from(
-          "template_renders",
-        )
+      const { data: defaultRender } = await supabase
+        .from("template_renders")
         .select("id")
-        .eq(
-          "artwork_variant_id",
-          artwork.id,
-        )
-        .eq(
-          "template_type",
-          "book_cover",
-        )
+        .eq("artwork_variant_id", artwork.id)
+        .eq("template_type", "book_cover")
         .eq("status", "ready")
         .order("created_at", {
           ascending: false,
@@ -237,8 +173,7 @@ export async function POST(
         .limit(1)
         .maybeSingle();
 
-      primaryRenderId =
-        defaultRender?.id ?? "";
+      primaryRenderId = defaultRender?.id ?? "";
     }
 
     if (!primaryRenderId) {
@@ -246,86 +181,55 @@ export async function POST(
         {
           ok: false,
           message:
-            "Render the Book cover template before creating the gallery draft.",
+            "Create the book-cover format before preparing the gallery entry.",
         },
         { status: 409 },
       );
     }
 
-    const { data: render } =
-      await supabase
-        .from(
-          "template_renders",
-        )
-        .select("id,status")
-        .eq(
-          "id",
-          primaryRenderId,
-        )
-        .eq(
-          "artwork_variant_id",
-          artwork.id,
-        )
-        .maybeSingle();
+    const { data: render } = await supabase
+      .from("template_renders")
+      .select("id,status")
+      .eq("id", primaryRenderId)
+      .eq("artwork_variant_id", artwork.id)
+      .maybeSingle();
 
-    if (
-      !render ||
-      render.status !== "ready"
-    ) {
+    if (!render || render.status !== "ready") {
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "Choose a ready template render for the gallery.",
+          message: "Choose a ready template render for the gallery.",
         },
         { status: 409 },
       );
     }
 
     const displayOrder =
-      typeof body.displayOrder ===
-        "number" &&
-      Number.isInteger(
-        body.displayOrder,
-      )
-        ? Math.max(
-            0,
-            body.displayOrder,
-          )
+      typeof body.displayOrder === "number" &&
+      Number.isInteger(body.displayOrder)
+        ? Math.max(0, body.displayOrder)
         : 100;
 
     const values = {
-      artwork_variant_id:
-        artwork.id,
+      artwork_variant_id: artwork.id,
 
-      primary_render_id:
-        primaryRenderId,
+      primary_render_id: primaryRenderId,
 
-      archetype_slug:
-        archetype.slug,
+      archetype_slug: archetype.slug,
 
-      slug:
-        makeSlug(
-          artwork.artwork_code,
-        ),
+      slug: makeSlug(artwork.artwork_code),
 
-      title_it:
-        archetype.title.it,
+      title_it: roleTitle,
 
-      title_en:
-        archetype.title.en,
+      title_en: roleTitle,
 
-      description_it:
-        archetype.description.it,
+      description_it: roleDescription,
 
-      description_en:
-        archetype.description.en,
+      description_en: roleDescription,
 
-      display_order:
-        displayOrder,
+      display_order: displayOrder,
 
-      featured:
-        body.featured === true,
+      featured: body.featured === true,
 
       status: "draft",
 
@@ -335,72 +239,59 @@ export async function POST(
 
       unpublished_at: null,
 
-      created_by:
-        access.admin.userId,
+      created_by: access.admin.userId,
 
       metadata: {
-        artwork_code:
-          artwork.artwork_code,
+        artwork_code: artwork.artwork_code,
 
-        collection:
-          "I AM NOBODY — Archetypes",
+        collection: "I AM NOBODY — Official Artworks",
+
+        role_title: roleTitle,
+
+        role_family: metadataText("role_family") || null,
+
+        threshold_name: metadataText("threshold_name") || null,
+
+        book_theme: metadataText("book_theme") || null,
+
+        concept_question: metadataText("concept_question") || null,
       },
     };
 
-    const {
-      data: gallery,
-      error: galleryError,
-    } = await supabase
+    const { data: gallery, error: galleryError } = await supabase
       .from("gallery_entries")
       .upsert(values, {
-        onConflict:
-          "artwork_variant_id",
+        onConflict: "artwork_variant_id",
       })
-      .select(
-        "id,slug,status,visibility,primary_render_id",
-      )
+      .select("id,slug,status,visibility,primary_render_id")
       .single();
 
-    if (
-      galleryError ||
-      !gallery
-    ) {
+    if (galleryError || !gallery) {
       return NextResponse.json(
         {
           ok: false,
           message:
-            galleryError?.message ||
-            "The gallery draft could not be saved.",
+            galleryError?.message || "The gallery draft could not be saved.",
         },
         { status: 500 },
       );
     }
 
-    await supabase
-      .from(
-        "studio_audit_log",
-      )
-      .insert({
-        actor_user_id:
-          access.admin.userId,
+    await supabase.from("studio_audit_log").insert({
+      actor_user_id: access.admin.userId,
 
-        action:
-          "gallery.draft_created",
+      action: "gallery.draft_created",
 
-        entity_type:
-          "gallery_entry",
+      entity_type: "gallery_entry",
 
-        entity_id:
-          gallery.id,
+      entity_id: gallery.id,
 
-        details: {
-          artwork_variant_id:
-            artwork.id,
+      details: {
+        artwork_variant_id: artwork.id,
 
-          primary_render_id:
-            primaryRenderId,
-        },
-      });
+        primary_render_id: primaryRenderId,
+      },
+    });
 
     return NextResponse.json({
       ok: true,
@@ -408,62 +299,58 @@ export async function POST(
     });
   }
 
-  const {
-    data: gallery,
-    error: galleryError,
-  } = await supabase
+  const { data: gallery, error: galleryError } = await supabase
     .from("gallery_entries")
-    .select(
-      "id,slug,status,visibility,primary_render_id",
-    )
-    .eq(
-      "artwork_variant_id",
-      artwork.id,
-    )
+    .select("id,slug,status,visibility,primary_render_id")
+    .eq("artwork_variant_id", artwork.id)
     .maybeSingle();
 
-  if (
-    galleryError ||
-    !gallery
-  ) {
+  if (galleryError || !gallery) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "Create the gallery draft first.",
+        message: "Create the gallery draft first.",
       },
       { status: 409 },
     );
   }
 
-  if (
-    body.action === "publish"
-  ) {
-    if (
-      !gallery.primary_render_id
-    ) {
+  if (body.action === "publish") {
+    if (!gallery.primary_render_id) {
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "The gallery draft has no primary render.",
+          message: "The gallery draft has no primary render.",
         },
         { status: 409 },
       );
     }
 
-    const publishedAt =
-      new Date().toISOString();
+    const { data: certificate } = await supabase
+      .from("artwork_certificates")
+      .select("id,status")
+      .eq("artwork_variant_id", artwork.id)
+      .eq("status", "valid")
+      .maybeSingle();
 
-    const {
-      error: publishError,
-    } = await supabase
+    if (!certificate) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: "Approve and certify the artwork before publishing it.",
+        },
+        { status: 409 },
+      );
+    }
+
+    const publishedAt = new Date().toISOString();
+
+    const { error: publishError } = await supabase
       .from("gallery_entries")
       .update({
         status: "published",
         visibility: "public",
-        published_at:
-          publishedAt,
+        published_at: publishedAt,
         unpublished_at: null,
       })
       .eq("id", gallery.id);
@@ -473,47 +360,34 @@ export async function POST(
         {
           ok: false,
           message:
-            publishError.message ||
-            "The artwork could not be published.",
+            publishError.message || "The artwork could not be published.",
         },
         { status: 500 },
       );
     }
 
     await supabase
-      .from(
-        "artwork_variants",
-      )
+      .from("artwork_variants")
       .update({
         status: "published",
       })
       .eq("id", artwork.id);
 
-    await supabase
-      .from(
-        "studio_audit_log",
-      )
-      .insert({
-        actor_user_id:
-          access.admin.userId,
+    await supabase.from("studio_audit_log").insert({
+      actor_user_id: access.admin.userId,
 
-        action:
-          "gallery.published",
+      action: "gallery.published",
 
-        entity_type:
-          "gallery_entry",
+      entity_type: "gallery_entry",
 
-        entity_id:
-          gallery.id,
+      entity_id: gallery.id,
 
-        details: {
-          artwork_variant_id:
-            artwork.id,
+      details: {
+        artwork_variant_id: artwork.id,
 
-          slug:
-            gallery.slug,
-        },
-      });
+        slug: gallery.slug,
+      },
+    });
 
     return NextResponse.json({
       ok: true,
@@ -522,25 +396,20 @@ export async function POST(
         ...gallery,
         status: "published",
         visibility: "public",
-        published_at:
-          publishedAt,
+        published_at: publishedAt,
       },
     });
   }
 
-  const unpublishedAt =
-    new Date().toISOString();
+  const unpublishedAt = new Date().toISOString();
 
-  const {
-    error: unpublishError,
-  } = await supabase
+  const { error: unpublishError } = await supabase
     .from("gallery_entries")
     .update({
       status: "draft",
       visibility: "private",
       published_at: null,
-      unpublished_at:
-        unpublishedAt,
+      unpublished_at: unpublishedAt,
     })
     .eq("id", gallery.id);
 
@@ -549,8 +418,7 @@ export async function POST(
       {
         ok: false,
         message:
-          unpublishError.message ||
-          "The artwork could not be unpublished.",
+          unpublishError.message || "The artwork could not be unpublished.",
       },
       { status: 500 },
     );
@@ -559,34 +427,25 @@ export async function POST(
   await supabase
     .from("artwork_variants")
     .update({
-      status:
-        "approved_for_template",
+      status: "approved_for_template",
     })
     .eq("id", artwork.id);
 
-  await supabase
-    .from("studio_audit_log")
-    .insert({
-      actor_user_id:
-        access.admin.userId,
+  await supabase.from("studio_audit_log").insert({
+    actor_user_id: access.admin.userId,
 
-      action:
-        "gallery.unpublished",
+    action: "gallery.unpublished",
 
-      entity_type:
-        "gallery_entry",
+    entity_type: "gallery_entry",
 
-      entity_id:
-        gallery.id,
+    entity_id: gallery.id,
 
-      details: {
-        artwork_variant_id:
-          artwork.id,
+    details: {
+      artwork_variant_id: artwork.id,
 
-        slug:
-          gallery.slug,
-      },
-    });
+      slug: gallery.slug,
+    },
+  });
 
   return NextResponse.json({
     ok: true,

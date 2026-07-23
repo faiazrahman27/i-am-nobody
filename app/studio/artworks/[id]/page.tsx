@@ -68,6 +68,7 @@ type JobRow = Readonly<{
     string;
   compiled_prompt:
     string | null;
+  metadata: Record<string, unknown> | null;
 }>;
 
 type QualityReviewRow =
@@ -125,6 +126,13 @@ type GalleryRow = Readonly<{
     string | null;
 }>;
 
+type CertificateRow = Readonly<{
+  certificate_code: string;
+  status: string;
+  issued_at: string;
+  verification_hash: string;
+}>;
+
 const REVIEWABLE_STATUSES =
   new Set([
     "candidate",
@@ -132,8 +140,7 @@ const REVIEWABLE_STATUSES =
     "auto_rejected",
     "auto_review_failed",
     "ready_for_review",
-    "approved_artwork",
-    "needs_regeneration",
+      "needs_regeneration",
     "wrong_mask",
     "wrong_composition",
     "too_busy",
@@ -163,8 +170,7 @@ function getStatusClass(
 ) {
   if (
     [
-      "approved_artwork",
-      "approved_for_template",
+          "approved_for_template",
       "published",
     ].includes(status)
   ) {
@@ -270,11 +276,12 @@ export default async function ArtworkReviewPage({
     { data: reviewData },
     { data: renderData },
     { data: galleryData },
+    { data: certificateData },
   ] = await Promise.all([
     supabase
       .from("generation_jobs")
       .select(
-        "archetype_slug,quality,clothing_notes,mood_notes,prop,variation_direction,background_variant,compiled_prompt",
+        "archetype_slug,quality,clothing_notes,mood_notes,prop,variation_direction,background_variant,compiled_prompt,metadata",
       )
       .eq(
         "id",
@@ -320,6 +327,17 @@ export default async function ArtworkReviewPage({
         variant.id,
       )
       .maybeSingle(),
+
+    supabase
+      .from("artwork_certificates")
+      .select(
+        "certificate_code,status,issued_at,verification_hash",
+      )
+      .eq(
+        "artwork_variant_id",
+        variant.id,
+      )
+      .maybeSingle(),
   ]);
 
   const job =
@@ -337,6 +355,11 @@ export default async function ArtworkReviewPage({
   const gallery =
     galleryData as
       | GalleryRow
+      | null;
+
+  const certificate =
+    certificateData as
+      | CertificateRow
       | null;
 
   const [
@@ -376,9 +399,25 @@ export default async function ArtworkReviewPage({
         )
       : null;
 
+  const jobMetadata =
+    job?.metadata && typeof job.metadata === "object"
+      ? job.metadata
+      : {};
+
+  const metadataText = (key: string) =>
+    typeof jobMetadata[key] === "string"
+      ? (jobMetadata[key] as string).trim()
+      : "";
+
   const title =
-    archetype?.title.en ??
-    "Nobody";
+    metadataText("role_title") || archetype?.title.en || "Nobody";
+
+  const roleFamily = metadataText("role_family");
+  const lifeContext = metadataText("life_context");
+  const thresholdName = metadataText("threshold_name");
+  const bookTheme = metadataText("book_theme");
+  const conceptQuestion = metadataText("concept_question");
+  const visualStory = metadataText("visual_story");
 
   const [
     previewResult,
@@ -570,12 +609,8 @@ export default async function ArtworkReviewPage({
                   ?.signedUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
-                    alt={`${title} artwork`}
-                    src={
-                      previewResult
-                        .data
-                        .signedUrl
-                    }
+                    alt={`${title} cover preview`}
+                    src={`/api/studio/artworks/${variant.id}/preview-cover`}
                   />
                 ) : (
                   <p>
@@ -585,7 +620,7 @@ export default async function ArtworkReviewPage({
               </div>
 
               <figcaption>
-                Artwork
+                Cover preview with the fixed title and layout
               </figcaption>
             </figure>
           </div>
@@ -758,6 +793,20 @@ export default async function ArtworkReviewPage({
                 </dd>
               </div>
 
+              {roleFamily ? (
+                <div>
+                  <dt>Human context</dt>
+                  <dd>{roleFamily}</dd>
+                </div>
+              ) : null}
+
+              {thresholdName ? (
+                <div>
+                  <dt>Book threshold</dt>
+                  <dd>{thresholdName}</dd>
+                </div>
+              ) : null}
+
               <div>
                 <dt>Created from</dt>
                 <dd>
@@ -798,6 +847,22 @@ export default async function ArtworkReviewPage({
                     </Link>
                   </p>
                 ))}
+              </div>
+            ) : null}
+
+            {conceptQuestion || bookTheme || lifeContext || visualStory ? (
+              <div className={styles.brief}>
+                <h3>AI creative direction</h3>
+
+                {conceptQuestion ? (
+                  <p>Question: {conceptQuestion}</p>
+                ) : null}
+
+                {bookTheme ? <p>Theme: {bookTheme}</p> : null}
+
+                {lifeContext ? <p>Context: {lifeContext}</p> : null}
+
+                {visualStory ? <p>Visual story: {visualStory}</p> : null}
               </div>
             ) : null}
 
@@ -847,6 +912,39 @@ export default async function ArtworkReviewPage({
               </div>
             ) : null}
           </section>
+
+          {certificate ? (
+            <section className={workflowStyles.certificatePanel}>
+              <div>
+                <p className={styles.eyebrow}>Official certificate</p>
+                <h2>Certified artwork</h2>
+              </div>
+
+              <div className={workflowStyles.certificateCode}>
+                <span>Certificate code</span>
+                <strong>{certificate.certificate_code}</strong>
+              </div>
+
+              <dl>
+                <div>
+                  <dt>Status</dt>
+                  <dd>{certificate.status}</dd>
+                </div>
+                <div>
+                  <dt>Issued</dt>
+                  <dd>{formatDate(certificate.issued_at)}</dd>
+                </div>
+              </dl>
+
+              <Link
+                className={workflowStyles.verifyLink}
+                href={`/verify/${certificate.certificate_code}`}
+                target="_blank"
+              >
+                Open public verification →
+              </Link>
+            </section>
+          ) : null}
 
           <section
             className={

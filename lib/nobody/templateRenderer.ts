@@ -152,6 +152,15 @@ const FRAME_REGIONS = {
   },
 } as const;
 
+
+export type NobodyCertificateRenderData = Readonly<{
+  certificateCode: string;
+  artworkCode: string;
+  archetypeTitle: string;
+  issuedAt: string;
+  verificationUrl: string;
+}>;
+
 export type RenderedTemplate =
   Readonly<{
     buffer: Buffer;
@@ -667,6 +676,100 @@ async function placeOnCanvas(
     .toBuffer();
 }
 
+
+function escapeXml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+function formatCertificateDate(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Rome",
+  }).format(date);
+}
+
+async function buildCertificateCard(
+  artwork: Buffer,
+  certificate: NobodyCertificateRenderData,
+) {
+  const width = 1359;
+  const height = 1920;
+  const artworkWidth = 983;
+  const artworkHeight = 1388;
+  const artworkLeft = Math.round((width - artworkWidth) / 2);
+  const artworkTop = 178;
+
+  const normalizedArtwork = await sharp(artwork)
+    .resize(artworkWidth, artworkHeight, {
+      fit: "fill",
+    })
+    .removeAlpha()
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+
+  const certificateCode = escapeXml(certificate.certificateCode);
+  const artworkCode = escapeXml(certificate.artworkCode);
+  const archetypeTitle = escapeXml(certificate.archetypeTitle.toUpperCase());
+  const issuedAt = escapeXml(formatCertificateDate(certificate.issuedAt));
+  const verificationUrl = escapeXml(certificate.verificationUrl);
+
+  const overlay = Buffer.from(`
+    <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="iris" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#35a8c5"/>
+          <stop offset="0.25" stop-color="#3eb889"/>
+          <stop offset="0.5" stop-color="#e0bf81"/>
+          <stop offset="0.75" stop-color="#d08a9b"/>
+          <stop offset="1" stop-color="#7661a7"/>
+        </linearGradient>
+      </defs>
+      <rect width="${width}" height="${height}" fill="#070707"/>
+      <rect x="0" y="0" width="${width}" height="6" fill="url(#iris)"/>
+      <rect x="${artworkLeft - 1}" y="${artworkTop - 1}" width="${artworkWidth + 2}" height="${artworkHeight + 2}" fill="none" stroke="#e0bf81" stroke-opacity="0.42" stroke-width="2"/>
+      <text x="92" y="92" fill="#f2eee6" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" letter-spacing="8">I AM NOBODY</text>
+      <text x="1267" y="92" text-anchor="end" fill="#e0bf81" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" letter-spacing="4">CERTIFICATE OF AUTHENTICITY</text>
+      <line x1="92" y1="126" x2="1267" y2="126" stroke="#ffffff" stroke-opacity="0.15"/>
+      <text x="92" y="1630" fill="#9d9488" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" letter-spacing="3">OFFICIAL ARTWORK</text>
+      <text x="92" y="1692" fill="#f2eee6" font-family="Georgia, 'Times New Roman', serif" font-size="62" letter-spacing="2">${archetypeTitle}</text>
+      <text x="92" y="1754" fill="#e0bf81" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" letter-spacing="5">${certificateCode}</text>
+      <text x="92" y="1810" fill="#9d9488" font-family="Arial, Helvetica, sans-serif" font-size="18">Artwork ${artworkCode} · Issued ${issuedAt}</text>
+      <text x="1267" y="1754" text-anchor="end" fill="#f2eee6" font-family="Arial, Helvetica, sans-serif" font-size="18">Verify this artwork</text>
+      <text x="1267" y="1787" text-anchor="end" fill="#e0bf81" font-family="Arial, Helvetica, sans-serif" font-size="17">${verificationUrl}</text>
+      <line x1="92" y1="1844" x2="1267" y2="1844" stroke="#ffffff" stroke-opacity="0.15"/>
+      <text x="92" y="1883" fill="#77716a" font-family="Arial, Helvetica, sans-serif" font-size="15">The approved artwork file is unchanged. This certificate is its permanent verification record.</text>
+    </svg>
+  `);
+
+  return sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: { r: 7, g: 7, b: 7, alpha: 1 },
+    },
+  })
+    .composite([
+      { input: normalizedArtwork, left: artworkLeft, top: artworkTop },
+      { input: overlay, left: 0, top: 0 },
+    ])
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+}
+
 export async function renderNobodyTemplate(
   input: {
     artwork: Buffer;
@@ -674,6 +777,8 @@ export async function renderNobodyTemplate(
       TemplateType;
     locale?:
       Locale | null;
+    certificate?:
+      NobodyCertificateRenderData | null;
   },
 ): Promise<RenderedTemplate> {
   const locale =
@@ -936,7 +1041,46 @@ export async function renderNobodyTemplate(
     });
   }
 
+  if (
+    input.templateType ===
+    "collectible_card"
+  ) {
+    if (!input.certificate) {
+      throw new Error(
+        "This artwork must have a certificate before its certificate card can be created.",
+      );
+    }
+
+    const buffer =
+      await buildCertificateCard(
+        input.artwork,
+        input.certificate,
+      );
+
+    return makeResult({
+      buffer,
+      templateType:
+        input.templateType,
+      locale,
+      width: 1359,
+      height: 1920,
+      mimeType:
+        "image/png",
+      extension: "png",
+      metadata: {
+        source:
+          "approved_artwork",
+        certificateCode:
+          input.certificate.certificateCode,
+        verificationUrl:
+          input.certificate.verificationUrl,
+        cropPolicy:
+          "no-destructive-crop",
+      },
+    });
+  }
+
   throw new Error(
-    "The collectible-card template is intentionally disabled until the certification and claim layer is designed.",
+    "Choose a supported final format.",
   );
 }

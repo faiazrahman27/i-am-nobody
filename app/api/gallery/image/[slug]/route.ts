@@ -35,7 +35,7 @@ export async function GET(
       "gallery_entries",
     )
     .select(
-      "id,primary_render_id,status,visibility,published_at",
+      "id,artwork_variant_id,primary_render_id,status,visibility,published_at",
     )
     .eq(
       "slug",
@@ -74,6 +74,20 @@ export async function GET(
             "no-store",
         },
       },
+    );
+  }
+
+  const { data: certificate } = await supabase
+    .from("artwork_certificates")
+    .select("id")
+    .eq("artwork_variant_id", gallery.artwork_variant_id)
+    .eq("status", "valid")
+    .maybeSingle();
+
+  if (!certificate) {
+    return NextResponse.json(
+      { error: "NOT_FOUND" },
+      { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 
