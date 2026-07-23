@@ -28,9 +28,16 @@ export function isAuthorizedCronRequest(request: Request) {
   const expected = process.env.CRON_SECRET?.trim();
   const authorization = request.headers.get("authorization")?.trim() ?? "";
 
-  if (!expected || expected.length < 32) {
-    return false;
-  }
+  if (!expected || expected.length < 32) return false;
 
   return safeEqual(authorization, `Bearer ${expected}`);
+}
+
+export function isAuthorizedInternalGenerationRequest(request: Request) {
+  const expected = process.env.CRON_SECRET?.trim();
+  const supplied = request.headers.get("x-studio-internal-secret")?.trim() ?? "";
+
+  if (!expected || expected.length < 32) return false;
+
+  return safeEqual(supplied, expected);
 }

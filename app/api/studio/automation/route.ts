@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ensureDailyAutomationBatch } from "@/lib/nobody/automationService";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStudioAccess } from "@/lib/supabase/studioAccess";
+import { assertNobodyRuntimeReady } from "@/lib/nobody/runtimeConfig";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
 
   if (body.action === "prepare_today") {
     try {
+      assertNobodyRuntimeReady();
       const result = await ensureDailyAutomationBatch({ force: true });
       return NextResponse.json({ ok: true, ...result });
     } catch (error) {
@@ -96,18 +98,22 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "process_next") {
-    const secret = process.env.CRON_SECRET?.trim();
-
-    if (!secret || secret.length < 32) {
+    try {
+      assertNobodyRuntimeReady();
+    } catch (error) {
       return NextResponse.json(
         {
           ok: false,
           message:
-            "Add the scheduled-worker secret before running the daily queue.",
+            error instanceof Error
+              ? error.message
+              : "The Studio runtime configuration is invalid.",
         },
         { status: 503 },
       );
     }
+
+    const secret = process.env.CRON_SECRET!.trim();
 
     try {
       const origin = new URL(request.url).origin;

@@ -72,6 +72,7 @@ export type GeneratedArtwork = Readonly<{
     canonicalHelmetId: string;
     canonicalHelmetSha256: string;
     canonicalBackgroundApplied: true;
+    backgroundIsolation: "difference-matte-composite";
     canonicalBackgroundId: string;
     canonicalBackgroundSha256: string;
     subjectMatteId: string;
@@ -385,41 +386,118 @@ async function buildModelEditMask(subjectMatte: Buffer) {
   return sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } }).png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
 }
 
-async function applyCanonicalBackground(artwork: Buffer, canonicalBackground: Buffer, subjectMatte: Buffer) {
-  const [artworkRaw, matteRawObject] = await Promise.all([
+async function applyCanonicalBackground(
+  artwork: Buffer,
+  canonicalBackground: Buffer,
+  subjectMatte: Buffer,
+) {
+  const [artworkRaw, backgroundRawObject, matteRawObject] = await Promise.all([
     sharp(artwork).removeAlpha().raw().toBuffer({ resolveWithObject: true }),
-    sharp(subjectMatte).extractChannel(0).raw().toBuffer({ resolveWithObject: true }),
+    sharp(canonicalBackground)
+      .removeAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true }),
+    sharp(subjectMatte)
+      .extractChannel(0)
+      .raw()
+      .toBuffer({ resolveWithObject: true }),
   ]);
 
+  const { width, height } = artworkRaw.info;
+
   if (
-    artworkRaw.info.width !== matteRawObject.info.width ||
-    artworkRaw.info.height !== matteRawObject.info.height ||
+    backgroundRawObject.info.width !== width ||
+    backgroundRawObject.info.height !== height ||
+    matteRawObject.info.width !== width ||
+    matteRawObject.info.height !== height ||
     artworkRaw.info.channels !== 3 ||
+    backgroundRawObject.info.channels !== 3 ||
     matteRawObject.info.channels !== 1
   ) {
-    throw new Error("The fixed subject matte does not match the artwork canvas.");
+    throw new Error(
+      "The fixed background assets do not match the artwork canvas.",
+    );
   }
 
-  const rgba = Buffer.alloc(
-    artworkRaw.info.width * artworkRaw.info.height * 4,
-  );
+  /*
+   * The image edit starts from the canonical background, so unchanged pixels
+   * remain very close to the plate. Build a soft alpha mask from the actual
+   * colour difference, bounded by the approved subject matte. This removes any
+   * regenerated wall pixels between the arms, body, and legs before the subject
+   * is composited back onto the immutable background plate.
+   */
+  const alpha = Buffer.alloc(width * height);
+  const differenceStart = 8;
+  const differenceEnd = 30;
 
-  for (let pixel = 0; pixel < matteRawObject.data.length; pixel += 1) {
+  for (let pixel = 0; pixel < alpha.length; pixel += 1) {
+    const offset = pixel * 3;
+    const matte = matteRawObject.data[pixel] ?? 0;
+
+    if (matte === 0) {
+      alpha[pixel] = 0;
+      continue;
+    }
+
+    const redDifference = Math.abs(
+      (artworkRaw.data[offset] ?? 0) -
+        (backgroundRawObject.data[offset] ?? 0),
+    );
+    const greenDifference = Math.abs(
+      (artworkRaw.data[offset + 1] ?? 0) -
+        (backgroundRawObject.data[offset + 1] ?? 0),
+    );
+    const blueDifference = Math.abs(
+      (artworkRaw.data[offset + 2] ?? 0) -
+        (backgroundRawObject.data[offset + 2] ?? 0),
+    );
+    const difference = Math.max(
+      redDifference,
+      greenDifference,
+      blueDifference,
+    );
+    const normalized = Math.max(
+      0,
+      Math.min(1, (difference - differenceStart) / (differenceEnd - differenceStart)),
+    );
+
+    alpha[pixel] = Math.round(normalized * matte);
+  }
+
+  const cleanedAlpha = await sharp(alpha, {
+    raw: { width, height, channels: 1 },
+  })
+    .median(3)
+    .blur(0.55)
+    .raw()
+    .toBuffer();
+
+  const rgba = Buffer.alloc(width * height * 4);
+  let visiblePixels = 0;
+
+  for (let pixel = 0; pixel < cleanedAlpha.length; pixel += 1) {
     const sourceOffset = pixel * 3;
     const outputOffset = pixel * 4;
+    const pixelAlpha = cleanedAlpha[pixel] ?? 0;
 
     rgba[outputOffset] = artworkRaw.data[sourceOffset] ?? 0;
     rgba[outputOffset + 1] = artworkRaw.data[sourceOffset + 1] ?? 0;
     rgba[outputOffset + 2] = artworkRaw.data[sourceOffset + 2] ?? 0;
-    rgba[outputOffset + 3] = matteRawObject.data[pixel] ?? 0;
+    rgba[outputOffset + 3] = pixelAlpha;
+
+    if (pixelAlpha >= 24) visiblePixels += 1;
+  }
+
+  const minimumVisiblePixels = Math.round(width * height * 0.09);
+
+  if (visiblePixels < minimumVisiblePixels) {
+    throw new Error(
+      "The generated subject could not be isolated from the fixed background.",
+    );
   }
 
   const subjectWithAlpha = await sharp(rgba, {
-    raw: {
-      width: artworkRaw.info.width,
-      height: artworkRaw.info.height,
-      channels: 4,
-    },
+    raw: { width, height, channels: 4 },
   })
     .png()
     .toBuffer();
@@ -430,20 +508,17 @@ async function applyCanonicalBackground(artwork: Buffer, canonicalBackground: Bu
     .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toBuffer();
 
-  const [backgroundRaw, outputRaw] = await Promise.all([
-    sharp(canonicalBackground).removeAlpha().raw().toBuffer(),
-    sharp(composed).removeAlpha().raw().toBuffer(),
-  ]);
+  const outputRaw = await sharp(composed).removeAlpha().raw().toBuffer();
 
-  for (let pixel = 0; pixel < matteRawObject.data.length; pixel += 1) {
-    if ((matteRawObject.data[pixel] ?? 0) !== 0) continue;
+  for (let pixel = 0; pixel < cleanedAlpha.length; pixel += 1) {
+    if ((cleanedAlpha[pixel] ?? 0) !== 0) continue;
 
     const offset = pixel * 3;
 
     if (
-      backgroundRaw[offset] !== outputRaw[offset] ||
-      backgroundRaw[offset + 1] !== outputRaw[offset + 1] ||
-      backgroundRaw[offset + 2] !== outputRaw[offset + 2]
+      backgroundRawObject.data[offset] !== outputRaw[offset] ||
+      backgroundRawObject.data[offset + 1] !== outputRaw[offset + 1] ||
+      backgroundRawObject.data[offset + 2] !== outputRaw[offset + 2]
     ) {
       throw new Error(
         "The fixed canonical background could not be applied exactly to the artwork.",
@@ -879,6 +954,7 @@ async function finalizeCleanArtwork(
         NOBODY_CANONICAL_HELMET.id,
       canonicalHelmetSha256: helmetSha256,
       canonicalBackgroundApplied: true,
+      backgroundIsolation: "difference-matte-composite",
       canonicalBackgroundId: NOBODY_CANONICAL_BACKGROUND.id,
       canonicalBackgroundSha256: backgroundSha256,
       subjectMatteId: NOBODY_SUBJECT_MATTE.id,

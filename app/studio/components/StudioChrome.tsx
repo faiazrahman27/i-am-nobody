@@ -26,8 +26,8 @@ type NavigationItem = Readonly<{
 const NAVIGATION: readonly NavigationItem[] = [
   {
     href: "/studio",
-    label: "Create",
-    description: "Create a new artwork",
+    label: "Overview",
+    description: "Daily production status",
     active: (pathname) => pathname === "/studio",
     icon: "create",
   },
@@ -65,7 +65,10 @@ function NavIcon({ name }: Readonly<{ name: NavigationItem["icon"] }>) {
   if (name === "create") {
     return (
       <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path d="M12 5v14M5 12h14" />
+        <rect height="6" rx="1" width="6" x="4" y="4" />
+        <rect height="6" rx="1" width="6" x="14" y="4" />
+        <rect height="6" rx="1" width="6" x="4" y="14" />
+        <rect height="6" rx="1" width="6" x="14" y="14" />
       </svg>
     );
   }
@@ -120,7 +123,7 @@ function getSectionLabel(pathname: string) {
     return "Artwork archive";
   }
 
-  return "Creation studio";
+  return "Studio overview";
 }
 
 function formatRole(role?: "owner" | "editor" | "reviewer") {

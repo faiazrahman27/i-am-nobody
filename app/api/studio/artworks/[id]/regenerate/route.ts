@@ -8,6 +8,8 @@ import type {
 } from "@/lib/nobody";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStudioAccess } from "@/lib/supabase/studioAccess";
+import { requireCronSecret } from "@/lib/cronAuth";
+import { assertNobodyRuntimeReady } from "@/lib/nobody/runtimeConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -168,6 +170,21 @@ export async function POST(
     );
   }
 
+  try {
+    assertNobodyRuntimeReady();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "The Studio runtime configuration is invalid.",
+      },
+      { status: 503 },
+    );
+  }
+
   let body: RegenerateRequest;
 
   try {
@@ -266,53 +283,71 @@ export async function POST(
     : undefined;
 
   const origin = new URL(request.url).origin;
-
+  const internalSecret = requireCronSecret();
   const cookie = request.headers.get("cookie") ?? "";
 
-  const generationResponse = await fetch(`${origin}/api/studio/generate`, {
-    method: "POST",
+  let generationResponse: Response;
+  let generationPayload: GenerateResponse;
 
-    headers: {
-      "Content-Type": "application/json",
+  try {
+    generationResponse = await fetch(`${origin}/api/studio/generate`, {
+      method: "POST",
 
-      cookie,
-    },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Studio-Internal-Secret": internalSecret,
+        cookie,
+      },
 
-    body: JSON.stringify({
-      archetype: job.archetype_slug,
+      body: JSON.stringify({
+        archetype: job.archetype_slug,
 
-      clothingNotes: job.clothing_notes ?? "",
+        clothingNotes: job.clothing_notes ?? "",
 
-      moodNotes: job.mood_notes ?? "",
+        moodNotes: job.mood_notes ?? "",
 
-      backgroundVariant: NOBODY_BRAND.defaultBackgroundVariant,
+        backgroundVariant: NOBODY_BRAND.defaultBackgroundVariant,
 
-      prop: job.prop,
+        prop: job.prop,
 
-      variationDirection,
+        variationDirection,
 
-      quality,
+        quality,
 
-      numberOfVariations: 1,
+        numberOfVariations: 1,
 
-      generationSource: "regeneration",
+        generationSource: "regeneration",
 
-      creativeBrief: correctedBrief,
-    }),
+        creativeBrief: correctedBrief,
+      }),
 
-    cache: "no-store",
+      cache: "no-store",
 
-    signal: AbortSignal.timeout(295_000),
-  });
+      signal: AbortSignal.timeout(295_000),
+    });
 
-  const generationPayload =
-    (await generationResponse.json()) as GenerateResponse;
+    generationPayload =
+      (await generationResponse.json()) as GenerateResponse;
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "The replacement artwork request failed.",
+      },
+      { status: 502 },
+    );
+  }
 
   if (
     !generationResponse.ok ||
     !generationPayload.ok ||
     !generationPayload.variants?.length
   ) {
+    const retryAfter = generationResponse.headers.get("retry-after");
+
     return NextResponse.json(
       {
         ok: false,
@@ -322,6 +357,7 @@ export async function POST(
       },
       {
         status: generationResponse.status || 500,
+        headers: retryAfter ? { "Retry-After": retryAfter } : undefined,
       },
     );
   }

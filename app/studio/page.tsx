@@ -1,10 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { NOBODY_BRAND } from "@/lib/nobody";
+import { getNobodyRuntimeReadiness, NOBODY_BRAND } from "@/lib/nobody";
 import { loadCanonicalReferenceAssets } from "@/lib/nobody/imagePipeline";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireStudioAdmin } from "@/lib/supabase/studioAccess";
-import ImageGenerator from "./components/ImageGenerator";
 import styles from "./studio.module.css";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +37,7 @@ async function countRows(
 }
 
 export default async function StudioHomePage() {
-  const admin = await requireStudioAdmin();
+  await requireStudioAdmin();
   const supabase = createSupabaseAdminClient();
 
   const [
@@ -108,18 +107,25 @@ export default async function StudioHomePage() {
   const studioReady =
     databaseReady && storageReady && obsoleteBucketRemoved && referenceReady;
 
-  const generationEnabled = Boolean(process.env.OPENAI_API_KEY?.trim());
+  const runtimeReadiness = getNobodyRuntimeReadiness();
 
   const automationReady =
     Boolean(automationConfig.data) && !automationConfig.error;
 
   const systemMessage = !studioReady
-    ? "Artwork creation is temporarily unavailable. Please check the studio configuration."
+    ? "Database, storage, or canonical asset validation failed."
     : !automationReady
-      ? "The daily studio setup is not complete yet. Finish the Daily Studio setup before activating the morning collection."
-      : generationEnabled
-        ? "The daily studio and human review workflow are ready."
-        : "The daily studio is prepared and waiting to be activated.";
+      ? "The daily automation configuration is unavailable."
+      : runtimeReadiness.ready
+        ? "Daily planning, generation, AI review, certification, and verification are active."
+        : "Add the required server environment variables and redeploy to activate AI production.";
+
+  const systemTitle =
+    studioReady && automationReady && runtimeReadiness.ready
+      ? "Production system active"
+      : studioReady && automationReady
+        ? "API configuration required"
+        : "Configuration error";
 
   return (
     <main className={styles.page}>
@@ -160,16 +166,16 @@ export default async function StudioHomePage() {
 
           <div
             className={`${styles.systemStatus} ${
-              studioReady ? styles.systemStatusReady : styles.systemStatusError
+              studioReady && automationReady && runtimeReadiness.ready
+                ? styles.systemStatusReady
+                : styles.systemStatusError
             }`}
           >
             <span aria-hidden="true" />
 
             <div>
               <strong>
-                {studioReady && automationReady
-                  ? "Daily studio ready"
-                  : "Setup incomplete"}
+                {systemTitle}
               </strong>
 
               <p>{systemMessage}</p>
@@ -182,7 +188,7 @@ export default async function StudioHomePage() {
 
           <div className={styles.referenceTopline}>
             <span>Original book cover</span>
-            <strong>Active</strong>
+            <strong>{referenceReady ? "Active" : "Unavailable"}</strong>
           </div>
 
           <div className={styles.coverStage}>
@@ -274,21 +280,13 @@ export default async function StudioHomePage() {
           <div aria-hidden="true">!</div>
 
           <div>
-            <h2>The studio needs attention</h2>
+            <h2>Studio configuration error</h2>
 
             <p>
-              Artwork creation is unavailable right now. Check the studio
-              configuration and try again.
+              Verify the database migration, private storage bucket, and canonical assets.
             </p>
           </div>
         </section>
-      ) : null}
-
-      {studioReady ? (
-        <ImageGenerator
-          canGenerate={admin.role !== "reviewer"}
-          generationEnabled={generationEnabled}
-        />
       ) : null}
 
       <section className={styles.processSection}>
@@ -352,7 +350,7 @@ export default async function StudioHomePage() {
 
             <p>
               The certified artwork is prepared as a private gallery entry.
-              Publication remains manual, and visitors can verify its
+              Publication requires your decision, and visitors can verify its
               certificate.
             </p>
 

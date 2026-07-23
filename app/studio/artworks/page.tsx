@@ -288,8 +288,8 @@ export default async function ArtworksPage({
         <section className={styles.emptyState}>
           <h2>The artwork library is not available.</h2>
           <p>
-            The studio archive could not be loaded. Please check the studio
-            setup and try again.
+            The Studio archive could not be loaded. Verify the database connection
+            and access policies, then reload this page.
           </p>
         </section>
       ) : cards.length === 0 ? (

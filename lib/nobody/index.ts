@@ -5,3 +5,5 @@ export * from "./quality";
 export * from "./promptBuilder";
 export * from "./artworkStatus";
 
+
+export * from "./runtimeConfig";

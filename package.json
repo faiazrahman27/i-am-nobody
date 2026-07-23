@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "validate:brand": "node scripts/validate-nobody-brand.mjs",
-    "prebuild": "npm run validate:brand"
+    "prebuild": "npm run validate:brand && npm run validate:production",
+    "validate:production": "node scripts/validate-production-config.mjs",
+    "check": "npm run lint && tsc --noEmit && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

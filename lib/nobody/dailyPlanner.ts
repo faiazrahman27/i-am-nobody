@@ -375,7 +375,7 @@ function buildRecentHistory(recent: readonly RecentConcept[]) {
   if (recent.length === 0) return "No previous daily concepts exist yet.";
 
   return recent
-    .slice(0, 120)
+    .slice(0, 180)
     .map(
       (item, index) =>
         `${index + 1}. ${item.usedOn} — ${item.roleTitle} | ${item.roleFamily} | ${item.threshold} | ${item.bookTheme} | ${item.conceptQuestion}`,

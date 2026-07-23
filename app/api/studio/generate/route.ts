@@ -20,7 +20,11 @@ import type {
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStudioAccess } from "@/lib/supabase/studioAccess";
 import type { StudioAdmin } from "@/lib/supabase/studioAccess";
-import { isAuthorizedCronRequest } from "@/lib/cronAuth";
+import {
+  isAuthorizedCronRequest,
+  isAuthorizedInternalGenerationRequest,
+} from "@/lib/cronAuth";
+import { assertNobodyRuntimeReady } from "@/lib/nobody/runtimeConfig";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -122,12 +126,15 @@ function normalizeDailyCreativeBrief(
   return brief;
 }
 
-function getVariationCount(value: unknown) {
-  if (typeof value !== "number" || !Number.isInteger(value)) {
-    return 1;
-  }
+function isGenerationLimitError(message: string) {
+  return /limit|already running|safety policy|please wait|cost guard|at most|generation is currently disabled/i.test(
+    message,
+  );
+}
 
-  return Math.max(1, Math.min(4, value));
+function getRetryAfter(message: string) {
+  const match = message.match(/wait\s+(\d+)\s+second/i);
+  return match ? Math.max(1, Number(match[1])) : 60;
 }
 
 function makeArtworkCode(archetypeCode: string, variantIndex: number) {
@@ -198,13 +205,29 @@ export async function POST(request: Request) {
     );
   }
 
+  try {
+    assertNobodyRuntimeReady();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "RUNTIME_CONFIGURATION_INVALID",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The Studio runtime configuration is invalid.",
+      },
+      { status: 503 },
+    );
+  }
+
   const supabase = createSupabaseAdminClient();
 
   const cronAuthorized = isAuthorizedCronRequest(request);
+  const internalAuthorized = isAuthorizedInternalGenerationRequest(request);
 
   let actor: StudioAdmin;
-  let generationSource: "manual" | "daily_automation" | "regeneration" =
-    "manual";
+  let generationSource: "daily_automation" | "regeneration";
   let automationItemId: string | null = null;
   let creativeBrief: DailyCreativeBrief | undefined;
 
@@ -393,6 +416,18 @@ export async function POST(request: Request) {
 
     generationSource = "daily_automation";
   } else {
+    if (!internalAuthorized || body.generationSource !== "regeneration") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "AUTOMATED_WORKFLOW_ONLY",
+          message:
+            "New artwork generation is automated. Request corrected versions from an artwork review page.",
+        },
+        { status: 403 },
+      );
+    }
+
     const access = await getStudioAccess();
 
     if (!access.authenticated) {
@@ -429,8 +464,7 @@ export async function POST(request: Request) {
     }
 
     actor = access.admin;
-    generationSource =
-      body.generationSource === "regeneration" ? "regeneration" : "manual";
+    generationSource = "regeneration";
 
     creativeBrief = normalizeDailyCreativeBrief(body.creativeBrief);
 
@@ -463,7 +497,7 @@ export async function POST(request: Request) {
     ? body.quality
     : "low";
 
-  const numberOfVariations = getVariationCount(body.numberOfVariations);
+  const numberOfVariations = 1;
 
   const backgroundVariant: BackgroundVariantSlug =
     NOBODY_BRAND.defaultBackgroundVariant;
@@ -523,7 +557,7 @@ export async function POST(request: Request) {
         ok: false,
         error: "CANONICAL_REFERENCE_MISSING",
         message:
-          "The original book-cover reference is unavailable. Please complete the studio setup.",
+          "The approved book-cover reference record is unavailable.",
       },
       { status: 503 },
     );
@@ -658,13 +692,21 @@ export async function POST(request: Request) {
     .single();
 
   if (jobError || !job) {
+    const message = jobError?.message || "The artwork could not be started.";
+    const rateLimited = isGenerationLimitError(message);
+    const retryAfter = rateLimited ? getRetryAfter(message) : null;
+
     return NextResponse.json(
       {
         ok: false,
-        error: "JOB_CREATION_FAILED",
-        message: jobError?.message || "The artwork could not be started.",
+        error: rateLimited ? "GENERATION_RATE_LIMITED" : "JOB_CREATION_FAILED",
+        message,
+        retryAfter,
       },
-      { status: 500 },
+      {
+        status: rateLimited ? 429 : 500,
+        headers: retryAfter ? { "Retry-After": String(retryAfter) } : undefined,
+      },
     );
   }
 

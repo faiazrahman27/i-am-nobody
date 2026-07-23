@@ -6,13 +6,14 @@ import {
   failDailyAutomationItem,
 } from "@/lib/nobody/automationService";
 import { isAuthorizedCronRequest } from "@/lib/cronAuth";
+import { assertNobodyRuntimeReady } from "@/lib/nobody/runtimeConfig";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
 const WORK_BUDGET_MS = 285_000;
-const GENERATION_CONCURRENCY = 5;
+const GENERATION_CONCURRENCY = 3;
 const MINIMUM_WAVE_BUDGET_MS = 55_000;
 
 function isRetryableStatus(status: number) {
@@ -131,6 +132,21 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { ok: false, message: "Unauthorized scheduled request." },
       { status: 401 },
+    );
+  }
+
+  try {
+    assertNobodyRuntimeReady();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "The Studio runtime configuration is invalid.",
+      },
+      { status: 503 },
     );
   }
 

@@ -7,9 +7,13 @@ import styles from "./automation.module.css";
 export default function AutomationControls({
   enabled,
   canManage,
+  showPlanningRecovery,
+  showGenerationRecovery,
 }: Readonly<{
   enabled: boolean;
   canManage: boolean;
+  showPlanningRecovery: boolean;
+  showGenerationRecovery: boolean;
 }>) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
@@ -42,10 +46,10 @@ export default function AutomationControls({
             ? "Daily generation paused."
             : "Daily generation resumed."
           : action === "prepare"
-            ? "Today's ten-artwork queue is ready."
+            ? "AI planning for today's collection completed."
             : payload.processed
-              ? "The next artwork was created and sent to review."
-              : "There is no queued artwork waiting to be processed.",
+              ? "The pending artwork was generated and sent to review."
+              : "There is no pending artwork to retry.",
       );
       router.refresh();
     } catch (caught) {
@@ -75,39 +79,43 @@ export default function AutomationControls({
         {pending === "toggle" ? "Saving…" : enabled ? "Pause daily generation" : "Resume daily generation"}
       </button>
 
-      <button
-        className={styles.secondaryButton}
-        disabled={!canManage || pending !== null}
-        onClick={() =>
-          run("prepare", () =>
-            fetch("/api/studio/automation", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "prepare_today" }),
-            }),
-          )
-        }
-        type="button"
-      >
-        {pending === "prepare" ? "Preparing…" : "Prepare today’s queue"}
-      </button>
+      {showPlanningRecovery ? (
+        <button
+          className={styles.secondaryButton}
+          disabled={!canManage || pending !== null}
+          onClick={() =>
+            run("prepare", () =>
+              fetch("/api/studio/automation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "prepare_today" }),
+              }),
+            )
+          }
+          type="button"
+        >
+          {pending === "prepare" ? "Retrying AI planning…" : "Retry AI planning"}
+        </button>
+      ) : null}
 
-      <button
-        className={styles.secondaryButton}
-        disabled={!canManage || pending !== null}
-        onClick={() =>
-          run("process", () =>
-            fetch("/api/studio/automation", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ action: "process_next" }),
-            }),
-          )
-        }
-        type="button"
-      >
-        {pending === "process" ? "Creating & reviewing…" : "Create next artwork now"}
-      </button>
+      {showGenerationRecovery ? (
+        <button
+          className={styles.secondaryButton}
+          disabled={!canManage || pending !== null}
+          onClick={() =>
+            run("process", () =>
+              fetch("/api/studio/automation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "process_next" }),
+              }),
+            )
+          }
+          type="button"
+        >
+          {pending === "process" ? "Retrying generation…" : "Retry pending generation"}
+        </button>
+      ) : null}
 
       {!canManage ? (
         <small>Owners and editors can manage the daily schedule.</small>

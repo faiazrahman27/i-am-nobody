@@ -163,6 +163,12 @@ export default async function AutomationPage() {
       <AutomationControls
         canManage={admin.role !== "reviewer"}
         enabled={config?.is_enabled ?? false}
+        showPlanningRecovery={
+          !todayBatch || Boolean(todayBatch.planner_error)
+        }
+        showGenerationRecovery={
+          Boolean(todayBatch) && !todayBatch?.planner_error && remaining > 0
+        }
       />
 
       <section className={styles.metrics} aria-label="Today’s progress">
