@@ -52,13 +52,13 @@ export default function AutomationControls({
 
       if (action === "toggle") {
         setMessage(
-          enabled ? "Daily generation paused." : "Daily generation resumed.",
+          enabled ? "Daily automation paused." : "Daily automation resumed.",
         );
       } else if (action === "prepare") {
         setMessage(
           payload.created === false
-            ? "Today's collection is already prepared."
-            : "AI planning for today's collection completed.",
+            ? "Today’s collection is already prepared."
+            : "Today’s collection was planned successfully.",
         );
       } else if (action === "retryFailed") {
         setMessage(
@@ -67,18 +67,37 @@ export default function AutomationControls({
               ? "Failed artworks returned to the queue."
               : "There are no failed artworks to retry."),
         );
-      } else if (payload.processed) {
-        setMessage(
-          payload.processedCount === 1
-            ? "One artwork passed the automated quality gate and was sent to human review."
-            : `${payload.processedCount ?? 0} artworks passed the automated quality gate and were sent to human review.`,
-        );
+      } else if ((payload.processedCount ?? 0) > 0 || (payload.failedCount ?? 0) > 0) {
+        const processedCount = payload.processedCount ?? 0;
+        const failedCount = payload.failedCount ?? 0;
+        const fragments: string[] = [];
+
+        if (processedCount > 0) {
+          fragments.push(
+            processedCount === 1
+              ? "1 artwork passed the automated gate and reached human review"
+              : `${processedCount} artworks passed the automated gate and reached human review`,
+          );
+        }
+
+        if (failedCount > 0) {
+          fragments.push(
+            failedCount === 1
+              ? "1 artwork attempt was rejected and re-queued automatically"
+              : `${failedCount} artwork attempts were rejected and re-queued automatically`,
+          );
+        }
+
+        setMessage(`${fragments.join(". ")}.`);
       } else if (payload.reason === "queue-empty-or-worker-active") {
         setMessage(
-          "No queued artwork is available right now. Another worker may already be generating it.",
+          "There is nothing available to claim right now. Another worker may already be processing the queue.",
         );
       } else {
-        setMessage(payload.message || "There is no queued artwork to generate.");
+        setMessage(
+          payload.message ||
+            "The manual generation wave finished, but no queued artwork was available.",
+        );
       }
 
       router.refresh();
@@ -132,8 +151,8 @@ export default function AutomationControls({
           type="button"
         >
           {pending === "prepare"
-            ? "Preparing today's collection…"
-            : "Prepare today's collection now"}
+            ? "Preparing today’s collection…"
+            : "Prepare today’s collection now"}
         </button>
       ) : null}
 
@@ -142,19 +161,19 @@ export default function AutomationControls({
           className={styles.secondaryButton}
           disabled={!canManage || pending !== null}
           onClick={() =>
-            run("process", () =>
+            run("processWave", () =>
               fetch("/api/studio/automation", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "process_next" }),
+                body: JSON.stringify({ action: "process_remaining" }),
               }),
             )
           }
           type="button"
         >
-          {pending === "process"
-            ? "Generating and checking artwork…"
-            : "Generate next artwork now"}
+          {pending === "processWave"
+            ? "Running manual generation wave…"
+            : "Run manual generation wave now"}
         </button>
       ) : null}
 
@@ -178,6 +197,12 @@ export default function AutomationControls({
             : "Retry failed artworks"}
         </button>
       ) : null}
+
+      <p className={styles.helperText}>
+        The daily system is fully automated. These buttons are manual recovery
+        tools only. “Run manual generation wave now” triggers one extra wave of
+        queued work immediately; it does not replace the automatic schedule.
+      </p>
 
       {!canManage ? (
         <small>Owners and editors can manage the daily schedule.</small>

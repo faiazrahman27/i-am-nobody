@@ -35,6 +35,7 @@ type BatchRow = Readonly<{
 
 type ItemRow = Readonly<{
   id: string;
+  batch_id: string;
   position: number;
   role_title: string;
   role_family: string;
@@ -56,10 +57,164 @@ function formatDate(value: string) {
   }).format(new Date(`${value}T12:00:00+02:00`));
 }
 
+function formatDateTime(value: string | null) {
+  if (!value) return "—";
+
+  return new Intl.DateTimeFormat("en", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Rome",
+  }).format(new Date(value));
+}
+
+function labelStatus(value: string) {
+  switch (value) {
+    case "queued":
+      return "Queued";
+    case "processing":
+      return "Generating";
+    case "completed":
+      return "Ready for review";
+    case "failed":
+      return "Needs retry";
+    case "planning":
+      return "Planning";
+    case "planning_failed":
+      return "Planning failed";
+    default:
+      return value.replaceAll("_", " ");
+  }
+}
+
+function summarizeBatch(batch: BatchRow, items: readonly ItemRow[]) {
+  const queued = items.filter((item) => item.status === "queued").length;
+  const processing = items.filter((item) => item.status === "processing").length;
+  const completed = items.filter((item) => item.status === "completed").length;
+  const failed = items.filter((item) => item.status === "failed").length;
+
+  return {
+    queued,
+    processing,
+    completed,
+    failed,
+    remaining: queued + processing,
+  };
+}
+
+function buildTodayStatus(input: {
+  config: ConfigRow | null;
+  todayBatch: BatchRow | null;
+  todayItems: readonly ItemRow[];
+  nowHour: number;
+}) {
+  const { config, todayBatch, todayItems, nowHour } = input;
+  const scheduleHour = config?.local_hour ?? 8;
+  const windowEnd = scheduleHour + 4;
+  const metrics = summarizeBatch(
+    todayBatch ?? {
+      id: "",
+      local_date: "",
+      requested_count: 0,
+      completed_count: 0,
+      failed_count: 0,
+      status: "queued",
+      collection_title: null,
+      collection_note: null,
+      planner_error: null,
+      started_at: null,
+      completed_at: null,
+    },
+    todayItems,
+  );
+
+  if (!config?.is_enabled) {
+    return {
+      tone: "paused",
+      title: "Daily automation is paused.",
+      description:
+        "No automatic planning or generation will start until daily automation is resumed.",
+    } as const;
+  }
+
+  if (!todayBatch) {
+    if (nowHour < scheduleHour) {
+      return {
+        tone: "scheduled",
+        title: "Today’s collection has not started yet.",
+        description: `Automatic planning begins at ${String(scheduleHour).padStart(2, "0")}:00 Rome time. You can also prepare today’s collection manually right now.`,
+      } as const;
+    }
+
+    return {
+      tone: "scheduled",
+      title: "Waiting for the next automation wave.",
+      description:
+        "The automatic worker can still arrive during this hour. If you want to start immediately, use the manual generation controls below.",
+    } as const;
+  }
+
+  if (todayBatch.planner_error) {
+    return {
+      tone: "error",
+      title: "Today’s collection needs another planning attempt.",
+      description: todayBatch.planner_error,
+    } as const;
+  }
+
+  if (metrics.processing > 0) {
+    return {
+      tone: "running",
+      title: "Generation is currently running.",
+      description: `${metrics.processing} artwork${metrics.processing === 1 ? " is" : "s are"} being generated right now. ${metrics.completed} already passed into human review.`,
+    } as const;
+  }
+
+  if (metrics.remaining > 0) {
+    const insideWindow = nowHour >= scheduleHour && nowHour <= windowEnd;
+
+    return {
+      tone: "waiting",
+      title: insideWindow
+        ? "Today’s collection is queued for the next automatic wave."
+        : "Today’s collection is queued and waiting.",
+      description: insideWindow
+        ? `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. Vercel cron can arrive any time during the current hour, or you can run a manual generation wave now.`
+        : `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. Automatic waves resume during the scheduled Rome window. You can still run a manual generation wave at any time.`,
+    } as const;
+  }
+
+  if (metrics.failed > 0) {
+    return {
+      tone: "warning",
+      title: "Some artworks need a manual retry.",
+      description: `${metrics.failed} artwork${metrics.failed === 1 ? " has" : "s have"} exhausted the automatic attempts. Use “Retry failed artworks” to return them to the queue.`,
+    } as const;
+  }
+
+  if (metrics.completed === todayItems.length && todayItems.length > 0) {
+    return {
+      tone: "success",
+      title: "Today’s collection is ready for human review.",
+      description: `${metrics.completed}/${todayItems.length} artworks passed the automated production gate and are now ready for review.`,
+    } as const;
+  }
+
+  return {
+    tone: "scheduled",
+    title: "Automation is ready.",
+    description:
+      "The daily system is active and waiting for the next valid planning or generation event.",
+  } as const;
+}
+
 export default async function AutomationPage() {
   const admin = await requireStudioAdmin();
   const supabase = createSupabaseAdminClient();
-  const today = getRomeDateParts(new Date()).localDate;
+  const now = new Date();
+  const { localDate: today, hour: romeHour } = getRomeDateParts(now);
 
   const [{ data: configData }, { data: batchData }] = await Promise.all([
     supabase
@@ -83,22 +238,31 @@ export default async function AutomationPage() {
   const todayBatch =
     batches.find((batch) => batch.local_date === today) ?? null;
 
-  let items: ItemRow[] = [];
+  const batchIds = batches.map((batch) => batch.id);
+  const { data: allItemsData } = batchIds.length
+    ? await supabase
+        .from("daily_artwork_items")
+        .select(
+          "id,batch_id,position,role_title,role_family,life_context,threshold_name,book_theme,concept_question,status,artwork_variant_id,error_message",
+        )
+        .in("batch_id", batchIds)
+        .order("batch_id")
+        .order("position")
+    : { data: [] as ItemRow[] };
 
-  if (todayBatch) {
-    const { data } = await supabase
-      .from("daily_artwork_items")
-      .select(
-        "id,position,role_title,role_family,life_context,threshold_name,book_theme,concept_question,status,artwork_variant_id,error_message",
-      )
-      .eq("batch_id", todayBatch.id)
-      .order("position");
+  const allItems = (allItemsData ?? []) as ItemRow[];
+  const itemsByBatchId = new Map<string, ItemRow[]>();
 
-    items = (data ?? []) as ItemRow[];
+  for (const item of allItems) {
+    const list = itemsByBatchId.get(item.batch_id) ?? [];
+    list.push(item);
+    itemsByBatchId.set(item.batch_id, list);
   }
 
+  const todayItems = todayBatch ? itemsByBatchId.get(todayBatch.id) ?? [] : [];
+
   const cards = await Promise.all(
-    items.map(async (item) => {
+    todayItems.map(async (item) => {
       let previewUrl: string | null = null;
 
       if (item.artwork_variant_id) {
@@ -122,11 +286,17 @@ export default async function AutomationPage() {
     }),
   );
 
-  const completed = items.filter((item) => item.status === "completed").length;
-  const failed = items.filter((item) => item.status === "failed").length;
-  const processing = items.filter((item) => item.status === "processing").length;
-  const queued = items.filter((item) => item.status === "queued").length;
+  const completed = todayItems.filter((item) => item.status === "completed").length;
+  const failed = todayItems.filter((item) => item.status === "failed").length;
+  const processing = todayItems.filter((item) => item.status === "processing").length;
+  const queued = todayItems.filter((item) => item.status === "queued").length;
   const remaining = queued + processing;
+  const todayStatus = buildTodayStatus({
+    config,
+    todayBatch,
+    todayItems,
+    nowHour: romeHour,
+  });
 
   return (
     <main className={styles.page}>
@@ -135,9 +305,9 @@ export default async function AutomationPage() {
           <p className={styles.eyebrow}>Autonomous daily studio</p>
           <h1>Ten new artworks. Every morning.</h1>
           <p>
-            At 10:00 in Rome, AI studies the book context, the four thresholds,
-            the 25 Keys, and recent Studio history. It then creates ten new
-            human roles and life situations, writes the complete creative
+            At 08:00 in Rome, AI studies the embedded book context, the four
+            thresholds, the 25 Keys, and recent Studio history. It then creates
+            ten new human roles and life situations, writes the creative
             direction, generates every artwork inside the fixed visual system,
             evaluates the results, and places them in your private review queue.
           </p>
@@ -146,24 +316,45 @@ export default async function AutomationPage() {
         <aside className={styles.scheduleCard}>
           <span>Daily schedule</span>
           <strong>
-            {String(config?.local_hour ?? 10).padStart(2, "0")}:00
+            {String(config?.local_hour ?? 8).padStart(2, "0")}:00
           </strong>
           <small>
             {config?.timezone ?? "Europe/Rome"} · {config?.daily_count ?? 10}{" "}
             artworks
           </small>
+          <small>Image quality · {config?.quality ?? "high"}</small>
           <em className={config?.is_enabled ? styles.live : styles.paused}>
             {config?.is_enabled ? "Active" : "Paused"}
           </em>
         </aside>
       </section>
 
+      <section className={styles.statusPanel}>
+        <div>
+          <p className={styles.eyebrow}>Live production status</p>
+          <h2>{todayStatus.title}</h2>
+          <p>{todayStatus.description}</p>
+        </div>
+        <div className={styles.statusMeta}>
+          <div>
+            <span>Rome time</span>
+            <strong>{String(romeHour).padStart(2, "0")}:00</strong>
+          </div>
+          <div>
+            <span>Today</span>
+            <strong>{formatDate(today)}</strong>
+          </div>
+          <div>
+            <span>Mode</span>
+            <strong>{todayStatus.tone}</strong>
+          </div>
+        </div>
+      </section>
+
       <AutomationControls
         canManage={admin.role !== "reviewer"}
         enabled={config?.is_enabled ?? false}
-        showPlanningRecovery={
-          !todayBatch || Boolean(todayBatch.planner_error)
-        }
+        showPlanningRecovery={!todayBatch || Boolean(todayBatch.planner_error)}
         showGenerationRecovery={
           Boolean(todayBatch) && !todayBatch?.planner_error && remaining > 0
         }
@@ -177,7 +368,7 @@ export default async function AutomationPage() {
       <section className={styles.metrics} aria-label="Today’s progress">
         <article>
           <span>Planned</span>
-          <strong>{items.length}</strong>
+          <strong>{todayItems.length}</strong>
         </article>
         <article>
           <span>Ready for review</span>
@@ -242,7 +433,7 @@ export default async function AutomationPage() {
                     <h3>{item.role_title}</h3>
                   </div>
                   <span className={styles.status}>
-                    {item.status.replaceAll("_", " ")}
+                    {labelStatus(item.status)}
                   </span>
                   <p>{item.concept_question}</p>
                   <small>{item.book_theme}</small>
@@ -271,16 +462,83 @@ export default async function AutomationPage() {
           {batches.length === 0 ? (
             <p>No daily collections have been prepared yet.</p>
           ) : (
-            batches.map((batch) => (
-              <div key={batch.id}>
-                <strong>{formatDate(batch.local_date)}</strong>
-                <span>{batch.status.replaceAll("_", " ")}</span>
-                <small>
-                  {batch.completed_count}/{batch.requested_count} ready
-                </small>
-                <small>{batch.collection_title || "Morning collection"}</small>
-              </div>
-            ))
+            batches.map((batch) => {
+              const batchItems = itemsByBatchId.get(batch.id) ?? [];
+              const summary = summarizeBatch(batch, batchItems);
+
+              return (
+                <details
+                  className={styles.historyDetails}
+                  key={batch.id}
+                  open={batch.id === todayBatch?.id}
+                >
+                  <summary className={styles.historySummary}>
+                    <strong>{formatDate(batch.local_date)}</strong>
+                    <span>{labelStatus(batch.status)}</span>
+                    <small>
+                      {summary.completed}/{batch.requested_count} ready
+                    </small>
+                    <small>
+                      {batch.collection_title || "Morning collection"}
+                    </small>
+                  </summary>
+
+                  <div className={styles.historyBody}>
+                    <div className={styles.historyMetaGrid}>
+                      <article>
+                        <span>Started</span>
+                        <strong>{formatDateTime(batch.started_at)}</strong>
+                      </article>
+                      <article>
+                        <span>Completed</span>
+                        <strong>{formatDateTime(batch.completed_at)}</strong>
+                      </article>
+                      <article>
+                        <span>Queued / generating</span>
+                        <strong>{summary.remaining}</strong>
+                      </article>
+                      <article>
+                        <span>Needs retry</span>
+                        <strong>{summary.failed}</strong>
+                      </article>
+                    </div>
+
+                    {batch.collection_note ? (
+                      <p className={styles.historyNote}>{batch.collection_note}</p>
+                    ) : null}
+
+                    {batch.planner_error ? (
+                      <p className={styles.historyError}>{batch.planner_error}</p>
+                    ) : null}
+
+                    {batchItems.length > 0 ? (
+                      <div className={styles.historyItems}>
+                        {batchItems.map((item) => (
+                          <div className={styles.historyItemRow} key={item.id}>
+                            <div>
+                              <small>#{String(item.position).padStart(2, "0")}</small>
+                              <strong>{item.role_title}</strong>
+                            </div>
+                            <span className={styles.status}>{labelStatus(item.status)}</span>
+                            <p>{item.concept_question}</p>
+                            {item.artwork_variant_id ? (
+                              <Link href={`/studio/artworks/${item.artwork_variant_id}`}>
+                                Open artwork →
+                              </Link>
+                            ) : null}
+                            {item.error_message ? <em>{item.error_message}</em> : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={styles.historyNote}>
+                        No artwork items were created for this batch.
+                      </p>
+                    )}
+                  </div>
+                </details>
+              );
+            })
           )}
         </div>
       </section>

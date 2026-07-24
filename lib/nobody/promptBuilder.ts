@@ -507,6 +507,7 @@ export function buildNobodyArtworkPrompt(
       "Use one coherent soft directional light consistent with the canonical cover.",
       "The helmet reflections, collar, shoulders, torso, sleeves, hands, and clothing folds must agree with the same light direction and exposure.",
       "Create subtle natural contact shadows where the fixed helmet meets the collar and neck opening, where fabric overlaps, and where arms meet the torso.",
+      "Do not cast a dramatic body or helmet shadow onto the background wall or studio floor. Keep the figure cleanly integrated without a fake projected backdrop shadow.",
       "The helmet must feel physically worn by the figure, never floating, pasted on, glowing, outlined, or separated by a halo.",
       "Keep skin absent and preserve realistic adult anatomy, symmetrical shoulders, plausible arms, and natural hands and fingers if visible.",
     ].join(" "),
@@ -576,7 +577,7 @@ export function buildNobodyArtworkPrompt(
 
     [
       "Do not create inconsistent light directions, impossible shadows,",
-      "a helmet halo, cut-out edge, floating helmet, missing contact shadow,",
+      "a fake cast shadow on the background, a helmet halo, cut-out edge, floating helmet, missing contact shadow,",
       "mismatched exposure, or reflections unrelated to the body lighting.",
       "Do not create malformed shoulders, duplicated limbs, twisted arms,",
       "extra fingers, missing fingers, fused fingers, broken hands,",

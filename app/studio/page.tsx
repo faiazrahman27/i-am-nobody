@@ -314,7 +314,7 @@ export default async function StudioHomePage() {
               morning, then produces them within the established visual system.
             </p>
 
-            <strong className={styles.complete}>Daily at 10:00 Rome</strong>
+            <strong className={styles.complete}>Daily at 08:00 Rome</strong>
           </article>
 
           <article className={styles.moduleCard}>

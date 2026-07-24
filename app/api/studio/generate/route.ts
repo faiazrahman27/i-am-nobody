@@ -582,7 +582,9 @@ export async function POST(request: Request) {
 
   const quality: ImageQuality = isImageQuality(body.quality)
     ? body.quality
-    : "low";
+    : generationSource === "daily_automation"
+      ? "high"
+      : "medium";
 
   const numberOfVariations = 1;
 
