@@ -38,6 +38,6 @@ No `OPENAI_BOOK_VECTOR_STORE_ID` variable is used.
 
 Follow `docs/PRODUCTION_AUTOMATION_CHECKLIST.md`.
 
-Manual planning and manual generation both work at any hour. The automatic worker remains scheduled for 10:00 Europe/Rome with retry opportunities through 14:00.
+Manual planning and manual generation both work at any hour. The automatic daily collection becomes eligible at 08:00 Europe/Rome, and Supabase Cron calls the production worker every ten minutes so remaining or retryable work continues automatically.
 
 The first successful new planning run records planner version `3.1.0` in the automation configuration and new planning records.

@@ -199,9 +199,10 @@ export default function AutomationControls({
       ) : null}
 
       <p className={styles.helperText}>
-        The daily system is fully automated. These buttons are manual recovery
-        tools only. “Run manual generation wave now” triggers one extra wave of
-        queued work immediately; it does not replace the automatic schedule.
+        Supabase Cron calls the production worker every ten minutes. These
+        buttons are manual recovery tools only. “Run manual generation wave now”
+        triggers one extra wave immediately; it does not replace the automatic
+        schedule.
       </p>
 
       {!canManage ? (

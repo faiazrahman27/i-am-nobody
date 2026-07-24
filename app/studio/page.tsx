@@ -142,8 +142,8 @@ export default async function StudioHomePage() {
             At 08:00 Rome time, AI develops ten new I AM NOBODY concepts from
             the book and recent Studio history, creates them inside the fixed
             visual system, evaluates the results, and places them in your private
-            review queue. Any remaining work continues automatically as soon as
-            the next worker wave arrives. You decide what changes, what is
+            review queue. Supabase Cron calls the production worker every ten
+            minutes, so remaining work continues automatically. You decide what changes, what is
             approved, and what is published.
           </p>
 
@@ -314,7 +314,7 @@ export default async function StudioHomePage() {
             <p>
               AI plans today’s ten roles and life situations at 08:00 Rome time,
               then produces them within the established visual system. Any delayed
-              or rejected item returns to the automatic queue for a fresh attempt.
+              or rejected item returns to the automatic queue for the next Supabase Cron wave.
             </p>
 
             <strong className={styles.complete}>Daily at 08:00 Rome</strong>

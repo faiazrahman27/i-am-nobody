@@ -17,6 +17,7 @@ type ConfigRow = Readonly<{
   background_variant: string;
   planner_model: string;
   last_batch_date: string | null;
+  metadata: Record<string, unknown> | null;
 }>;
 
 type BatchRow = Readonly<{
@@ -109,8 +110,9 @@ function buildTodayStatus(input: {
   todayBatch: BatchRow | null;
   todayItems: readonly ItemRow[];
   nowHour: number;
+  schedulerConfigured: boolean;
 }) {
-  const { config, todayBatch, todayItems, nowHour } = input;
+  const { config, todayBatch, todayItems, nowHour, schedulerConfigured } = input;
   const scheduleHour = config?.local_hour ?? 8;
   const metrics = summarizeBatch(
     todayBatch ?? {
@@ -138,20 +140,29 @@ function buildTodayStatus(input: {
     } as const;
   }
 
+  if (!schedulerConfigured) {
+    return {
+      tone: "error",
+      title: "Supabase Cron setup is required.",
+      description:
+        "Run migration 014, create the two required Vault secrets, and configure the Supabase Cron job before relying on automatic worker waves. Manual controls remain available.",
+    } as const;
+  }
+
   if (!todayBatch) {
     if (nowHour < scheduleHour) {
       return {
         tone: "scheduled",
         title: "Today’s collection has not started yet.",
-        description: `Automatic planning begins at ${String(scheduleHour).padStart(2, "0")}:00 Rome time. You can also prepare today’s collection manually right now.`,
+        description: `Supabase Cron checks the worker every ten minutes. Automatic planning becomes eligible at ${String(scheduleHour).padStart(2, "0")}:00 Rome time, and you can also prepare today’s collection manually right now.`,
       } as const;
     }
 
     return {
       tone: "scheduled",
-      title: "Waiting for the next automation wave.",
+      title: "Waiting for the next Supabase Cron wave.",
       description:
-        "The automatic worker can still arrive during this hour. If you want to start immediately, use the manual generation controls below.",
+        "Supabase Cron calls the production worker every ten minutes. If you want to start immediately, use the manual generation controls below.",
     } as const;
   }
 
@@ -174,8 +185,8 @@ function buildTodayStatus(input: {
   if (metrics.remaining > 0) {
     return {
       tone: "waiting",
-      title: "Today’s collection is queued for the next automatic wave.",
-      description: `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. The worker checks every ten minutes after the 08:00 start, or you can run a manual generation wave now.`,
+      title: "Today’s collection is queued for the next Supabase Cron wave.",
+      description: `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. Supabase Cron calls the worker every ten minutes, or you can run a manual generation wave now.`,
     } as const;
   }
 
@@ -213,7 +224,7 @@ export default async function AutomationPage() {
     supabase
       .from("daily_artwork_automation")
       .select(
-        "is_enabled,timezone,local_hour,daily_count,quality,background_variant,planner_model,last_batch_date",
+        "is_enabled,timezone,local_hour,daily_count,quality,background_variant,planner_model,last_batch_date,metadata",
       )
       .eq("singleton", true)
       .maybeSingle(),
@@ -227,6 +238,8 @@ export default async function AutomationPage() {
   ]);
 
   const config = configData as ConfigRow | null;
+  const schedulerConfigured =
+    config?.metadata?.scheduler === "supabase-cron";
   const batches = (batchData ?? []) as BatchRow[];
   const todayBatch =
     batches.find((batch) => batch.local_date === today) ?? null;
@@ -289,6 +302,7 @@ export default async function AutomationPage() {
     todayBatch,
     todayItems,
     nowHour: romeHour,
+    schedulerConfigured,
   });
 
   return (
@@ -303,6 +317,8 @@ export default async function AutomationPage() {
             ten new human roles and life situations, writes the creative
             direction, generates every artwork inside the fixed visual system,
             evaluates the results, and places them in your private review queue.
+            Supabase Cron calls the production worker every ten minutes so delayed
+            or remaining items continue automatically.
           </p>
         </div>
 
@@ -316,6 +332,9 @@ export default async function AutomationPage() {
             artworks
           </small>
           <small>Image quality · {config?.quality ?? "high"}</small>
+          <small>
+            Scheduler · {schedulerConfigured ? "Supabase Cron / 10 min" : "Setup required"}
+          </small>
           <em className={config?.is_enabled ? styles.live : styles.paused}>
             {config?.is_enabled ? "Active" : "Paused"}
           </em>

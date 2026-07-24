@@ -1,53 +1,69 @@
 # I AM NOBODY — Production Image Automation Checklist
 
-This release keeps the book knowledge embedded in `lib/nobody/bookCreativeContext.ts`. The book PDF is not required in GitHub, Vercel, Supabase Storage, or OpenAI File Search.
+This release keeps the book knowledge embedded in `lib/nobody/bookCreativeContext.ts`. The book PDF is not required in GitHub, Vercel, Supabase Storage, OpenAI Files, or a vector store.
 
-## What this release fixes
+## Production architecture
 
-- Manual planning works at any hour.
-- Manual generation works at any hour and is no longer blocked by the 10:00 Rome schedule.
-- Automatic generation starts at 10:00 Europe/Rome and has retry invocations through 14:00 in both summer and winter time.
-- The Studio page refreshes itself while work remains queued or generating.
-- Rejected or incomplete image attempts no longer become permanent idempotent results. A fresh image can be generated.
-- Only images that pass the strict automated visual gate count as Ready for review.
-- The canonical background and helmet remain checksum-verified and are applied deterministically after model generation.
-- The planner and prompt reject text-bearing objects, screens, badges, labels, logos, letters, numbers, and pseudo-text.
-- The visual review checks lighting direction, contact shadows, helmet integration, anatomy, hands, clothing geometry, text artifacts, and every existing brand rule.
+```text
+Vercel Hobby
+- Hosts the Next.js website and Studio
+- Hosts the protected artwork worker API route
+- Does not schedule repeated cron jobs
+
+Supabase
+- Database and private storage
+- Supabase Cron scheduler
+- pg_net authenticated HTTP worker calls
+- Vault-encrypted worker URL and CRON_SECRET
+
+OpenAI API
+- Daily concept planning
+- Image generation
+- Automated visual review
+```
+
+## Automation behaviour
+
+- The production date and schedule are evaluated in `Europe/Rome`.
+- Today’s collection becomes eligible at 08:00 Rome time.
+- The system creates exactly ten planned items for each Rome calendar date.
+- Supabase Cron calls the protected production worker every ten minutes.
+- Calls before 08:00 safely do nothing.
+- Calls after 08:00 prepare today’s plan when missing and process queued work.
+- Completed items are skipped.
+- Retryable failures are queued again according to the existing retry policy.
+- Manual planning, generation waves, and deliberate failed-item recovery remain available.
+- Nothing is approved or published without a human decision.
+
+## Image-generation boundary
+
+- The book context drives the role, life situation, philosophical tension, clothing, mood, posture, and restrained object direction.
+- Characters must not read as a generic person in a generic hoodie, jacket, or suit.
+- A bag, backpack, satchel, tote, glove, apron detail, pouch, folder, folded cloth, or one similarly restrained unbranded object may be worn, carried, attached, or held when it makes the character legible.
+- No sign, placard, board, readable document, floating symbol, decorative object, logo, pseudo-text, screen, badge, label, or unrelated background object is allowed.
+- The canonical background and helmet remain checksum-verified and are applied by the production pipeline.
+- Scanlines, banding, ghosting, transparency, double exposure, pasted overlays, and technically corrupted images are rejected.
 
 ## Replace the files
 
-1. Make a backup commit in the existing repository:
+1. Make a backup commit:
 
    ```powershell
    git status
    git add .
-   git commit -m "Backup before production automation hardening"
+   git commit -m "Backup before Supabase Cron migration"
    ```
 
 2. Extract the supplied complete project ZIP to a temporary folder.
-3. Open the extracted project folder and copy everything inside it.
-4. Paste it over the existing local project folder.
+3. Copy everything inside the extracted project folder.
+4. Paste it over the existing repository folder.
 5. Choose **Replace the files in the destination**.
-6. Do not delete the existing `.git`, `.env.local`, or `.vercel` folders.
-7. Do not put the book PDF in the repository.
-
-## OpenAI API Platform
-
-Use the existing key in the **I AM NOBODY Production** API project.
-
-Keep it as **Restricted** with:
-
-```text
-Responses: Write
-Images: Request
-Everything else: None
-```
-
-No Files permission, Vector Stores permission, Assistant, File Search resource, or extra key is required.
+6. Do not delete `.git`, `.env.local`, or `.vercel` from the existing repository.
+7. Do not put the private book PDF or any secret in GitHub.
 
 ## Vercel environment variables
 
-In the Vercel project connected to `www.iamnobody.live`, confirm these Production variables already exist:
+Confirm these Production variables exist:
 
 ```text
 NEXT_PUBLIC_SITE_URL=https://www.iamnobody.live
@@ -58,14 +74,33 @@ OPENAI_API_KEY=sk-proj-...
 OPENAI_IMAGE_MODEL=gpt-image-2-2026-04-21
 OPENAI_REVIEW_MODEL=gpt-5.6-luna
 OPENAI_PLANNER_MODEL=gpt-5.6-luna
-CRON_SECRET=at least 32 random characters
+CRON_SECRET=the existing real random value of at least 32 characters
 ```
 
-Do not add `NEXT_PUBLIC_OPENAI_API_KEY`. Do not add `OPENAI_BOOK_VECTOR_STORE_ID`.
+Do not add:
 
-## Supabase
+```text
+NEXT_PUBLIC_OPENAI_API_KEY
+NEXT_PUBLIC_CRON_SECRET
+OPENAI_BOOK_VECTOR_STORE_ID
+```
 
-No new SQL migration is required for this release. Do not rerun the existing migrations.
+## Required Supabase SQL work
+
+Run in this order:
+
+```text
+1. lib/supabase/migrations/013_automation_schedule_8am_high_quality.sql
+2. lib/supabase/migrations/014_supabase_cron_scheduler.sql
+3. Create `iamnobody_worker_url` and `iamnobody_cron_secret` in Supabase Vault
+4. Run `select nobody_private.configure_nobody_supabase_cron();`
+```
+
+Follow the exact one-time configuration and verification instructions in:
+
+```text
+docs/SUPABASE_CRON_SETUP.md
+```
 
 ## Local checks
 
@@ -79,39 +114,29 @@ npx tsc --noEmit
 npm run build
 ```
 
-The build requires the same environment values used by Vercel. If local production variables are unavailable, run the checks after confirming `.env.local` contains the required server-only values.
+The production build validates all required environment variables.
 
 ## Deploy
 
 ```powershell
 git status
 git add .
-git commit -m "Harden image automation and enable manual generation"
+git commit -m "Move daily artwork scheduling to Supabase Cron"
 git push
 ```
 
-Wait for the Vercel deployment to show **Ready**.
+Wait for the Vercel Production deployment to show **Ready** before configuring or testing the Supabase scheduler.
 
-## Manual test at any time
+## Manual test
 
-1. Open `https://www.iamnobody.live/studio/automation`.
-2. If today has no collection, press **Prepare today's collection now** once.
-3. Wait until **Planned** shows `10`.
-4. Press **Generate next artwork now** once.
-5. Keep the page open while the button says **Generating and checking artwork…**.
-6. The page also refreshes automatically every 15 seconds while work remains.
-7. A successful image changes **Ready for review** to `1` and **Queued / generating** to `9`.
-8. Scroll to the completed card and press **Review artwork →**.
-9. If an image fails the automated gate, it is queued for a fresh attempt. After three unsuccessful attempts it appears under **Needs retry**, where **Retry failed artworks** resets it deliberately.
-
-## Automatic operation
-
-Leave **Daily generation: Active**.
-
-Vercel invokes the route at several UTC hours. The server checks Europe/Rome time and only works during the intended 10:00–14:00 local window. This covers daylight-saving changes without requiring manual schedule edits.
-
-The worker processes up to three queue items concurrently per invocation. It continues existing work and never creates a second collection for the same Rome calendar date.
+1. Complete `docs/SUPABASE_CRON_SETUP.md`.
+2. Trigger one immediate worker request from Supabase SQL.
+3. Open `https://www.iamnobody.live/studio/automation`.
+4. Confirm the page shows 08:00 Rome, Active, and high quality.
+5. If today has no plan and it is already after 08:00, the worker creates it.
+6. Wait for later ten-minute waves or use **Run manual generation wave now**.
+7. Failed items that exhaust automatic attempts can be deliberately reset using **Retry failed artworks**.
 
 ## Quality boundary
 
-The system makes the background and helmet deterministic and applies strict automated rejection and retry rules. Generative clothing, anatomy, shadows, and materials can still occasionally fail. Such results are blocked from the Ready for review count rather than being accepted. Final publication still requires human approval.
+The system makes the canonical background and helmet deterministic, strengthens character-specific planning, and blocks technically corrupted outputs. Generative anatomy, clothing, hands, objects, lighting, and material construction can still occasionally fail. Those attempts must be rejected and retried rather than presented as production-ready work. Final approval and publication remain human decisions.
