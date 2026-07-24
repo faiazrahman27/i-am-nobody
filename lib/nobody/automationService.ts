@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   createConceptFingerprint,
+  NOBODY_DAILY_PLANNER_VERSION,
   planDailyNobodyArtworks,
 } from "./dailyPlanner";
 import { getRomeDateParts } from "./dailyAutomation";
@@ -170,7 +171,7 @@ async function planBatch(input: {
         object_direction: item.objectDirection,
         creative_direction: item.creativeDirection,
         planner_model: plan.model,
-        planner_version: input.config.planner_prompt_version,
+        planner_version: NOBODY_DAILY_PLANNER_VERSION,
         first_used_on: existing?.first_used_on ?? input.localDate,
         last_used_on: input.localDate,
         use_count: Number(existing?.use_count ?? 0) + 1,
@@ -246,7 +247,7 @@ async function planBatch(input: {
               source: "ai_daily_planner",
               concept_fingerprint: fingerprint,
               planner_model: plan.model,
-              planner_version: input.config.planner_prompt_version,
+              planner_version: NOBODY_DAILY_PLANNER_VERSION,
             },
           };
         }),
@@ -267,7 +268,7 @@ async function planBatch(input: {
             planner_model: plan.model,
             planner_response_id: plan.responseId,
             planner_request_id: plan.requestId,
-            planner_prompt_version: input.config.planner_prompt_version,
+            planner_prompt_version: NOBODY_DAILY_PLANNER_VERSION,
             planner_completed_at: now,
             planner_error: null,
             collection_title: plan.collectionTitle,
@@ -285,6 +286,7 @@ async function planBatch(input: {
           .update({
             last_batch_date: input.localDate,
             planner_model: plan.model,
+            planner_prompt_version: NOBODY_DAILY_PLANNER_VERSION,
           })
           .eq("singleton", true),
       ]);
@@ -401,7 +403,7 @@ export async function ensureDailyAutomationBatch(input?: {
         requested_count: config.daily_count,
         status: "planning_failed",
         planner_model: config.planner_model,
-        planner_prompt_version: config.planner_prompt_version,
+        planner_prompt_version: NOBODY_DAILY_PLANNER_VERSION,
         planner_attempt_count: 0,
         planner_started_at: null,
         metadata: {

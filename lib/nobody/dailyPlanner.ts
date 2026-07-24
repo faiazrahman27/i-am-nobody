@@ -3,10 +3,11 @@ import "server-only";
 import { createHash } from "node:crypto";
 import {
   NOBODY_BOOK_AUDIENCE_LENSES,
-  NOBODY_BOOK_CHAPTER_THEMES,
+  NOBODY_BOOK_CHAPTERS,
   NOBODY_BOOK_CONTEXT_VERSION,
   NOBODY_BOOK_QUESTIONS,
   NOBODY_BOOK_THRESHOLDS,
+  NOBODY_BOOK_VOICES,
   NOBODY_DAILY_PLANNER_SOURCEBOOK,
 } from "./bookCreativeContext";
 import type { BackgroundVariantSlug, ImageQuality } from "./types";
@@ -14,7 +15,7 @@ import type { NobodyThreshold } from "./types";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_PLANNER_MODEL = "gpt-5.6-luna";
-export const NOBODY_DAILY_PLANNER_VERSION = "2.0.0";
+export const NOBODY_DAILY_PLANNER_VERSION = "3.0.0";
 
 const THRESHOLDS: readonly NobodyThreshold[] = [
   "Nobody",
@@ -406,6 +407,9 @@ async function requestPlan(input: {
     "Professions may appear, but the collection must not be dominated by professions. Include relational roles, invisible labour, inner conflicts, life transitions, civic and ecological responsibility, community, technology, body, care, disagreement, loss, renewal, and legacy when appropriate.",
     "Every brief must be visually possible as one calm, front-facing, standing figure inside the fixed I AM NOBODY visual system. Communicate the idea through clothing, material, subtle posture, and at most one small unbranded object. Never request a different background, literal environment, scenery, another person, readable text, logos, uniforms with insignia, weapons, or spectacle.",
     "Do not write image-generation boilerplate. Write precise creative briefs that make each person recognisable without becoming a costume or stereotype.",
+    "Treat the embedded editorial dossier as the authoritative source for the book. Do not claim to quote or retrieve the PDF, and do not invent chapters, claims, or values outside the supplied dossier.",
+    "Use the book deeply rather than decoratively: the life situation, threshold, question, clothing contradiction, posture, and mood must express one coherent philosophical tension.",
+    "Usually write an original concept question for the specific person instead of copying one of the 25 Keys word for word.",
     "Do not repeat or lightly rename any role, question, or visual story in recent Studio history.",
     "The ten artworks must form a coherent morning collection but remain clearly different from one another.",
     "Use all four thresholds across a ten-item collection and at least six genuinely different role families.",
@@ -424,13 +428,21 @@ async function requestPlan(input: {
     "FOUR THRESHOLDS:",
     ...NOBODY_BOOK_THRESHOLDS.map(
       (item) =>
-        `${item.name}: ${item.meaning} Visual tension: ${item.visualTension}`,
+        `${item.name} — Central question: ${item.centralQuestion} Meaning: ${item.meaning} Human movement: ${item.humanMovement} Visual tension: ${item.visualTension} Avoid: ${item.avoid}`,
     ),
     "",
-    "CHAPTER THEMES:",
-    ...NOBODY_BOOK_CHAPTER_THEMES.map(
-      (theme, index) => `${index + 1}. ${theme}`,
-    ),
+    "COMPLETE CHAPTER-LEVEL EDITORIAL DOSSIER:",
+    ...NOBODY_BOOK_CHAPTERS.map((chapter, index) => {
+      const references =
+        "references" in chapter && chapter.references?.length
+          ? ` References: ${chapter.references.join("; ")}.`
+          : "";
+
+      return `${index + 1}. [${chapter.threshold}] ${chapter.title} — Core question: ${chapter.coreQuestion} Thesis: ${chapter.thesis} Tensions: ${chapter.tensions.join("; ")}. Human situations: ${chapter.humanSituations.join("; ")}. Visual metaphors: ${chapter.visualMetaphors.join("; ")}.${references}`;
+    }),
+    "",
+    "PHILOSOPHICAL AND LIVING VOICES:",
+    ...NOBODY_BOOK_VOICES.map((voice, index) => `${index + 1}. ${voice}`),
     "",
     "THE 25 KEYS:",
     ...NOBODY_BOOK_QUESTIONS.map(
