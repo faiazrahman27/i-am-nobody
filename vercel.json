@@ -5,7 +5,7 @@
   "crons": [
     {
       "path": "/api/automation/daily-artworks",
-      "schedule": "*/10 6-20 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
