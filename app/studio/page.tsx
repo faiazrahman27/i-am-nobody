@@ -135,14 +135,16 @@ export default async function StudioHomePage() {
 
           <h1>
             Ten new artworks.
-            <span>Every morning.</span>
+            <span>Daily at 08:00.</span>
           </h1>
 
           <p className={styles.heroLead}>
-            Every morning, AI develops ten new I AM NOBODY concepts from the
-            book and recent Studio history, creates them inside the fixed visual
-            system, evaluates the results, and places them in your private review queue. You decide
-            what changes, what is approved, and what is published.
+            At 08:00 Rome time, AI develops ten new I AM NOBODY concepts from
+            the book and recent Studio history, creates them inside the fixed
+            visual system, evaluates the results, and places them in your private
+            review queue. Any remaining work continues automatically as soon as
+            the next worker wave arrives. You decide what changes, what is
+            approved, and what is published.
           </p>
 
           <blockquote className={styles.manifesto}>
@@ -310,8 +312,9 @@ export default async function StudioHomePage() {
             <h3>Generate</h3>
 
             <p>
-              AI creates ten new roles and life situations from the book every
-              morning, then produces them within the established visual system.
+              AI plans today’s ten roles and life situations at 08:00 Rome time,
+              then produces them within the established visual system. Any delayed
+              or rejected item returns to the automatic queue for a fresh attempt.
             </p>
 
             <strong className={styles.complete}>Daily at 08:00 Rome</strong>

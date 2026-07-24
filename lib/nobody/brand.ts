@@ -5,7 +5,7 @@ import type {
 } from "./types";
 
 export const NOBODY_BRAND_VERSION = "2.1.0";
-export const NOBODY_PROMPT_VERSION = "2.3.0";
+export const NOBODY_PROMPT_VERSION = "2.4.0";
 export const NOBODY_REVIEW_VERSION = "1.2.0";
 export const NOBODY_TEMPLATE_VERSION = "1.0.0";
 

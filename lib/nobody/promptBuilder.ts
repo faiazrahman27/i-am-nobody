@@ -63,7 +63,7 @@ const forbiddenInputPatterns: readonly Readonly<{
   {
     code: "forbidden_text_bearing_object",
     pattern:
-      /\b(phone|smartphone|screen|tablet|laptop|book|newspaper|magazine|letter|document|paperwork|passport|ticket|badge|name tag|sign|label|package|clipboard|certificate)\b/i,
+      /\b(phone|smartphone|screen|tablet|laptop|book|newspaper|magazine|letter|document|paperwork|passport|ticket|badge|name tag|sign|placard|label|package|clipboard|certificate)\b/i,
     message:
       "Objects that normally contain text or screens are not permitted because they can create artificial lettering.",
   },
@@ -391,8 +391,9 @@ export function buildNobodyArtworkPrompt(
           "Additional approved clothing direction:",
           `${clothingNotes}.`,
           "This direction is secondary to the canonical",
-          "brand rules and must remain refined, minimal,",
-          "realistic, and unbranded.",
+          "brand rules and must remain refined, minimal, realistic, unbranded,",
+          "and specific enough that the role can be understood before typography is added.",
+          "Do not reduce the character to a vague hoodie, plain suit, generic jacket, or ordinary casual clothing.",
         ].join(" ")
       : "";
 
@@ -420,13 +421,15 @@ export function buildNobodyArtworkPrompt(
   const propSentence =
     selectedProp
       ? [
-          "Include exactly one restrained symbolic prop:",
+          "Include exactly one restrained role-defining object:",
           `${selectedProp}.`,
-          "It must remain visually secondary and must not",
-          "explain the whole archetype. It must have no screen,",
-          "letters, numbers, labels, badges, logos, or pseudo-text.",
+          "It must be naturally worn, carried, held, or attached to the person,",
+          "never floating, displayed as a sign, or placed separately in the background.",
+          "A plain backpack, school bag, satchel, shoulder bag, tote, fabric carry bag,",
+          "small utility pouch, glove, or similarly restrained object is acceptable when relevant.",
+          "It must have no screen, letters, numbers, labels, badges, logos, symbols, or pseudo-text.",
         ].join(" ")
-      : "Do not include any prop.";
+      : "Do not include any separate object or prop.";
 
   const prompt = [
     `Create one clean vertical editorial artwork belonging to the official visual universe of “${NOBODY_BRAND.projectName}”.`,
@@ -435,14 +438,12 @@ export function buildNobodyArtworkPrompt(
 
     [
       "CANONICAL REFERENCE:",
-      "Use the supplied original I AM NOBODY book cover",
-      `(${NOBODY_BRAND.canonicalReference.id})`,
-      "as the highest visual authority for body distance,",
-      "vertical framing, centred alignment, head and helmet",
-      "scale, posture, background mood, light restraint,",
-      "and overall elegance.",
-      "Preserve the same visual grammar without copying",
-      "any typography from the cover.",
+      `The approved I AM NOBODY cover (${NOBODY_BRAND.canonicalReference.id}) defines the production system.`,
+      "Use the attached neutral composition guide and exact helmet guide for body distance,",
+      "vertical framing, centred alignment, head and helmet scale, posture, background mood,",
+      "light restraint, and overall elegance.",
+      "Generate a completely new person and outfit. Do not copy, trace, ghost, or partially preserve",
+      "the original tuxedo body, typography, frame, spine, or graphic design.",
     ].join(" "),
 
     "",
@@ -477,10 +478,11 @@ export function buildNobodyArtworkPrompt(
     [
       `ARCHETYPE — ${archetype.title.en.toUpperCase()}:`,
       `Dress the figure in ${archetype.clothingPrompt}.`,
-      "The clothing alone should suggest the social role.",
-      "It must feel clean, iconic, premium, realistic,",
-      "restrained, and contemporary—not theatrical, literal,",
-      "comedic, or costume-like.",
+      "The clothing, materials, layering, and one restrained carried or worn object when requested",
+      "must make the specific human role or life situation understandable before typography is added.",
+      "Use concrete role-defining details so the person never reads as a generic man or woman.",
+      "It must feel clean, iconic, premium, realistic, restrained, and contemporary—not theatrical,",
+      "literal, comedic, stereotyped, costume-like, or overloaded with accessories.",
     ].join(" "),
 
     customClothingSentence,
@@ -534,6 +536,8 @@ export function buildNobodyArtworkPrompt(
       "soft controlled contrast, subtle surface texture,",
       "and restrained cinematic depth without artificial grain,",
       "blur, over-sharpening, plastic skin, or CGI gloss.",
+      "The figure must be fully opaque, physically integrated, and technically clean,",
+      "with no transparency, double exposure, ghosting, scanlines, horizontal banding, or pasted overlay effect.",
       "The result must feel like an official alternate cover",
       "artwork from the same I AM NOBODY universe.",
     ].join(" "),
@@ -547,10 +551,11 @@ export function buildNobodyArtworkPrompt(
     [
       "OUTPUT:",
       "Artwork only.",
-      "Do not include readable text, pseudo-text, letters, numbers, random glyphs, logos, labels, badges, signatures, or any graphic template layer.",
+      "Do not include readable text, pseudo-text, letters, numbers, random glyphs, logos, labels, badges, signs, placards, signatures, or any graphic template layer.",
+      "Do not add floating icons, decorative symbols, explanatory signs, or separate background objects.",
       "Use an opaque background.",
-      "Maintain clean edges, realistic material detail,",
-      "natural anatomy, and production-ready resolution.",
+      "Maintain clean edges, realistic material detail, natural anatomy,",
+      "production-ready resolution, and flawless technical cleanliness.",
     ].join(" "),
   ]
     .filter(Boolean)
@@ -615,14 +620,20 @@ export function buildNobodyArtworkPrompt(
       "or overly retouched CGI styling.",
     ].join(" "),
 
+    [
+      "Do not create scanlines, horizontal bands, halftone stripes, transparency,",
+      "double exposure, ghosted duplicate bodies, partial original-cover overlays,",
+      "pasted-on clothing, low-opacity figures, or visible edit-mask artifacts.",
+    ].join(" "),
+
     `Do not include ${joinNaturalLanguage(
       NOBODY_BRAND.globalForbiddenElements,
     )}.`,
 
     [
-      "Do not add more than one prop.",
-      "If a prop is not explicitly requested above,",
-      "add no prop.",
+      "Do not add more than one role-defining object.",
+      "If an object is requested, keep it naturally worn, carried, held, or attached to the person.",
+      "If no object is explicitly requested above, add no object.",
     ].join(" "),
 
     [

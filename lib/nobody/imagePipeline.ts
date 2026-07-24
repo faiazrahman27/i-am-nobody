@@ -72,11 +72,15 @@ export type GeneratedArtwork = Readonly<{
     canonicalHelmetId: string;
     canonicalHelmetSha256: string;
     canonicalBackgroundApplied: true;
-    backgroundIsolation: "difference-matte-composite";
+    backgroundIsolation: "subject-matte-composite";
     canonicalBackgroundId: string;
     canonicalBackgroundSha256: string;
     subjectMatteId: string;
     subjectMatteSha256: string;
+    horizontalArtifactCheck: Readonly<{
+      averageRowDifference: number;
+      severeRowDifferenceRatio: number;
+    }>;
   }>;
 }>;
 
@@ -163,119 +167,64 @@ function sha256(buffer: Buffer) {
     .digest("hex");
 }
 
-async function blurRegion(
-  input: Buffer,
-  region: {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
-    sigma: number;
-  },
-) {
-  return sharp(input)
-    .extract({
-      left: region.left,
-      top: region.top,
-      width: region.width,
-      height: region.height,
-    })
-    .blur(region.sigma)
-    .png()
-    .toBuffer();
-}
-
 async function buildCompositionReference(
-  originalCover: Buffer,
+  canonicalBackground: Buffer,
+  subjectMatte: Buffer,
 ) {
-  const { width, height } =
-    NOBODY_BRAND.canonicalReference;
-
-  const blurredRegions = await Promise.all([
-    blurRegion(originalCover, {
-      left: 290,
-      top: 560,
-      width: 350,
-      height: 420,
-      sigma: 22,
-    }),
-    blurRegion(originalCover, {
-      left: 270,
-      top: 990,
-      width: 380,
-      height: 105,
-      sigma: 16,
-    }),
-    blurRegion(originalCover, {
-      left: 245,
-      top: 1135,
-      width: 430,
-      height: 75,
-      sigma: 14,
-    }),
-    blurRegion(originalCover, {
-      left: 24,
-      top: 380,
-      width: 44,
-      height: 560,
-      sigma: 12,
-    }),
-  ]);
-
-  const deLettered = await sharp(originalCover)
-    .composite([
-      {
-        input: blurredRegions[0],
-        left: 290,
-        top: 560,
-      },
-      {
-        input: blurredRegions[1],
-        left: 270,
-        top: 990,
-      },
-      {
-        input: blurredRegions[2],
-        left: 245,
-        top: 1135,
-      },
-      {
-        input: blurredRegions[3],
-        left: 24,
-        top: 380,
-      },
-    ])
+  const resizedBackground = await sharp(canonicalBackground)
     .resize(
       NOBODY_BRAND.modelCanvas.width,
       NOBODY_BRAND.modelCanvas.height,
-      {
-        fit: "fill",
-      },
+      { fit: "fill" },
     )
-    .png()
+    .removeAlpha()
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toBuffer();
 
-  const metadata =
-    await sharp(deLettered).metadata();
+  const resizedMatte = await sharp(subjectMatte)
+    .resize(
+      NOBODY_BRAND.modelCanvas.width,
+      NOBODY_BRAND.modelCanvas.height,
+      { fit: "fill" },
+    )
+    .greyscale()
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+
+  const silhouetteFill = await sharp({
+    create: {
+      width: NOBODY_BRAND.modelCanvas.width,
+      height: NOBODY_BRAND.modelCanvas.height,
+      channels: 3,
+      background: {
+        r: 150,
+        g: 132,
+        b: 112,
+      },
+    },
+  })
+    .joinChannel(resizedMatte)
+    .blur(0.55)
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+
+  const reference = await sharp(resizedBackground)
+    .composite([{ input: silhouetteFill, blend: "over" }])
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
+
+  const metadata = await sharp(reference).metadata();
 
   if (
-    metadata.width !==
-      NOBODY_BRAND.modelCanvas.width ||
-    metadata.height !==
-      NOBODY_BRAND.modelCanvas.height
+    metadata.width !== NOBODY_BRAND.modelCanvas.width ||
+    metadata.height !== NOBODY_BRAND.modelCanvas.height
   ) {
     throw new Error(
-      "Could not prepare the canonical composition reference.",
+      "Could not prepare the canonical neutral composition guide.",
     );
   }
 
-  if (width !== 906 || height !== 1280) {
-    throw new Error(
-      "The canonical reference dimensions changed unexpectedly.",
-    );
-  }
-
-  return deLettered;
+  return reference;
 }
 
 async function buildHelmetReference(
@@ -398,7 +347,7 @@ async function applyCanonicalBackground(
       .raw()
       .toBuffer({ resolveWithObject: true }),
     sharp(subjectMatte)
-      .extractChannel(0)
+      .greyscale()
       .raw()
       .toBuffer({ resolveWithObject: true }),
   ]);
@@ -420,86 +369,53 @@ async function applyCanonicalBackground(
   }
 
   /*
-   * The image edit starts from the canonical background, so unchanged pixels
-   * remain very close to the plate. Build a soft alpha mask from the actual
-   * colour difference, bounded by the approved subject matte. This removes any
-   * regenerated wall pixels between the arms, body, and legs before the subject
-   * is composited back onto the immutable background plate.
+   * The OpenAI edit is already created on the immutable background plate.
+   * The previous colour-difference alpha reconstruction made dark garments
+   * partially transparent and amplified row-level differences into scanlines.
+   * Use the approved subject matte directly instead: the full generated person
+   * stays opaque, while every pixel outside the subject space is replaced by
+   * the exact canonical background.
    */
-  const alpha = Buffer.alloc(width * height);
-  const differenceStart = 8;
-  const differenceEnd = 30;
-
-  for (let pixel = 0; pixel < alpha.length; pixel += 1) {
-    const offset = pixel * 3;
-    const matte = matteRawObject.data[pixel] ?? 0;
-
-    if (matte === 0) {
-      alpha[pixel] = 0;
-      continue;
-    }
-
-    const redDifference = Math.abs(
-      (artworkRaw.data[offset] ?? 0) -
-        (backgroundRawObject.data[offset] ?? 0),
-    );
-    const greenDifference = Math.abs(
-      (artworkRaw.data[offset + 1] ?? 0) -
-        (backgroundRawObject.data[offset + 1] ?? 0),
-    );
-    const blueDifference = Math.abs(
-      (artworkRaw.data[offset + 2] ?? 0) -
-        (backgroundRawObject.data[offset + 2] ?? 0),
-    );
-    const difference = Math.max(
-      redDifference,
-      greenDifference,
-      blueDifference,
-    );
-    const normalized = Math.max(
-      0,
-      Math.min(1, (difference - differenceStart) / (differenceEnd - differenceStart)),
-    );
-
-    alpha[pixel] = Math.round(normalized * matte);
-  }
-
-  const cleanedAlpha = await sharp(alpha, {
-    raw: { width, height, channels: 1 },
-  })
-    .median(3)
-    .blur(0.55)
-    .raw()
-    .toBuffer();
-
-  const rgba = Buffer.alloc(width * height * 4);
+  const matteAlpha = Buffer.alloc(width * height);
   let visiblePixels = 0;
 
-  for (let pixel = 0; pixel < cleanedAlpha.length; pixel += 1) {
+  for (let pixel = 0; pixel < matteAlpha.length; pixel += 1) {
+    const rawMatte = (matteRawObject.data[pixel] ?? 0) / 255;
+    const smooth = rawMatte <= 0.025
+      ? 0
+      : rawMatte >= 0.93
+        ? 1
+        : Math.pow((rawMatte - 0.025) / 0.905, 0.72);
+    const alpha = Math.max(0, Math.min(255, Math.round(smooth * 255)));
+
+    matteAlpha[pixel] = alpha;
+    if (alpha >= 32) visiblePixels += 1;
+  }
+
+  const minimumVisiblePixels = Math.round(width * height * 0.12);
+
+  if (visiblePixels < minimumVisiblePixels) {
+    throw new Error(
+      "The approved subject matte does not contain enough visible subject area.",
+    );
+  }
+
+  const rgba = Buffer.alloc(width * height * 4);
+
+  for (let pixel = 0; pixel < matteAlpha.length; pixel += 1) {
     const sourceOffset = pixel * 3;
     const outputOffset = pixel * 4;
-    const pixelAlpha = cleanedAlpha[pixel] ?? 0;
 
     rgba[outputOffset] = artworkRaw.data[sourceOffset] ?? 0;
     rgba[outputOffset + 1] = artworkRaw.data[sourceOffset + 1] ?? 0;
     rgba[outputOffset + 2] = artworkRaw.data[sourceOffset + 2] ?? 0;
-    rgba[outputOffset + 3] = pixelAlpha;
-
-    if (pixelAlpha >= 24) visiblePixels += 1;
-  }
-
-  const minimumVisiblePixels = Math.round(width * height * 0.09);
-
-  if (visiblePixels < minimumVisiblePixels) {
-    throw new Error(
-      "The generated subject could not be isolated from the fixed background.",
-    );
+    rgba[outputOffset + 3] = matteAlpha[pixel] ?? 0;
   }
 
   const subjectWithAlpha = await sharp(rgba, {
     raw: { width, height, channels: 4 },
   })
-    .png()
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toBuffer();
 
   const composed = await sharp(canonicalBackground)
@@ -510,8 +426,8 @@ async function applyCanonicalBackground(
 
   const outputRaw = await sharp(composed).removeAlpha().raw().toBuffer();
 
-  for (let pixel = 0; pixel < cleanedAlpha.length; pixel += 1) {
-    if ((cleanedAlpha[pixel] ?? 0) !== 0) continue;
+  for (let pixel = 0; pixel < matteAlpha.length; pixel += 1) {
+    if ((matteAlpha[pixel] ?? 0) !== 0) continue;
 
     const offset = pixel * 3;
 
@@ -527,6 +443,88 @@ async function applyCanonicalBackground(
   }
 
   return composed;
+}
+
+async function rejectHorizontalLineArtifacts(
+  artwork: Buffer,
+  subjectMatte: Buffer,
+) {
+  const [imageObject, matteObject] = await Promise.all([
+    sharp(artwork)
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true }),
+    sharp(subjectMatte)
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true }),
+  ]);
+
+  const { width, height } = imageObject.info;
+
+  if (
+    matteObject.info.width !== width ||
+    matteObject.info.height !== height ||
+    imageObject.info.channels !== 1 ||
+    matteObject.info.channels !== 1
+  ) {
+    throw new Error(
+      "The technical artifact detector could not read the artwork canvas.",
+    );
+  }
+
+  const rowMeans: number[] = [];
+
+  for (let y = 0; y < height; y += 1) {
+    let total = 0;
+    let count = 0;
+    const rowOffset = y * width;
+
+    for (let x = 0; x < width; x += 1) {
+      const index = rowOffset + x;
+
+      if ((matteObject.data[index] ?? 0) < 96) continue;
+
+      total += imageObject.data[index] ?? 0;
+      count += 1;
+    }
+
+    if (count >= 24) {
+      rowMeans.push(total / count);
+    }
+  }
+
+  if (rowMeans.length < 120) {
+    throw new Error(
+      "The generated figure does not occupy enough rows for technical validation.",
+    );
+  }
+
+  let totalDifference = 0;
+  let severeDifferenceRows = 0;
+
+  for (let index = 1; index < rowMeans.length; index += 1) {
+    const difference = Math.abs(rowMeans[index] - rowMeans[index - 1]);
+    totalDifference += difference;
+
+    if (difference > 4) {
+      severeDifferenceRows += 1;
+    }
+  }
+
+  const averageDifference = totalDifference / (rowMeans.length - 1);
+  const severeRatio = severeDifferenceRows / (rowMeans.length - 1);
+
+  if (averageDifference > 7 || severeRatio > 0.24) {
+    throw new Error(
+      "The generated artwork contains pervasive horizontal scanline or banding artifacts and was rejected before storage.",
+    );
+  }
+
+  return {
+    averageRowDifference: Number(averageDifference.toFixed(4)),
+    severeRowDifferenceRatio: Number(severeRatio.toFixed(4)),
+  } as const;
 }
 
 async function applyCanonicalHelmet(
@@ -648,7 +646,7 @@ export async function loadCanonicalReferenceAssets(): Promise<CanonicalReference
   ]);
 
   const [compositionReference, helmetReference, modelBackground, modelEditMask] = await Promise.all([
-    buildCompositionReference(originalCover),
+    buildCompositionReference(canonicalBackground, subjectMatte),
     buildHelmetReference(helmetOverlay),
     buildModelBackground(canonicalBackground),
     buildModelEditMask(subjectMatte),
@@ -897,6 +895,11 @@ async function finalizeCleanArtwork(
     helmetOverlay,
   );
 
+  const horizontalArtifactCheck = await rejectHorizontalLineArtifacts(
+    cleanArtworkImage,
+    subjectMatte,
+  );
+
   const metadata =
     await sharp(
       cleanArtworkImage,
@@ -954,11 +957,12 @@ async function finalizeCleanArtwork(
         NOBODY_CANONICAL_HELMET.id,
       canonicalHelmetSha256: helmetSha256,
       canonicalBackgroundApplied: true,
-      backgroundIsolation: "difference-matte-composite",
+      backgroundIsolation: "subject-matte-composite",
       canonicalBackgroundId: NOBODY_CANONICAL_BACKGROUND.id,
       canonicalBackgroundSha256: backgroundSha256,
       subjectMatteId: NOBODY_SUBJECT_MATTE.id,
       subjectMatteSha256,
+      horizontalArtifactCheck,
     },
   };
 }
@@ -983,10 +987,10 @@ export async function generateNobodyArtworks(input: {
     "",
     "REFERENCE USE:",
     "Reference image 1 is the exact canonical background base. Preserve it unchanged and create the figure only inside the editable subject area.",
-    "Reference image 2 is the canonical composition guide derived from the original I AM NOBODY cover. Use it for body distance, vertical framing, centred stance, proportion, lighting restraint, and overall elegance only.",
+    "Reference image 2 is a neutral silhouette guide showing only the approved body space and scale. Use it for body distance, vertical framing, centred stance, proportion, and restrained editorial lighting. Generate a completely new person, clothing construction, hands, and role-specific details inside that space. Do not copy, trace, echo, ghost, or preserve the original tuxedo body.",
     "Reference image 3 is the immutable canonical helmet blueprint. Match its exact position, scale, silhouette, neck connection, black structural edges, reflective visor, and restrained blue, green, violet, and golden reflections.",
     "Do not invent, redesign, enlarge, shrink, rotate, or stylise the helmet. Do not create a second rim, visor, head shape, face, hair, skin, or helmet edge outside the canonical silhouette. The exact canonical helmet pixels are applied after generation, so the clothing neckline and shoulders must integrate naturally beneath that fixed helmet.",
-    "Create a new clean full-bleed artwork. Do not reproduce the original cover typography, spine, frame, border, coloured separator, author name, or any other graphic design element.",
+    "Create a new clean full-bleed artwork. Do not reproduce the original cover typography, spine, frame, border, coloured separator, author name, or any other graphic design element. Do not create scanlines, horizontal bands, halftone stripes, transparency, double exposure, low-opacity clothing, or a pasted mask-overlay effect.",
     "",
     "STRICT EXCLUSIONS:",
     input.negativePrompt,

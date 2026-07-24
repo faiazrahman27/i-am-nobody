@@ -112,7 +112,6 @@ function buildTodayStatus(input: {
 }) {
   const { config, todayBatch, todayItems, nowHour } = input;
   const scheduleHour = config?.local_hour ?? 8;
-  const windowEnd = scheduleHour + 4;
   const metrics = summarizeBatch(
     todayBatch ?? {
       id: "",
@@ -173,16 +172,10 @@ function buildTodayStatus(input: {
   }
 
   if (metrics.remaining > 0) {
-    const insideWindow = nowHour >= scheduleHour && nowHour <= windowEnd;
-
     return {
       tone: "waiting",
-      title: insideWindow
-        ? "Today’s collection is queued for the next automatic wave."
-        : "Today’s collection is queued and waiting.",
-      description: insideWindow
-        ? `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. Vercel cron can arrive any time during the current hour, or you can run a manual generation wave now.`
-        : `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. Automatic waves resume during the scheduled Rome window. You can still run a manual generation wave at any time.`,
+      title: "Today’s collection is queued for the next automatic wave.",
+      description: `${metrics.remaining} artwork${metrics.remaining === 1 ? " remains" : "s remain"} in the queue. The worker checks every ten minutes after the 08:00 start, or you can run a manual generation wave now.`,
     } as const;
   }
 
@@ -303,7 +296,7 @@ export default async function AutomationPage() {
       <section className={styles.hero}>
         <div>
           <p className={styles.eyebrow}>Autonomous daily studio</p>
-          <h1>Ten new artworks. Every morning.</h1>
+          <h1>Ten new artworks. Daily at 08:00.</h1>
           <p>
             At 08:00 in Rome, AI studies the embedded book context, the four
             thresholds, the 25 Keys, and recent Studio history. It then creates

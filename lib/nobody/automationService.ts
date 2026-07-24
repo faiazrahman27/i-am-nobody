@@ -362,8 +362,7 @@ export async function ensureDailyAutomationBatch(input?: {
   }
 
   const canCreate =
-    input?.force === true ||
-    (hour >= config.local_hour && hour <= config.local_hour + 4);
+    input?.force === true || hour >= config.local_hour;
 
   if (!canCreate) {
     return {

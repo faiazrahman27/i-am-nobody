@@ -15,7 +15,7 @@ import type { NobodyThreshold } from "./types";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_PLANNER_MODEL = "gpt-5.6-luna";
-export const NOBODY_DAILY_PLANNER_VERSION = "3.1.0";
+export const NOBODY_DAILY_PLANNER_VERSION = "3.2.0";
 
 const THRESHOLDS: readonly NobodyThreshold[] = [
   "Nobody",
@@ -29,9 +29,9 @@ const FORBIDDEN_BRIEF_PATTERNS: readonly Readonly<{
   pattern: RegExp;
 }>[] = [
   {
-    label: "a text-bearing or screen-based object",
+    label: "a text-bearing, screen-based, or sign-like object",
     pattern:
-      /\b(phone|smartphone|screen|tablet|laptop|book|newspaper|magazine|letter|document|paperwork|passport|ticket|badge|name tag|sign|label|package|clipboard|certificate)\b/i,
+      /\b(phone|smartphone|screen|tablet|laptop|book|newspaper|magazine|letter|document|paperwork|passport|ticket|badge|name tag|sign|placard|label|package|clipboard|certificate)\b/i,
   },
   {
     label: "letters, numbers, logos, badges, labels, or insignia",
@@ -312,8 +312,10 @@ function validatePlan(
         issues.push(`Artwork ${position} needs a meaningful question.`);
       if (visualStory.length < 30)
         issues.push(`Artwork ${position} needs a visual story.`);
-      if (clothingDirection.length < 30)
-        issues.push(`Artwork ${position} needs a clothing direction.`);
+      if (clothingDirection.length < 70)
+        issues.push(
+          `Artwork ${position} needs a more specific clothing direction with concrete garments, materials, and role-defining details.`,
+        );
       if (moodDirection.length < 12)
         issues.push(`Artwork ${position} needs a mood direction.`);
       if (bodyDirection.length < 12)
@@ -338,10 +340,23 @@ function validatePlan(
 
       if (
         objectDirection.toLowerCase() !== "none" &&
-        objectDirection.split(/\s+/).length > 12
+        objectDirection.split(/\s+/).length > 16
       ) {
         issues.push(
           `Artwork ${position} has an object direction that is too complex.`,
+        );
+      }
+
+      const studentContext = /\b(school|student|pupil|college|university)\b/i.test(
+        [roleTitle, roleFamily, lifeContext].join(" "),
+      );
+      const hasStudentCarrySignal = /\b(backpack|school bag|satchel|shoulder bag)\b/i.test(
+        [clothingDirection, objectDirection].join(" "),
+      );
+
+      if (studentContext && !hasStudentCarrySignal) {
+        issues.push(
+          `Artwork ${position} describes a student or school context but does not include a plain backpack, school bag, satchel, or shoulder bag.`,
         );
       }
 
@@ -447,10 +462,14 @@ async function requestPlan(input: {
   const instructions = [
     "You are the autonomous daily creative director for the private I AM NOBODY Image Studio.",
     `Create exactly ${input.count} original artwork briefs for ${input.localDate}.`,
-    "You decide the human role or life situation, emotional tension, clothing, posture nuance, one optional object, philosophical question, and complete visual direction.",
+    "You decide the human role or life situation, emotional tension, clothing, posture nuance, one optional role-defining object, philosophical question, and complete visual direction.",
+    "Every person must be unique and immediately legible as a specific human role or life situation. Never return a generic man or woman in a generic hoodie, jacket, suit, or casual outfit.",
     "Do not choose from a fixed archetype list. The role library is intentionally open-ended and must grow over time.",
     "Professions may appear, but the collection must not be dominated by professions. Include relational roles, invisible labour, inner conflicts, life transitions, civic and ecological responsibility, community, technology, body, care, disagreement, loss, renewal, and legacy when appropriate.",
-    "Every brief must be visually possible as one calm, front-facing, standing figure inside the fixed I AM NOBODY visual system. Communicate the idea through clothing, material, subtle posture, and at most one small unbranded object. Never request a different background, literal environment, scenery, another person, readable text, logos, uniforms with insignia, weapons, or spectacle.",
+    "Every brief must be visually possible as one calm, front-facing, standing figure inside the fixed I AM NOBODY visual system. Communicate the idea through clothing, material, subtle posture, and at most one small unbranded object carried, worn, held, or attached to the person. Never request a different background, literal environment, scenery, another person, readable text, logos, uniforms with insignia, weapons, spectacle, floating objects, signs, placards, icons, or decorative symbols.",
+    "clothingDirection must name concrete garments, construction, material, layering, and one or more restrained role-defining details. Avoid vague directions such as wearing a hoodie, wearing a suit, casual clothes, normal workwear, or a dark jacket without explaining what makes the person specific.",
+    "A plain bag is allowed when it belongs naturally to the character: backpack, school bag, satchel, shoulder bag, tote, fabric carry bag, or small utility pouch. The bag must be unbranded, text-free, physically worn or carried, and not placed as a separate background object.",
+    "If the role is a school pupil, student, college student, or university student, include a plain backpack, school bag, satchel, or shoulder bag unless the concept has a stronger equally clear wearable signal.",
     "Do not write image-generation boilerplate. Write precise creative briefs that make each person recognisable without becoming a costume or stereotype.",
     "Treat the embedded editorial dossier as the authoritative source for the book. Do not claim to quote or retrieve the PDF, and do not invent chapters, claims, or values outside the supplied dossier.",
     "Use the book deeply rather than decoratively: the life situation, threshold, question, clothing contradiction, posture, and mood must express one coherent philosophical tension.",
@@ -459,8 +478,8 @@ async function requestPlan(input: {
     "The ten artworks must form a coherent morning collection but remain clearly different from one another.",
     "Use all four thresholds across a ten-item collection and at least six genuinely different role families.",
     "No more than four of the ten may be conventional professions. At least six must come from relationships, invisible labour, life stages, inner conflicts, care, community, technology, embodiment, ecology, responsibility, loss, transition, or legacy.",
-    "objectDirection must be exactly the word 'none' or one simple restrained object. Do not use phones, screens, books, papers, documents, newspapers, badges, signs, labels, packages, tickets, passports, certificates, or anything likely to contain text.",
-    "Clothing must contain no letters, numbers, slogans, badges, insignia, labels, patches, nameplates, logos, or pseudo-text. Prefer plain fabrics and physically believable tailoring.",
+    "objectDirection must be exactly the word 'none' or one simple restrained role-defining object carried, worn, held, or attached to the person. Plain backpacks, school bags, satchels, shoulder bags, totes, fabric carry bags, small utility pouches, gloves, folded cloth, and similarly text-free objects are allowed when relevant. Do not use phones, screens, books, papers, documents, newspapers, badges, signs, placards, labels, packages, tickets, passports, certificates, or anything likely to contain text.",
+    "Clothing and objects must contain no letters, numbers, slogans, badges, insignia, labels, patches, nameplates, logos, symbols, or pseudo-text. Prefer plain fabrics and physically believable tailoring.",
     "bodyDirection must always preserve an upright, front-facing, centred standing pose with level shoulders. Prefer hands in pockets or relaxed at the sides; never request sitting, profile, three-quarter view, leaning, action, or a complex hand gesture.",
     "Lighting and shadow direction must stay coherent with the canonical cover, including a natural contact shadow beneath the fixed helmet and physically plausible garment folds.",
     "The fixed visual identity is handled elsewhere by the production system and should not be discussed in the brief.",
@@ -503,6 +522,7 @@ async function requestPlan(input: {
     ),
     "",
     `PRODUCTION SETTINGS: ${input.quality} exploration quality; exact fixed canonical background; exactly ${input.count} artworks.`,
+    "EDITORIAL GOAL: before typography is added, a reviewer must be able to understand who each character is about from the clothing, carried or worn object when relevant, and restrained posture alone.",
     "",
     "RECENT STUDIO HISTORY — DO NOT REPEAT:",
     buildRecentHistory(input.recentConcepts),

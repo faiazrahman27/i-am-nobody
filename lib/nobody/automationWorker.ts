@@ -8,7 +8,7 @@ import {
 } from "./automationService";
 
 const DEFAULT_WORK_BUDGET_MS = 285_000;
-const GENERATION_CONCURRENCY = 3;
+const GENERATION_CONCURRENCY = 5;
 const MINIMUM_WAVE_BUDGET_MS = 260_000;
 
 const HUMAN_REVIEW_READY_STATUSES = new Set([

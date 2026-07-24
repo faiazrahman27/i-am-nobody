@@ -1,7 +1,8 @@
 .page {
   position: relative;
   min-height: 100svh;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: hidden;
   background:
     radial-gradient(
       circle at 86% 2%,
@@ -188,7 +189,7 @@
 .grid {
   display: grid;
   grid-template-columns:
-    repeat(4, minmax(0, 1fr));
+    repeat(auto-fit, minmax(270px, 1fr));
   gap: 18px;
   width: min(100%, 1320px);
   margin: 0 auto;
@@ -309,7 +310,13 @@
   align-items: flex-start;
 }
 
+.cardBody > div {
+  min-width: 0;
+}
+
 .cardBody h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: #fff;
   font-family: var(--font-display);
   font-size: 2rem;
@@ -338,7 +345,11 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-align: center;
+  max-width: 48%;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
+  white-space: normal;
 }
 
 .review {
@@ -734,22 +745,10 @@
   }
 }
 
-@media (max-width: 1120px) {
-  .grid {
-    grid-template-columns:
-      repeat(3, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 900px) {
   .intro {
     grid-template-columns: 1fr;
     align-items: start;
-  }
-
-  .grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
   }
 
   .reviewLayout {

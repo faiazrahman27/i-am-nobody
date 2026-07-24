@@ -3,7 +3,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 
 export const NOBODY_AUTOMATION_TIMEZONE = "Europe/Rome";
-export const NOBODY_AUTOMATION_LOCAL_HOUR = 10;
+export const NOBODY_AUTOMATION_LOCAL_HOUR = 8;
 export const NOBODY_AUTOMATION_DAILY_COUNT = 10;
 
 export function getRomeDateParts(date = new Date()) {

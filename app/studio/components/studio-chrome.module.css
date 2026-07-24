@@ -1,5 +1,6 @@
 .shell {
   min-height: 100svh;
+  overflow-x: clip;
   background: var(--brand-black);
   isolation: isolate;
 }
@@ -27,7 +28,7 @@
   position: sticky;
   z-index: 80;
   top: 0;
-  padding: 3px clamp(16px, 3vw, 42px) 0;
+  padding: 3px clamp(12px, 2.2vw, 30px) 0;
   background: linear-gradient(
     180deg,
     rgba(5, 5, 5, 0.98),
@@ -41,11 +42,11 @@
   position: relative;
   display: grid;
   grid-template-columns:
-    minmax(210px, 0.78fr)
-    minmax(470px, 1.45fr)
-    minmax(220px, 0.77fr);
+    minmax(170px, 0.72fr)
+    minmax(0, 1.58fr)
+    minmax(150px, auto);
   align-items: center;
-  gap: clamp(18px, 3vw, 42px);
+  gap: clamp(10px, 1.8vw, 26px);
   width: min(100%, 1440px);
   min-height: 86px;
   margin: 0 auto;
@@ -118,7 +119,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding: 14px clamp(10px, 1.35vw, 18px);
+  padding: 14px clamp(8px, 1vw, 14px);
   color: rgba(242, 238, 230, 0.58);
   font-family: var(--font-sans);
   transition: color 180ms ease, background 180ms ease, transform 180ms ease;
@@ -377,6 +378,8 @@
 .content {
   position: relative;
   z-index: 1;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .content :global(main > header) {
@@ -393,9 +396,9 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
   .navbar {
-    grid-template-columns: minmax(190px, 0.8fr) minmax(360px, 1.2fr) auto;
+    grid-template-columns: minmax(170px, 0.75fr) minmax(0, 1.25fr) auto;
   }
 
   .navLink small,

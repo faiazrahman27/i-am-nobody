@@ -34,7 +34,7 @@ const NAVIGATION: readonly NavigationItem[] = [
   {
     href: "/studio/automation",
     label: "Daily studio",
-    description: "Ten artworks every morning",
+    description: "Ten artworks daily at 08:00",
     active: (pathname) => pathname.startsWith("/studio/automation"),
     icon: "automation",
   },
@@ -253,7 +253,7 @@ export default function StudioChrome({
         <div className={styles.welcomeCopy}>
           <strong>Welcome to the private I AM NOBODY Image Studio.</strong>
           <p>
-            Every morning the studio prepares ten new artworks for your review. Nothing is approved or published without a human decision.
+            At 08:00 Rome time the studio starts today’s ten-artwork collection. Remaining items continue automatically on the next worker wave, and you can run them manually at any time. Nothing is approved or published without a human decision.
           </p>
         </div>
 
