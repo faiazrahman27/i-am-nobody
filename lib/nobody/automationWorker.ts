@@ -63,11 +63,12 @@ async function processClaimedItem(input: {
   origin: string;
   item: ClaimedItem;
   timeout: number;
+  automaticRetry: boolean;
 }): Promise<
   | Readonly<{ ok: true; item: ProcessedAutomationItem }>
   | Readonly<{ ok: false; item: FailedAutomationItem }>
 > {
-  const { origin, item, timeout } = input;
+  const { origin, item, timeout, automaticRetry } = input;
 
   try {
     const secret = process.env.CRON_SECRET?.trim() ?? "";
@@ -112,7 +113,7 @@ async function processClaimedItem(input: {
 
       const message = fallbackParts.join(" ").trim();
 
-      const retryable = isRetryableStatus(response.status);
+      const retryable = automaticRetry && isRetryableStatus(response.status);
       const failure = await failDailyAutomationItem({
         itemId: item.itemId,
         batchId: item.batchId,
@@ -138,9 +139,13 @@ async function processClaimedItem(input: {
     }
 
     if (!variantStatus || !HUMAN_REVIEW_READY_STATUSES.has(variantStatus)) {
-      const fallbackReviewMessage = variantStatus === "auto_rejected"
-        ? "The generated artwork did not pass the automated visual quality gate. A fresh attempt has been queued."
-        : "The generated artwork could not be certified for human review. A fresh attempt has been queued.";
+      const fallbackReviewMessage = automaticRetry
+        ? variantStatus === "auto_rejected"
+          ? "The generated artwork did not pass the automated visual quality gate. A fresh attempt has been queued."
+          : "The generated artwork could not be certified for human review. A fresh attempt has been queued."
+        : variantStatus === "auto_rejected"
+          ? "The test artwork did not pass the automated visual quality gate. It was not re-queued automatically. Review the result before retrying."
+          : "The test artwork could not be certified for human review. It was not re-queued automatically.";
 
       const message = [
         variantStatus ? `Automatic review result: ${variantStatus}.` : "",
@@ -151,7 +156,7 @@ async function processClaimedItem(input: {
         itemId: item.itemId,
         batchId: item.batchId,
         message,
-        retryable: true,
+        retryable: automaticRetry,
       });
 
       return {
@@ -193,7 +198,7 @@ async function processClaimedItem(input: {
       itemId: item.itemId,
       batchId: item.batchId,
       message,
-      retryable: true,
+      retryable: automaticRetry,
     }).catch(() => ({ retryQueued: false as const }));
 
     return {
@@ -214,6 +219,7 @@ export async function processDailyAutomationQueue(input: {
   itemLimit?: number;
   force?: boolean;
   workBudgetMs?: number;
+  automaticRetry?: boolean;
 }): Promise<DailyAutomationWorkerResult> {
   const startedAt = Date.now();
   const itemLimit = Math.max(1, Math.min(10, input.itemLimit ?? 10));
@@ -222,6 +228,7 @@ export async function processDailyAutomationQueue(input: {
     Math.min(DEFAULT_WORK_BUDGET_MS, input.workBudgetMs ?? DEFAULT_WORK_BUDGET_MS),
   );
   const origin = new URL(input.requestUrl).origin;
+  const automaticRetry = input.automaticRetry !== false;
   const processed: ProcessedAutomationItem[] = [];
   const failures: FailedAutomationItem[] = [];
 
@@ -272,7 +279,9 @@ export async function processDailyAutomationQueue(input: {
 
     const timeout = Math.max(60_000, Math.min(remaining - 8_000, 275_000));
     const results = await Promise.all(
-      claimed.map((item) => processClaimedItem({ origin, item, timeout })),
+      claimed.map((item) =>
+        processClaimedItem({ origin, item, timeout, automaticRetry }),
+      ),
     );
 
     for (const result of results) {

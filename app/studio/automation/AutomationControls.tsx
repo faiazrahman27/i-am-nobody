@@ -52,7 +52,9 @@ export default function AutomationControls({
 
       if (action === "toggle") {
         setMessage(
-          enabled ? "Daily automation paused." : "Daily automation resumed.",
+          enabled
+            ? "Daily automation and Supabase Cron are paused. Manual testing remains available."
+            : "Daily automation and Supabase Cron are active again.",
         );
       } else if (action === "prepare") {
         setMessage(
@@ -83,8 +85,8 @@ export default function AutomationControls({
         if (failedCount > 0) {
           fragments.push(
             failedCount === 1
-              ? "1 artwork attempt was rejected and re-queued automatically"
-              : `${failedCount} artwork attempts were rejected and re-queued automatically`,
+              ? "1 test artwork failed; review its exact error before choosing whether to retry it"
+              : `${failedCount} test artworks failed; review their exact errors before choosing whether to retry them`,
           );
         }
 
@@ -96,7 +98,7 @@ export default function AutomationControls({
       } else {
         setMessage(
           payload.message ||
-            "The manual generation wave finished, but no queued artwork was available.",
+            "The manual test finished, but no queued artwork was available.",
         );
       }
 
@@ -112,27 +114,37 @@ export default function AutomationControls({
     }
   }
 
+  function toggleAutomation() {
+    if (!enabled) {
+      const confirmed = window.confirm(
+        "Enable automatic daily generation? Supabase Cron will call the worker every ten minutes after the 08:00 Rome start until the daily queue is complete.",
+      );
+
+      if (!confirmed) return;
+    }
+
+    void run("toggle", () =>
+      fetch("/api/studio/automation", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !enabled }),
+      }),
+    );
+  }
+
   return (
     <div className={styles.controls}>
       <button
         className={enabled ? styles.pauseButton : styles.primaryButton}
         disabled={!canManage || pending !== null}
-        onClick={() =>
-          run("toggle", () =>
-            fetch("/api/studio/automation", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ enabled: !enabled }),
-            }),
-          )
-        }
+        onClick={toggleAutomation}
         type="button"
       >
         {pending === "toggle"
           ? "Saving…"
           : enabled
-            ? "Pause daily generation"
-            : "Resume daily generation"}
+            ? "Pause daily automation"
+            : "Enable daily automation"}
       </button>
 
       {showPlanningRecovery ? (
@@ -165,15 +177,15 @@ export default function AutomationControls({
               fetch("/api/studio/automation", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "process_remaining" }),
+                body: JSON.stringify({ action: "process_next" }),
               }),
             )
           }
           type="button"
         >
           {pending === "processWave"
-            ? "Running manual generation wave…"
-            : "Run manual generation wave now"}
+            ? "Generating one test artwork…"
+            : "Generate one test artwork now"}
         </button>
       ) : null}
 
@@ -199,10 +211,9 @@ export default function AutomationControls({
       ) : null}
 
       <p className={styles.helperText}>
-        Supabase Cron calls the production worker every ten minutes. These
-        buttons are manual recovery tools only. “Run manual generation wave now”
-        triggers one extra wave immediately; it does not replace the automatic
-        schedule.
+        {enabled
+          ? "Automatic daily generation is active. Supabase Cron calls the worker every ten minutes after the 08:00 Rome start. Manual testing still generates only one queued artwork per click."
+          : "Manual testing mode is active. Supabase Cron is unscheduled and no automatic artwork generation will run. “Generate one test artwork now” processes exactly one queued artwork per click."}
       </p>
 
       {!canManage ? (

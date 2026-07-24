@@ -111,8 +111,16 @@ function buildTodayStatus(input: {
   todayItems: readonly ItemRow[];
   nowHour: number;
   schedulerConfigured: boolean;
+  manualTestingMode: boolean;
 }) {
-  const { config, todayBatch, todayItems, nowHour, schedulerConfigured } = input;
+  const {
+    config,
+    todayBatch,
+    todayItems,
+    nowHour,
+    schedulerConfigured,
+    manualTestingMode,
+  } = input;
   const scheduleHour = config?.local_hour ?? 8;
   const metrics = summarizeBatch(
     todayBatch ?? {
@@ -131,12 +139,31 @@ function buildTodayStatus(input: {
     todayItems,
   );
 
-  if (!config?.is_enabled) {
+  if (!config?.is_enabled || manualTestingMode) {
+    if (metrics.processing > 0) {
+      return {
+        tone: "running",
+        title: "One manual test artwork is being generated.",
+        description:
+          "Automatic scheduling remains paused. Wait for this test to finish before starting another one.",
+      } as const;
+    }
+
+    if (metrics.failed > 0) {
+      return {
+        tone: "warning",
+        title: "Manual testing mode is active.",
+        description: `${metrics.failed} test artwork${metrics.failed === 1 ? " needs" : "s need"} review before retrying. Supabase Cron is paused and no automatic retries will run.`,
+      } as const;
+    }
+
     return {
       tone: "paused",
-      title: "Daily automation is paused.",
+      title: "Manual testing mode is active.",
       description:
-        "No automatic planning or generation will start until daily automation is resumed.",
+        metrics.remaining > 0
+          ? `${metrics.remaining} planned artwork${metrics.remaining === 1 ? " is" : "s are"} waiting. Supabase Cron is paused; generate exactly one test artwork per click.`
+          : "Supabase Cron is paused, so no automatic artwork generation will run. Prepare a collection when needed and generate exactly one queued test artwork per click.",
     } as const;
   }
 
@@ -238,8 +265,17 @@ export default async function AutomationPage() {
   ]);
 
   const config = configData as ConfigRow | null;
+  const automationMetadata = config?.metadata ?? {};
   const schedulerConfigured =
-    config?.metadata?.scheduler === "supabase-cron";
+    automationMetadata.scheduler === "supabase-cron";
+  const schedulerState =
+    typeof automationMetadata.scheduler_state === "string"
+      ? automationMetadata.scheduler_state
+      : config?.is_enabled
+        ? "active"
+        : "paused";
+  const manualTestingMode =
+    automationMetadata.manual_testing_mode === true || !config?.is_enabled;
   const batches = (batchData ?? []) as BatchRow[];
   const todayBatch =
     batches.find((batch) => batch.local_date === today) ?? null;
@@ -303,22 +339,25 @@ export default async function AutomationPage() {
     todayItems,
     nowHour: romeHour,
     schedulerConfigured,
+    manualTestingMode,
   });
 
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
         <div>
-          <p className={styles.eyebrow}>Autonomous daily studio</p>
-          <h1>Ten new artworks. Daily at 08:00.</h1>
+          <p className={styles.eyebrow}>
+            {manualTestingMode ? "Manual artwork testing" : "Autonomous daily studio"}
+          </p>
+          <h1>
+            {manualTestingMode
+              ? "Test one artwork at a time."
+              : "Ten new artworks. Daily at 08:00."}
+          </h1>
           <p>
-            At 08:00 in Rome, AI studies the embedded book context, the four
-            thresholds, the 25 Keys, and recent Studio history. It then creates
-            ten new human roles and life situations, writes the creative
-            direction, generates every artwork inside the fixed visual system,
-            evaluates the results, and places them in your private review queue.
-            Supabase Cron calls the production worker every ten minutes so delayed
-            or remaining items continue automatically.
+            {manualTestingMode
+              ? "Automatic planning and generation are paused. You can keep the current ten-item plan, generate one queued artwork per click, inspect the exact result and review reason, and decide when the visual system is ready for daily automation."
+              : "At 08:00 in Rome, AI studies the embedded book context, the four thresholds, the 25 Keys, and recent Studio history. It creates ten new human roles and life situations, generates the collection, evaluates every result, and sends successful work to your private review queue."}
           </p>
         </div>
 
@@ -333,10 +372,15 @@ export default async function AutomationPage() {
           </small>
           <small>Image quality · {config?.quality ?? "high"}</small>
           <small>
-            Scheduler · {schedulerConfigured ? "Supabase Cron / 10 min" : "Setup required"}
+            Scheduler · {manualTestingMode
+              ? "Paused · manual testing"
+              : schedulerConfigured
+                ? "Supabase Cron / 10 min"
+                : "Setup required"}
           </small>
-          <em className={config?.is_enabled ? styles.live : styles.paused}>
-            {config?.is_enabled ? "Active" : "Paused"}
+          <small>Manual test size · 1 artwork per click</small>
+          <em className={!manualTestingMode && schedulerState === "active" ? styles.live : styles.paused}>
+            {manualTestingMode ? "Manual only" : "Active"}
           </em>
         </aside>
       </section>

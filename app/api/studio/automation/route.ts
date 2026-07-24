@@ -82,14 +82,21 @@ export async function PATCH(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase
-    .from("daily_artwork_automation")
-    .update({ is_enabled: body.enabled })
-    .eq("singleton", true);
+  const functionName = body.enabled
+    ? "resume_nobody_daily_automation"
+    : "pause_nobody_daily_automation";
+  const { data, error } = await supabase.rpc(functionName);
 
   if (error) {
     return NextResponse.json(
-      { ok: false, message: error.message },
+      {
+        ok: false,
+        message:
+          error.message ||
+          (body.enabled
+            ? "Daily automation could not be enabled."
+            : "Daily automation could not be paused."),
+      },
       { status: 500 },
     );
   }
@@ -99,10 +106,17 @@ export async function PATCH(request: Request) {
     action: body.enabled ? "automation.enabled" : "automation.paused",
     entity_type: "daily_artwork_automation",
     entity_id: "singleton",
-    details: { enabled: body.enabled },
+    details: {
+      enabled: body.enabled,
+      scheduler_result: data,
+    },
   });
 
-  return NextResponse.json({ ok: true, enabled: body.enabled });
+  return NextResponse.json({
+    ok: true,
+    enabled: body.enabled,
+    scheduler: data,
+  });
 }
 
 export async function POST(request: Request) {
@@ -177,6 +191,7 @@ export async function POST(request: Request) {
         requestUrl: request.url,
         force: true,
         itemLimit: body.action === "process_remaining" ? 3 : 1,
+        automaticRetry: false,
       });
 
       return NextResponse.json(result);
