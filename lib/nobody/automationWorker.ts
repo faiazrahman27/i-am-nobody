@@ -8,8 +8,8 @@ import {
 } from "./automationService";
 
 const DEFAULT_WORK_BUDGET_MS = 285_000;
-const GENERATION_CONCURRENCY = 5;
-const MINIMUM_WAVE_BUDGET_MS = 260_000;
+const GENERATION_CONCURRENCY = 2;
+const MINIMUM_WAVE_BUDGET_MS = 220_000;
 
 const HUMAN_REVIEW_READY_STATUSES = new Set([
   "ready_for_review",
@@ -100,11 +100,17 @@ async function processClaimedItem(input: {
     const variantId = variant?.id;
     const variantStatus = variant?.status ?? null;
 
+    const errorCode = typeof payload.error === "string" && payload.error.trim() ? payload.error.trim() : null;
+    const responseStatus = response.status;
+
     if (!response.ok || !payload.ok || !payload.jobId || !variantId) {
-      const message = normalizeMessage(
-        payload.message,
-        "The scheduled artwork could not be completed.",
-      );
+      const fallbackParts = [
+        responseStatus ? `Artwork generation failed (HTTP ${responseStatus}).` : "Artwork generation failed.",
+        errorCode ? `Code: ${errorCode}.` : "",
+        normalizeMessage(payload.message, "The scheduled artwork could not be completed."),
+      ].filter(Boolean);
+
+      const message = fallbackParts.join(" ").trim();
 
       const retryable = isRetryableStatus(response.status);
       const failure = await failDailyAutomationItem({
@@ -132,12 +138,14 @@ async function processClaimedItem(input: {
     }
 
     if (!variantStatus || !HUMAN_REVIEW_READY_STATUSES.has(variantStatus)) {
-      const message = normalizeMessage(
-        variant?.reviewSummary,
-        variantStatus === "auto_rejected"
-          ? "The generated artwork did not pass the automated visual quality gate. A fresh attempt has been queued."
-          : "The generated artwork could not be certified for human review. A fresh attempt has been queued.",
-      );
+      const fallbackReviewMessage = variantStatus === "auto_rejected"
+        ? "The generated artwork did not pass the automated visual quality gate. A fresh attempt has been queued."
+        : "The generated artwork could not be certified for human review. A fresh attempt has been queued.";
+
+      const message = [
+        variantStatus ? `Automatic review result: ${variantStatus}.` : "",
+        normalizeMessage(variant?.reviewSummary, fallbackReviewMessage),
+      ].filter(Boolean).join(" ").trim();
 
       const failure = await failDailyAutomationItem({
         itemId: item.itemId,

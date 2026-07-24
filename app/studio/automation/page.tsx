@@ -80,7 +80,7 @@ function labelStatus(value: string) {
     case "completed":
       return "Ready for review";
     case "failed":
-      return "Needs retry";
+      return "Automatic retries exhausted";
     case "planning":
       return "Planning";
     case "planning_failed":
@@ -194,7 +194,7 @@ function buildTodayStatus(input: {
     return {
       tone: "warning",
       title: "Some artworks need a manual retry.",
-      description: `${metrics.failed} artwork${metrics.failed === 1 ? " has" : "s have"} exhausted the automatic attempts. Use “Retry failed artworks” to return them to the queue.`,
+      description: `${metrics.failed} artwork${metrics.failed === 1 ? " has" : "s have"} exhausted the automatic attempts. Use “Retry failed artworks” to return them to the queue. The exact latest failure message is shown on each item card and in Automation history.`,
     } as const;
   }
 

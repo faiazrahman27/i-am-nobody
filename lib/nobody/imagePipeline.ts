@@ -322,17 +322,79 @@ async function buildModelBackground(canonicalBackground: Buffer) {
   return sharp(canonicalBackground).resize(NOBODY_BRAND.modelCanvas.width, NOBODY_BRAND.modelCanvas.height, { fit: "fill" }).removeAlpha().png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
 }
 
-async function buildModelEditMask(subjectMatte: Buffer) {
-  const { data, info } = await sharp(subjectMatte).resize(NOBODY_BRAND.modelCanvas.width, NOBODY_BRAND.modelCanvas.height, { fit: "fill" }).greyscale().raw().toBuffer({ resolveWithObject: true });
+async function buildModelEditMask(subjectMatte: Buffer, helmetOverlay: Buffer) {
+  const { data, info } = await sharp(subjectMatte)
+    .resize(NOBODY_BRAND.modelCanvas.width, NOBODY_BRAND.modelCanvas.height, { fit: "fill" })
+    .greyscale()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const helmetCanvas = await sharp({
+    create: {
+      width: NOBODY_BRAND.generationCanvas.width,
+      height: NOBODY_BRAND.generationCanvas.height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([
+      {
+        input: helmetOverlay,
+        left: NOBODY_CANONICAL_HELMET.placement.left,
+        top: NOBODY_CANONICAL_HELMET.placement.top,
+      },
+    ])
+    .resize(NOBODY_BRAND.modelCanvas.width, NOBODY_BRAND.modelCanvas.height, { fit: "fill" })
+    .extractChannel("alpha")
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  if (helmetCanvas.info.width !== info.width || helmetCanvas.info.height !== info.height) {
+    throw new Error("The canonical helmet mask could not be aligned to the model canvas.");
+  }
+
+  const expandedHelmet = Buffer.alloc(helmetCanvas.data.length);
+  const dilationRadius = 8;
+
+  for (let y = 0; y < info.height; y += 1) {
+    for (let x = 0; x < info.width; x += 1) {
+      const index = y * info.width + x;
+      if ((helmetCanvas.data[index] ?? 0) < 12) continue;
+
+      for (let offsetY = -dilationRadius; offsetY <= dilationRadius; offsetY += 1) {
+        const targetY = y + offsetY;
+        if (targetY < 0 || targetY >= info.height) continue;
+
+        for (let offsetX = -dilationRadius; offsetX <= dilationRadius; offsetX += 1) {
+          const targetX = x + offsetX;
+          if (targetX < 0 || targetX >= info.width) continue;
+
+          if (offsetX * offsetX + offsetY * offsetY > dilationRadius * dilationRadius) continue;
+          expandedHelmet[targetY * info.width + targetX] = 255;
+        }
+      }
+    }
+  }
+
   const rgba = Buffer.alloc(info.width * info.height * 4);
+
   for (let index = 0; index < data.length; index += 1) {
     const outputIndex = index * 4;
+    const matteValue = data[index] ?? 0;
+    const helmetBlock = expandedHelmet[index] ?? 0;
+    const editableValue = helmetBlock > 0
+      ? Math.max(0, Math.round(matteValue * 0.05))
+      : matteValue;
+
     rgba[outputIndex] = 0;
     rgba[outputIndex + 1] = 0;
     rgba[outputIndex + 2] = 0;
-    rgba[outputIndex + 3] = 255 - (data[index] ?? 0);
+    rgba[outputIndex + 3] = 255 - editableValue;
   }
-  return sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } }).png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer();
+
+  return sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 } })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
 }
 
 async function applyCanonicalBackground(
@@ -649,7 +711,7 @@ export async function loadCanonicalReferenceAssets(): Promise<CanonicalReference
     buildCompositionReference(canonicalBackground, subjectMatte),
     buildHelmetReference(helmetOverlay),
     buildModelBackground(canonicalBackground),
-    buildModelEditMask(subjectMatte),
+    buildModelEditMask(subjectMatte, helmetOverlay),
   ]);
 
   return {

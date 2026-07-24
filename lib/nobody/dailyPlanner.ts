@@ -15,7 +15,7 @@ import type { NobodyThreshold } from "./types";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_PLANNER_MODEL = "gpt-5.6-luna";
-export const NOBODY_DAILY_PLANNER_VERSION = "3.2.0";
+export const NOBODY_DAILY_PLANNER_VERSION = "3.3.0";
 
 const THRESHOLDS: readonly NobodyThreshold[] = [
   "Nobody",
@@ -136,10 +136,20 @@ function tokenSimilarity(left: string, right: string) {
   return union === 0 ? 0 : intersection / union;
 }
 
+const VISUAL_SPECIFICITY_PATTERN = /\b(backpack|school bag|satchel|shoulder bag|tote|pouch|sack|apron|overalls?|coverall|scrubs?|lab coat|stethoscope|turtleneck|cardigan|blazer|overcoat|trench|parka|duffel|bomber|anorak|tunic|vest|waistcoat|pleated|corduroy|denim|wool|linen|canvas|leather|suede|knit|quilted|ribbed|cargo|tailored|workshirt|dress shirt|jacket|hoodie|scarf|gloves?|boots?|loafers?|clogs?|trainer|sneaker|gown|uniform|robe|sweater)\b/i;
+const COLOUR_OR_TEXTURE_PATTERN = /\b(black|white|cream|ecru|ivory|beige|taupe|camel|tan|brown|umber|rust|terracotta|red|burgundy|oxblood|pink|rose|orange|mustard|ochre|yellow|olive|sage|green|mint|teal|blue|navy|cobalt|indigo|violet|purple|grey|gray|charcoal|silver|gold|matte|washed|faded|heathered|textured|herringbone|pinstripe)\b/i;
+
 function clean(value: unknown, maxLength: number) {
   return typeof value === "string"
     ? value.replace(/\s+/g, " ").trim().slice(0, maxLength)
     : "";
+}
+
+function visualSimilarity(left: DailyAiArtworkBrief, right: DailyAiArtworkBrief) {
+  return tokenSimilarity(
+    [left.roleFamily, left.visualStory, left.clothingDirection, left.objectDirection, left.creativeDirection].join(" "),
+    [right.roleFamily, right.visualStory, right.clothingDirection, right.objectDirection, right.creativeDirection].join(" "),
+  );
 }
 
 function makeSchema(count: number) {
@@ -316,6 +326,10 @@ function validatePlan(
         issues.push(
           `Artwork ${position} needs a more specific clothing direction with concrete garments, materials, and role-defining details.`,
         );
+      if (!VISUAL_SPECIFICITY_PATTERN.test([roleTitle, roleFamily, clothingDirection, objectDirection].join(" ")))
+        issues.push(`Artwork ${position} needs a clearer role-defining garment or carried element.`);
+      if (!COLOUR_OR_TEXTURE_PATTERN.test(clothingDirection))
+        issues.push(`Artwork ${position} needs a more specific colour, texture, or material direction.`);
       if (moodDirection.length < 12)
         issues.push(`Artwork ${position} needs a mood direction.`);
       if (bodyDirection.length < 12)
@@ -411,6 +425,17 @@ function validatePlan(
       };
     });
 
+  for (let index = 0; index < items.length; index += 1) {
+    for (let compareIndex = index + 1; compareIndex < items.length; compareIndex += 1) {
+      const similarity = visualSimilarity(items[index], items[compareIndex]);
+      if (similarity >= 0.68) {
+        issues.push(
+          `Artwork ${items[index].position} and artwork ${items[compareIndex].position} are visually too similar. Diversify the silhouette, garments, materials, object, and philosophical role signal.`,
+        );
+      }
+    }
+  }
+
   if (roleFamilies.size < Math.min(6, count)) {
     issues.push(
       "The collection needs broader role and life-context diversity.",
@@ -467,15 +492,15 @@ async function requestPlan(input: {
     "Do not choose from a fixed archetype list. The role library is intentionally open-ended and must grow over time.",
     "Professions may appear, but the collection must not be dominated by professions. Include relational roles, invisible labour, inner conflicts, life transitions, civic and ecological responsibility, community, technology, body, care, disagreement, loss, renewal, and legacy when appropriate.",
     "Every brief must be visually possible as one calm, front-facing, standing figure inside the fixed I AM NOBODY visual system. Communicate the idea through clothing, material, subtle posture, and at most one small unbranded object carried, worn, held, or attached to the person. Never request a different background, literal environment, scenery, another person, readable text, logos, uniforms with insignia, weapons, spectacle, floating objects, signs, placards, icons, or decorative symbols.",
-    "clothingDirection must name concrete garments, construction, material, layering, and one or more restrained role-defining details. Avoid vague directions such as wearing a hoodie, wearing a suit, casual clothes, normal workwear, or a dark jacket without explaining what makes the person specific.",
+    "clothingDirection must name concrete garments, construction, material, layering, colour or texture cues, and one or more restrained role-defining details. Avoid vague directions such as wearing a hoodie, wearing a suit, casual clothes, normal workwear, or a dark jacket without explaining what makes the person specific.",
     "A plain bag is allowed when it belongs naturally to the character: backpack, school bag, satchel, shoulder bag, tote, fabric carry bag, or small utility pouch. The bag must be unbranded, text-free, physically worn or carried, and not placed as a separate background object.",
     "If the role is a school pupil, student, college student, or university student, include a plain backpack, school bag, satchel, or shoulder bag unless the concept has a stronger equally clear wearable signal.",
-    "Do not write image-generation boilerplate. Write precise creative briefs that make each person recognisable without becoming a costume or stereotype.",
+    "Do not write image-generation boilerplate. Write precise creative briefs that make each person recognisable without becoming a parody, a Halloween costume, or a lazy stereotype. Recognisable occupational or seasonal clothing is allowed when it is philosophically justified and kept text-free, restrained, and editorial.",
     "Treat the embedded editorial dossier as the authoritative source for the book. Do not claim to quote or retrieve the PDF, and do not invent chapters, claims, or values outside the supplied dossier.",
     "Use the book deeply rather than decoratively: the life situation, threshold, question, clothing contradiction, posture, and mood must express one coherent philosophical tension.",
     "Usually write an original concept question for the specific person instead of copying one of the 25 Keys word for word.",
     "Do not repeat or lightly rename any role, question, or visual story in recent Studio history.",
-    "The ten artworks must form a coherent morning collection but remain clearly different from one another.",
+    "The ten artworks must form a coherent morning collection but remain clearly different from one another. Vary silhouette, layering, garment category, materials, object choice, and restrained colour story across the collection. Do not let most of the collection collapse into the same oatmeal, beige, taupe, grey, or dark-jacket look.",
     "Use all four thresholds across a ten-item collection and at least six genuinely different role families.",
     "No more than four of the ten may be conventional professions. At least six must come from relationships, invisible labour, life stages, inner conflicts, care, community, technology, embodiment, ecology, responsibility, loss, transition, or legacy.",
     "objectDirection must be exactly the word 'none' or one simple restrained role-defining object carried, worn, held, or attached to the person. Plain backpacks, school bags, satchels, shoulder bags, totes, fabric carry bags, small utility pouches, gloves, folded cloth, and similarly text-free objects are allowed when relevant. Do not use phones, screens, books, papers, documents, newspapers, badges, signs, placards, labels, packages, tickets, passports, certificates, or anything likely to contain text.",
@@ -483,7 +508,7 @@ async function requestPlan(input: {
     "bodyDirection must always preserve an upright, front-facing, centred standing pose with level shoulders. Prefer hands in pockets or relaxed at the sides; never request sitting, profile, three-quarter view, leaning, action, or a complex hand gesture.",
     "Lighting and shadow direction must stay coherent with the canonical cover, including a natural contact shadow beneath the fixed helmet and physically plausible garment folds.",
     "The fixed visual identity is handled elsewhere by the production system and should not be discussed in the brief.",
-    "Return only the requested structured data.",
+    "Examples of acceptable specificity include: a secondary-school student with a clean backpack; a physician in restrained scrubs with a stethoscope; a winter gift-bearer in a dignified red coat with a plain sack; a municipal caretaker in clean workwear carrying one tool; a mourner with a folded program translated into textile rather than paper. These are examples, not a fixed list. Return only the requested structured data.",
   ].join("\n");
 
   const inputText = [

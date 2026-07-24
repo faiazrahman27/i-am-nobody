@@ -432,7 +432,7 @@ export function buildNobodyArtworkPrompt(
       : "Do not include any separate object or prop.";
 
   const prompt = [
-    `Create one clean vertical editorial artwork belonging to the official visual universe of “${NOBODY_BRAND.projectName}”.`,
+    `Create one clean vertical editorial artwork belonging to the official visual universe of “${NOBODY_BRAND.projectName}”. The person must read as a distinct individual role or life situation, not as another variation of the same generic neutral figure.`,
 
     "",
 
@@ -481,13 +481,24 @@ export function buildNobodyArtworkPrompt(
       "The clothing, materials, layering, and one restrained carried or worn object when requested",
       "must make the specific human role or life situation understandable before typography is added.",
       "Use concrete role-defining details so the person never reads as a generic man or woman.",
-      "It must feel clean, iconic, premium, realistic, restrained, and contemporary—not theatrical,",
-      "literal, comedic, stereotyped, costume-like, or overloaded with accessories.",
+      "Honour the brief literally enough that a student looks like a student, a doctor looks like a doctor, a municipal worker looks like a municipal worker, and a seasonal gift-bearer still reads clearly without parody.",
+      "Do not flatten everything into the same beige, taupe, grey, charcoal, or dark-jacket formula.",
+      "It must feel clean, iconic, premium, realistic, restrained, and contemporary—avoid parody, caricature, cheap costume shorthand, or overloaded accessories.",
     ].join(" "),
 
     customClothingSentence,
 
     propSentence,
+
+    "",
+
+    [
+      "VISUAL DIFFERENTIATION:",
+      "Follow the daily creative brief closely. Preserve its specific garments, material contrast, silhouette, and restrained colour story.",
+      "Do not default to the same loose neutral tailoring, the same overshirt, the same monochrome sweater layering, or the same generic editorial uniform from one artwork to the next.",
+      "If the brief calls for a backpack, satchel, pouch, stethoscope, apron, sack, glove, or similar text-free carried signal, integrate it naturally with correct scale and anatomy.",
+      "The role signal must come from the person and what they wear or carry, never from background storytelling.",
+    ].join(" "),
 
     "",
 
@@ -510,6 +521,7 @@ export function buildNobodyArtworkPrompt(
       "The helmet reflections, collar, shoulders, torso, sleeves, hands, and clothing folds must agree with the same light direction and exposure.",
       "Create subtle natural contact shadows where the fixed helmet meets the collar and neck opening, where fabric overlaps, and where arms meet the torso.",
       "Do not cast a dramatic body or helmet shadow onto the background wall or studio floor. Keep the figure cleanly integrated without a fake projected backdrop shadow.",
+      "Do not create a large halo, echo, fringe, or second rim around the helmet. Keep the area directly around the helmet clean and simple so the verified production helmet can sit perfectly on the shoulders and collar.",
       "The helmet must feel physically worn by the figure, never floating, pasted on, glowing, outlined, or separated by a halo.",
       "Keep skin absent and preserve realistic adult anatomy, symmetrical shoulders, plausible arms, and natural hands and fingers if visible.",
     ].join(" "),
