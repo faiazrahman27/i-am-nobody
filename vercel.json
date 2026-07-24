@@ -18,6 +18,14 @@
     {
       "path": "/api/automation/daily-artworks",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/automation/daily-artworks",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/automation/daily-artworks",
+      "schedule": "0 13 * * *"
     }
   ]
 }

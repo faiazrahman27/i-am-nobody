@@ -3,6 +3,7 @@ import { getRomeDateParts } from "@/lib/nobody/dailyAutomation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireStudioAdmin } from "@/lib/supabase/studioAccess";
 import AutomationControls from "./AutomationControls";
+import AutomationLiveRefresh from "./AutomationLiveRefresh";
 import styles from "./automation.module.css";
 
 export const dynamic = "force-dynamic";
@@ -121,14 +122,11 @@ export default async function AutomationPage() {
     }),
   );
 
-  const completed = todayBatch?.completed_count ?? 0;
-  const failed = todayBatch?.failed_count ?? 0;
-  const remaining = Math.max(
-    (todayBatch?.requested_count ?? config?.daily_count ?? 10) -
-      completed -
-      failed,
-    0,
-  );
+  const completed = items.filter((item) => item.status === "completed").length;
+  const failed = items.filter((item) => item.status === "failed").length;
+  const processing = items.filter((item) => item.status === "processing").length;
+  const queued = items.filter((item) => item.status === "queued").length;
+  const remaining = queued + processing;
 
   return (
     <main className={styles.page}>
@@ -169,6 +167,11 @@ export default async function AutomationPage() {
         showGenerationRecovery={
           Boolean(todayBatch) && !todayBatch?.planner_error && remaining > 0
         }
+        showFailedRecovery={failed > 0}
+      />
+
+      <AutomationLiveRefresh
+        enabled={Boolean(todayBatch) && (remaining > 0 || failed > 0)}
       />
 
       <section className={styles.metrics} aria-label="Today’s progress">
@@ -181,7 +184,7 @@ export default async function AutomationPage() {
           <strong>{completed}</strong>
         </article>
         <article>
-          <span>Still processing</span>
+          <span>Queued / generating</span>
           <strong>{remaining}</strong>
         </article>
         <article>

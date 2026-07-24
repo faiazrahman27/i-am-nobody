@@ -15,13 +15,34 @@ import type { NobodyThreshold } from "./types";
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const DEFAULT_PLANNER_MODEL = "gpt-5.6-luna";
-export const NOBODY_DAILY_PLANNER_VERSION = "3.0.0";
+export const NOBODY_DAILY_PLANNER_VERSION = "3.1.0";
 
 const THRESHOLDS: readonly NobodyThreshold[] = [
   "Nobody",
   "Somebody",
   "Anybody",
   "Infinite",
+];
+
+const FORBIDDEN_BRIEF_PATTERNS: readonly Readonly<{
+  label: string;
+  pattern: RegExp;
+}>[] = [
+  {
+    label: "a text-bearing or screen-based object",
+    pattern:
+      /\b(phone|smartphone|screen|tablet|laptop|book|newspaper|magazine|letter|document|paperwork|passport|ticket|badge|name tag|sign|label|package|clipboard|certificate)\b/i,
+  },
+  {
+    label: "letters, numbers, logos, badges, labels, or insignia",
+    pattern:
+      /\b(text|lettered|numbered|printed|slogan|logo|brand(?:ed)?|insignia|emblem|patch|nameplate|label|badge|symbol|glyph)\b/i,
+  },
+  {
+    label: "an incompatible pose or scene",
+    pattern:
+      /\b(sitting|seated|leaning|profile|three-quarter|running|walking|jumping|dancing|fighting|crowd|office|street|city|classroom|kitchen|stage|landscape)\b/i,
+  },
 ];
 
 export type DailyAiArtworkBrief = Readonly<{
@@ -300,6 +321,30 @@ function validatePlan(
       if (creativeDirection.length < 30)
         issues.push(`Artwork ${position} needs a complete creative direction.`);
 
+      const visualDirections = [
+        clothingDirection,
+        bodyDirection,
+        objectDirection,
+        creativeDirection,
+      ].join(" ");
+
+      for (const rule of FORBIDDEN_BRIEF_PATTERNS) {
+        if (rule.pattern.test(visualDirections)) {
+          issues.push(
+            `Artwork ${position} requests ${rule.label}; replace it with a text-free, front-facing, production-safe direction.`,
+          );
+        }
+      }
+
+      if (
+        objectDirection.toLowerCase() !== "none" &&
+        objectDirection.split(/\s+/).length > 12
+      ) {
+        issues.push(
+          `Artwork ${position} has an object direction that is too complex.`,
+        );
+      }
+
       if (usedRoles.has(normalizedRole))
         issues.push(`The role “${roleTitle}” is repeated today.`);
       if (usedQuestions.has(normalizedQuestion))
@@ -414,7 +459,10 @@ async function requestPlan(input: {
     "The ten artworks must form a coherent morning collection but remain clearly different from one another.",
     "Use all four thresholds across a ten-item collection and at least six genuinely different role families.",
     "No more than four of the ten may be conventional professions. At least six must come from relationships, invisible labour, life stages, inner conflicts, care, community, technology, embodiment, ecology, responsibility, loss, transition, or legacy.",
-    "objectDirection must be the word 'none' or one restrained object described without text or branding.",
+    "objectDirection must be exactly the word 'none' or one simple restrained object. Do not use phones, screens, books, papers, documents, newspapers, badges, signs, labels, packages, tickets, passports, certificates, or anything likely to contain text.",
+    "Clothing must contain no letters, numbers, slogans, badges, insignia, labels, patches, nameplates, logos, or pseudo-text. Prefer plain fabrics and physically believable tailoring.",
+    "bodyDirection must always preserve an upright, front-facing, centred standing pose with level shoulders. Prefer hands in pockets or relaxed at the sides; never request sitting, profile, three-quarter view, leaning, action, or a complex hand gesture.",
+    "Lighting and shadow direction must stay coherent with the canonical cover, including a natural contact shadow beneath the fixed helmet and physically plausible garment folds.",
     "The fixed visual identity is handled elsewhere by the production system and should not be discussed in the brief.",
     "Return only the requested structured data.",
   ].join("\n");
@@ -524,7 +572,7 @@ export async function planDailyNobodyArtworks(input: {
   let previousIssues: readonly string[] | undefined;
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
       const response = await requestPlan({ ...input, previousIssues });
       const validation = validatePlan(

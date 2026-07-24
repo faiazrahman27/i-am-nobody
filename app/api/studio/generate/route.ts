@@ -57,6 +57,17 @@ type SavedVariant = Readonly<{
   reviewSummary: string | null;
 }>;
 
+type ExistingVariantRow = Readonly<{
+  id: string;
+  artwork_code: string;
+  status: string;
+  width: number;
+  height: number;
+  sha256: string;
+  visual_score: number | null;
+  rejection_reason: string | null;
+}>;
+
 function normalizeOptionalText(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -73,6 +84,16 @@ const NOBODY_THRESHOLDS: readonly NobodyThreshold[] = [
   "Anybody",
   "Infinite",
 ];
+
+const HUMAN_REVIEW_READY_STATUSES = new Set([
+  "ready_for_review",
+  "approved_artwork",
+  "approved_for_template",
+  "published",
+]);
+
+const ACTIVE_VARIANT_STATUSES = new Set(["candidate", "reviewing"]);
+const ACTIVE_GENERATION_STALE_AFTER_MS = 8 * 60 * 1000;
 
 function normalizeBriefField(value: unknown, maxLength: number) {
   return typeof value === "string"
@@ -269,39 +290,105 @@ export async function POST(request: Request) {
     ]);
 
     if (existingJobResult.data) {
-      const { data: existingVariants } = await supabase
-        .from("artwork_variants")
-        .select("id,artwork_code,status,width,height,sha256,visual_score")
-        .eq("job_id", existingJobResult.data.id)
-        .order("variant_index");
+      const { data: existingVariants, error: existingVariantsError } =
+        await supabase
+          .from("artwork_variants")
+          .select(
+            "id,artwork_code,status,width,height,sha256,visual_score,rejection_reason",
+          )
+          .eq("job_id", existingJobResult.data.id)
+          .order("variant_index");
 
-      if (existingVariants?.length) {
+      if (existingVariantsError) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "AUTOMATION_RETRY_LOOKUP_FAILED",
+            message: existingVariantsError.message,
+          },
+          { status: 500 },
+        );
+      }
+
+      const previousVariants = (existingVariants ?? []) as ExistingVariantRow[];
+      const readyVariants = previousVariants.filter((variant) =>
+        HUMAN_REVIEW_READY_STATUSES.has(variant.status),
+      );
+
+      if (readyVariants.length > 0) {
         return NextResponse.json({
           ok: true,
           idempotent: true,
           jobId: existingJobResult.data.id,
-          variants: existingVariants,
+          variants: readyVariants.map((variant) => ({
+            ...variant,
+            reviewSummary: variant.rejection_reason ?? null,
+          })),
         });
       }
 
+      const createdAt = Date.parse(existingJobResult.data.created_at);
+      const isFreshActiveAttempt =
+        Number.isFinite(createdAt) &&
+        Date.now() - createdAt < ACTIVE_GENERATION_STALE_AFTER_MS &&
+        (["queued", "generating"].includes(existingJobResult.data.status) ||
+          previousVariants.some((variant) =>
+            ACTIVE_VARIANT_STATUSES.has(variant.status),
+          ));
+
+      if (isFreshActiveAttempt) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "GENERATION_ALREADY_RUNNING",
+            message:
+              "This artwork is already being generated or visually checked by another worker.",
+          },
+          { status: 409 },
+        );
+      }
+
+      const activeVariantIds = previousVariants
+        .filter((variant) => ACTIVE_VARIANT_STATUSES.has(variant.status))
+        .map((variant) => variant.id);
+
+      if (activeVariantIds.length > 0) {
+        const { error: staleVariantError } = await supabase
+          .from("artwork_variants")
+          .update({
+            status: "auto_review_failed",
+            automated_review_status: "error",
+            automated_reviewed_at: new Date().toISOString(),
+            rejection_reason:
+              "The previous generation or visual review did not finish within the production lease and was superseded by a fresh attempt.",
+          })
+          .in("id", activeVariantIds);
+
+        if (staleVariantError) {
+          return NextResponse.json(
+            {
+              ok: false,
+              error: "AUTOMATION_STALE_VARIANT_RELEASE_FAILED",
+              message: staleVariantError.message,
+            },
+            { status: 500 },
+          );
+        }
+      }
+
       /*
-       * A previous scheduled attempt may have created its job record and then
-       * failed before an artwork variant was stored. Detach that terminal or
-       * stale job from the queue item so the item's next leased attempt can
-       * create a fresh job without violating the one-job-per-item guard.
+       * A rejected, failed, or stale attempt must not become the permanent
+       * idempotent result for a daily queue item. Keep the historical job and
+       * variants, but detach the item so its next lease creates a fresh image.
        */
       const { error: releaseError } = await supabase
         .from("generation_jobs")
         .update({
           automation_item_id: null,
-          status: ["queued", "generating"].includes(
-            existingJobResult.data.status,
-          )
-            ? "failed"
-            : existingJobResult.data.status,
+          status: "failed",
           error_code: "AUTOMATION_ATTEMPT_SUPERSEDED",
           error_message:
-            "A later scheduled attempt replaced this incomplete generation.",
+            "A fresh scheduled attempt replaced a rejected, failed, or stale generation.",
           completed_at: new Date().toISOString(),
         })
         .eq("id", existingJobResult.data.id)
@@ -313,7 +400,7 @@ export async function POST(request: Request) {
             ok: false,
             error: "AUTOMATION_RETRY_BLOCKED",
             message:
-              "The incomplete scheduled attempt could not be released for retry.",
+              "The previous scheduled attempt could not be released for a fresh retry.",
           },
           { status: 409 },
         );
@@ -581,10 +668,12 @@ export async function POST(request: Request) {
 
   const automatedReviewEnabled = policy?.automated_review_enabled !== false;
 
-  const automatedReviewThreshold =
+  const automatedReviewThreshold = Math.max(
+    88,
     typeof policy?.automated_review_threshold === "number"
       ? policy.automated_review_threshold
-      : 75;
+      : 88,
+  );
 
   const { data: job, error: jobError } = await supabase
     .from("generation_jobs")
@@ -986,7 +1075,7 @@ export async function POST(request: Request) {
               console.error("[I AM NOBODY] Visual review failed.", reviewError);
 
               reviewSummary =
-                "Visual review could not be completed. The artwork is still available for manual review.";
+                "Visual review could not be completed. This result will not enter the human-review queue; a fresh generation attempt is required.";
 
               await supabase
                 .from("artwork_variants")
@@ -1026,7 +1115,7 @@ export async function POST(request: Request) {
     );
 
     const hasReviewErrors = createdVariants.some(
-      (variant) => variant.status === "auto_review_failed",
+      (variant) => !HUMAN_REVIEW_READY_STATUSES.has(variant.status),
     );
 
     await Promise.all([

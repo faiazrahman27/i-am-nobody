@@ -760,7 +760,7 @@ async function callOpenAIImageEdit(input: {
       cache: "no-store",
       signal:
         AbortSignal.timeout(
-          280_000,
+          175_000,
         ),
     },
   );

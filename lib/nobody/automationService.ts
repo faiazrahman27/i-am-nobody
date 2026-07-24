@@ -363,7 +363,7 @@ export async function ensureDailyAutomationBatch(input?: {
 
   const canCreate =
     input?.force === true ||
-    (hour >= config.local_hour && hour <= config.local_hour + 3);
+    (hour >= config.local_hour && hour <= config.local_hour + 4);
 
   if (!canCreate) {
     return {
@@ -542,6 +542,7 @@ export async function failDailyAutomationItem(input: {
   batchId: string;
   message: string;
   retryable?: boolean;
+  preserveAttempt?: boolean;
 }) {
   const supabase = createSupabaseAdminClient();
   const { data: item } = await supabase
@@ -551,19 +552,87 @@ export async function failDailyAutomationItem(input: {
     .maybeSingle();
 
   const attempts = Number(item?.attempt_count ?? 1);
-  const shouldRetry = input.retryable !== false && attempts < 3;
+  const effectiveAttempts = input.preserveAttempt
+    ? Math.max(0, attempts - 1)
+    : attempts;
+  const shouldRetry = input.retryable !== false && effectiveAttempts < 3;
 
-  await supabase
+  const { error } = await supabase
     .from("daily_artwork_items")
     .update({
       status: shouldRetry ? "queued" : "failed",
+      attempt_count: effectiveAttempts,
       locked_at: null,
       lease_expires_at: null,
       error_message: input.message.slice(0, 1600),
     })
     .eq("id", input.itemId);
 
+  if (error) {
+    throw new Error(error.message);
+  }
+
   await supabase.rpc("refresh_daily_artwork_batch", {
     p_batch_id: input.batchId,
   });
+
+  return { retryQueued: shouldRetry } as const;
+}
+
+export async function requeueFailedDailyAutomationItems(input?: {
+  now?: Date;
+}) {
+  const { localDate } = getRomeDateParts(input?.now ?? new Date());
+  const supabase = createSupabaseAdminClient();
+
+  const { data: batch, error: batchError } = await supabase
+    .from("daily_artwork_batches")
+    .select("id")
+    .eq("local_date", localDate)
+    .maybeSingle();
+
+  if (batchError) {
+    throw new Error(batchError.message);
+  }
+
+  if (!batch) {
+    return { localDate, batchId: null, requeuedCount: 0 } as const;
+  }
+
+  const { data: requeued, error: requeueError } = await supabase
+    .from("daily_artwork_items")
+    .update({
+      status: "queued",
+      attempt_count: 0,
+      locked_at: null,
+      lease_expires_at: null,
+      error_message: null,
+    })
+    .eq("batch_id", batch.id)
+    .eq("status", "failed")
+    .select("id");
+
+  if (requeueError) {
+    throw new Error(requeueError.message);
+  }
+
+  await supabase.rpc("refresh_daily_artwork_batch", {
+    p_batch_id: batch.id,
+  });
+
+  const requeuedCount = requeued?.length ?? 0;
+
+  if (requeuedCount > 0) {
+    await supabase.from("studio_audit_log").insert({
+      action: "automation.failed_items_requeued",
+      entity_type: "daily_artwork_batch",
+      entity_id: batch.id,
+      details: {
+        local_date: localDate,
+        count: requeuedCount,
+      },
+    });
+  }
+
+  return { localDate, batchId: batch.id as string, requeuedCount } as const;
 }

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { ensureDailyAutomationBatch } from "@/lib/nobody/automationService";
+import {
+  ensureDailyAutomationBatch,
+  requeueFailedDailyAutomationItems,
+} from "@/lib/nobody/automationService";
+import { processDailyAutomationQueue } from "@/lib/nobody/automationWorker";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getStudioAccess } from "@/lib/supabase/studioAccess";
 import { assertNobodyRuntimeReady } from "@/lib/nobody/runtimeConfig";
@@ -17,14 +21,41 @@ async function requireEditor() {
   const access = await getStudioAccess();
 
   if (!access.authenticated) {
-    return { response: NextResponse.json({ ok: false, message: "Please sign in again." }, { status: 401 }) } as const;
+    return {
+      response: NextResponse.json(
+        { ok: false, message: "Please sign in again." },
+        { status: 401 },
+      ),
+    } as const;
   }
 
   if (!access.authorized || access.admin.role === "reviewer") {
-    return { response: NextResponse.json({ ok: false, message: "Only a studio owner or editor can change the daily automation." }, { status: 403 }) } as const;
+    return {
+      response: NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Only a studio owner or editor can change the daily automation.",
+        },
+        { status: 403 },
+      ),
+    } as const;
   }
 
   return { admin: access.admin } as const;
+}
+
+function runtimeErrorResponse(error: unknown) {
+  return NextResponse.json(
+    {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "The Studio runtime configuration is invalid.",
+    },
+    { status: 503 },
+  );
 }
 
 export async function PATCH(request: Request) {
@@ -37,11 +68,17 @@ export async function PATCH(request: Request) {
   try {
     body = (await request.json()) as AutomationRequest;
   } catch {
-    return NextResponse.json({ ok: false, message: "The automation request is invalid." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, message: "The automation request is invalid." },
+      { status: 400 },
+    );
   }
 
   if (typeof body.enabled !== "boolean") {
-    return NextResponse.json({ ok: false, message: "Choose whether the daily automation is active." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, message: "Choose whether the daily automation is active." },
+      { status: 400 },
+    );
   }
 
   const supabase = createSupabaseAdminClient();
@@ -51,7 +88,10 @@ export async function PATCH(request: Request) {
     .eq("singleton", true);
 
   if (error) {
-    return NextResponse.json({ ok: false, message: error.message }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, message: error.message },
+      { status: 500 },
+    );
   }
 
   await supabase.from("studio_audit_log").insert({
@@ -75,7 +115,10 @@ export async function POST(request: Request) {
   try {
     body = (await request.json()) as AutomationRequest;
   } catch {
-    return NextResponse.json({ ok: false, message: "The automation request is invalid." }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, message: "The automation request is invalid." },
+      { status: 400 },
+    );
   }
 
   if (body.action === "prepare_today") {
@@ -97,34 +140,17 @@ export async function POST(request: Request) {
     }
   }
 
-  if (body.action === "process_next") {
+  if (body.action === "retry_failed") {
     try {
-      assertNobodyRuntimeReady();
-    } catch (error) {
-      return NextResponse.json(
-        {
-          ok: false,
-          message:
-            error instanceof Error
-              ? error.message
-              : "The Studio runtime configuration is invalid.",
-        },
-        { status: 503 },
-      );
-    }
-
-    const secret = process.env.CRON_SECRET!.trim();
-
-    try {
-      const origin = new URL(request.url).origin;
-      const response = await fetch(`${origin}/api/automation/daily-artworks?limit=1`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${secret}` },
-        cache: "no-store",
-        signal: AbortSignal.timeout(295_000),
+      const result = await requeueFailedDailyAutomationItems();
+      return NextResponse.json({
+        ok: true,
+        ...result,
+        message:
+          result.requeuedCount > 0
+            ? `${result.requeuedCount} failed artwork${result.requeuedCount === 1 ? "" : "s"} returned to the generation queue.`
+            : "There are no failed artworks to retry.",
       });
-      const payload = await response.json();
-      return NextResponse.json(payload, { status: response.status });
     } catch (error) {
       return NextResponse.json(
         {
@@ -132,12 +158,44 @@ export async function POST(request: Request) {
           message:
             error instanceof Error
               ? error.message
-              : "The next daily artwork could not be processed.",
+              : "The failed artworks could not be queued again.",
         },
         { status: 500 },
       );
     }
   }
 
-  return NextResponse.json({ ok: false, message: "Choose a valid automation action." }, { status: 400 });
+  if (body.action === "process_next" || body.action === "process_remaining") {
+    try {
+      assertNobodyRuntimeReady();
+    } catch (error) {
+      return runtimeErrorResponse(error);
+    }
+
+    try {
+      const result = await processDailyAutomationQueue({
+        requestUrl: request.url,
+        force: true,
+        itemLimit: body.action === "process_remaining" ? 3 : 1,
+      });
+
+      return NextResponse.json(result);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            error instanceof Error
+              ? error.message
+              : "The daily artwork queue could not be processed.",
+        },
+        { status: 500 },
+      );
+    }
+  }
+
+  return NextResponse.json(
+    { ok: false, message: "Choose a valid automation action." },
+    { status: 400 },
+  );
 }

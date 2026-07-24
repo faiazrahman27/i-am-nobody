@@ -60,6 +60,20 @@ const forbiddenInputPatterns: readonly Readonly<{
     message:
       "The archetype must be communicated through clothing, not a literal environment.",
   },
+  {
+    code: "forbidden_text_bearing_object",
+    pattern:
+      /\b(phone|smartphone|screen|tablet|laptop|book|newspaper|magazine|letter|document|paperwork|passport|ticket|badge|name tag|sign|label|package|clipboard|certificate)\b/i,
+    message:
+      "Objects that normally contain text or screens are not permitted because they can create artificial lettering.",
+  },
+  {
+    code: "forbidden_clothing_marking",
+    pattern:
+      /\b(printed|lettered|numbered|slogan|insignia|emblem|patch|nameplate|brand(?:ed)?|logo)\b/i,
+    message:
+      "Clothing must be completely unbranded and free of letters, numbers, insignia, and printed markings.",
+  },
 ];
 
 function normalizeOptionalText(
@@ -285,6 +299,23 @@ export function buildNobodyArtworkPrompt(
         message: "The AI creative brief needs a complete clothing direction.",
       });
     }
+
+    const controlledBriefText = [
+      creativeBrief.clothingDirection,
+      creativeBrief.bodyDirection,
+      creativeBrief.objectDirection,
+      creativeBrief.creativeDirection,
+    ].join(" ");
+
+    for (const rule of forbiddenInputPatterns) {
+      if (rule.pattern.test(controlledBriefText)) {
+        issues.push({
+          field: "creativeBrief",
+          code: rule.code,
+          message: rule.message,
+        });
+      }
+    }
   }
 
   const backgroundSlug = NOBODY_BRAND.defaultBackgroundVariant;
@@ -392,7 +423,8 @@ export function buildNobodyArtworkPrompt(
           "Include exactly one restrained symbolic prop:",
           `${selectedProp}.`,
           "It must remain visually secondary and must not",
-          "explain the whole archetype.",
+          "explain the whole archetype. It must have no screen,",
+          "letters, numbers, labels, badges, logos, or pseudo-text.",
         ].join(" ")
       : "Do not include any prop.";
 
@@ -471,6 +503,17 @@ export function buildNobodyArtworkPrompt(
     "",
 
     [
+      "LIGHTING, SHADOWS, AND PHYSICAL INTEGRATION:",
+      "Use one coherent soft directional light consistent with the canonical cover.",
+      "The helmet reflections, collar, shoulders, torso, sleeves, hands, and clothing folds must agree with the same light direction and exposure.",
+      "Create subtle natural contact shadows where the fixed helmet meets the collar and neck opening, where fabric overlaps, and where arms meet the torso.",
+      "The helmet must feel physically worn by the figure, never floating, pasted on, glowing, outlined, or separated by a halo.",
+      "Keep skin absent and preserve realistic adult anatomy, symmetrical shoulders, plausible arms, and natural hands and fingers if visible.",
+    ].join(" "),
+
+    "",
+
+    [
       "BACKGROUND:",
       `${background.prompt}.`,
       "The background supports the figure but does not",
@@ -488,7 +531,8 @@ export function buildNobodyArtworkPrompt(
       "Photographic editorial realism, believable tailoring",
       "and materials, natural body proportions,",
       "soft controlled contrast, subtle surface texture,",
-      "and restrained cinematic depth.",
+      "and restrained cinematic depth without artificial grain,",
+      "blur, over-sharpening, plastic skin, or CGI gloss.",
       "The result must feel like an official alternate cover",
       "artwork from the same I AM NOBODY universe.",
     ].join(" "),
@@ -502,7 +546,7 @@ export function buildNobodyArtworkPrompt(
     [
       "OUTPUT:",
       "Artwork only.",
-      "Do not include text or any graphic template layer.",
+      "Do not include readable text, pseudo-text, letters, numbers, random glyphs, logos, labels, badges, signatures, or any graphic template layer.",
       "Use an opaque background.",
       "Maintain clean edges, realistic material detail,",
       "natural anatomy, and production-ready resolution.",
@@ -528,6 +572,21 @@ export function buildNobodyArtworkPrompt(
       "Do not show any visible eye, mouth, nose, beard,",
       "skin through the visor, recognisable face, hair, exposed head,",
       "second helmet edge, extra visor, duplicate chin guard, or alternative helmet silhouette.",
+    ].join(" "),
+
+    [
+      "Do not create inconsistent light directions, impossible shadows,",
+      "a helmet halo, cut-out edge, floating helmet, missing contact shadow,",
+      "mismatched exposure, or reflections unrelated to the body lighting.",
+      "Do not create malformed shoulders, duplicated limbs, twisted arms,",
+      "extra fingers, missing fingers, fused fingers, broken hands,",
+      "impossible clothing seams, or warped body proportions.",
+    ].join(" "),
+
+    [
+      "Do not create readable text or fake text anywhere, including random",
+      "letters, numbers, symbols, badges, labels, patches, logos, signatures,",
+      "screen content, paper content, or AI-like pseudo-typography.",
     ].join(" "),
 
     [
